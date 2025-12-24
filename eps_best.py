@@ -110,8 +110,14 @@ def run_algo(GB, printer, cluster_size):
         if len(GB.remaining_nodes) <= cluster_size and flip:
             Lcluster_GB.append(t)
             flip = 0
-            break
+            # Don't break here for TS - need to reach convergence or single node
+            if not hasattr(GB, 'has_converged'):
+                break
 
+        # Check for Thompson Sampling convergence or standard elimination
+        if hasattr(GB, 'has_converged') and GB.has_converged():
+            Lnode_GB.append(t)
+            break
         if len(GB.remaining_nodes) == 1:
             Lnode_GB.append(t)
             break
@@ -178,6 +184,7 @@ if __name__ == "__main__":
         G_tracker_GB_2 = []
         # G_tracker_GB_det = []
         G_tracker_GB_sum = []
+        G_tracker_TS = []
         G_tracker_Base = []
 
         for i in range(runs):
@@ -190,6 +197,7 @@ if __name__ == "__main__":
             GB_2 = graph_algo.MaxDiffVarAlgo(Degree, Adj, node_means, eta=eta, eps=0.0)
             # GB_det = graph_algo.OneStepMinDetAlgo(Degree, Adj, node_means, eta=eta, eps=0.0)
             GB_sum = graph_algo.OneStepMinSumAlgo(Degree, Adj, node_means, eta=eta, eps=0.0)
+            TS = graph_algo.ThompsonSampling(Degree, Adj, node_means, eta=eta, q=0.01, eps=0.0)
             Base = graph_algo.NoGraphAlgo(Degree, Adj, node_means)
 
             Time_tracker_Cyc, _, _ = run_algo(Cyc, printer="Cyc", cluster_size=node_per_cluster)
@@ -197,6 +205,7 @@ if __name__ == "__main__":
             Time_tracker_GB, _, _ = run_algo(GB, printer="GB", cluster_size=node_per_cluster)
             Time_tracker_GB_2, _, _ = run_algo(GB_2, printer="GB_2", cluster_size=node_per_cluster)
             # Time_tracker_GB_det, _, _ = run_algo(GB_det, printer="GB_det", cluster_size=node_per_cluster)
+            Time_tracker_TS, _, _ = run_algo(TS, printer="Thompson Sampling", cluster_size=node_per_cluster)
             Time_tracker_Base, _, _ = run_algo(Base, printer="Base", cluster_size=node_per_cluster)
 
             if len(G_tracker_GB) == 0:
@@ -205,6 +214,7 @@ if __name__ == "__main__":
                 G_tracker_GB_2 = Time_tracker_GB_2
                 # G_tracker_GB_det = Time_tracker_GB_det
                 G_tracker_GB_sum = Time_tracker_GB_sum
+                G_tracker_TS = Time_tracker_TS
                 G_tracker_Base = Time_tracker_Base
             else:
                 for j in range(len(G_tracker_Base)):
@@ -213,6 +223,7 @@ if __name__ == "__main__":
                     G_tracker_GB_2[j] = (i * G_tracker_GB_2[j] + Time_tracker_GB_2[j]) / float(i + 1)
                     # G_tracker_GB_det[j] = (i * G_tracker_GB_det[j] + Time_tracker_GB_det[j]) / float(i + 1)
                     G_tracker_GB_sum[j] = (i * G_tracker_GB_sum[j] + Time_tracker_GB_sum[j]) / float(i + 1)
+                    G_tracker_TS[j] = (i * G_tracker_TS[j] + Time_tracker_TS[j]) / float(i + 1)
                     G_tracker_Base[j] = (i * G_tracker_Base[j] + Time_tracker_Base[j]) / float(i + 1)
 
         """
@@ -233,6 +244,8 @@ if __name__ == "__main__":
         #          label='Det ' + str(g_type), linewidth=3.0)
         plt.plot(G_tracker_GB_sum, node_per_cluster * clusters * np.ones(len(Time_tracker_GB_sum)) - range(len(Time_tracker_GB_sum)),
                  label='JVM-N', linewidth=3.0)
+        plt.plot(G_tracker_TS, node_per_cluster * clusters * np.ones(len(Time_tracker_TS)) - range(len(Time_tracker_TS)),
+                 color='red', marker='s', markersize=3, label='Thompson Sampling', linewidth=2.0, linestyle='--')
     plt.plot(G_tracker_Base, node_per_cluster * clusters * np.ones(len(Time_tracker_GB_2)) - range(len(Time_tracker_Base)),
              label='No Graph UCB', linewidth=2.0)
     plt.title("No. of remaining arms vs time steps")
