@@ -9,6 +9,7 @@ All algorithms can be used as modules.
 import numpy as np
 import support_func
 import algobase
+from scipy.stats import norm
 
 with_reset = False
 imperfect_graph_info = True
@@ -191,155 +192,79 @@ class OneStepMinSumAlgo(algobase.AlgoBase):
 
 class ThompsonSampling(algobase.AlgoBase):
     """
-    Thompson Sampling algorithm for graph bandits based on TS-Explore from the paper.
+    Thompsoon sampling algorithm for graph bandits based on Chang et al. 2026.
     """
 
-    def __init__(self, D, A, mu, eta, delta=0.0001, q=0.01, eps=0.0):
-        """
-        Parameters
-        ----------
-        D : Degree matrix
-        A : Adjacency matrix
-        mu : node-mean vector
-        eta : Penalty parameter for mean estimation
-        delta : Confidence parameter
-        q : Threshold parameter for sampling
-        eps : Epsilon for imperfect graph info
-        """
+    def __init__(self, D, A, mu, eta, delta, q, eps):
         super().__init__(D, A, mu, eta, eps=eps)
+        self.delta = delta
         self.q = q
-        self.M = 1  # Number of posterior samples
-        self.converged = False  # Track convergence status
-        
+        self.K = self.dim
+        self.converged = False
+        self.t = 0
+
+        # play through first round
+        for arm in range(self.K):
+            reward = self.play_arm(arm)
+            self.t += 1
+    
+    def compute_floor_factor(self, t):
+        """
+        floor( 1/q * log(12 K^2 t^2 / delta) )
+        """
+        log_term = np.log(12 * self.K**2 * t**2 / self.delta)
+        return np.floor(log_term / self.q)
+    
     def compute_variance_factor(self, t):
         """
-        Compute C(δ, q, t) from the paper - variance scaling factor.
+        C(delta, q, t) = log(12 K^2 t^2 / delta) / phi^2(q)
         """
-        if t <= 0:
-            t = 1
-        # C(δ, q, t) = log(12K²t²/δ) / φ²(q)
-        # Using approximation: φ²(q) ≈ 2*log(1/q) for small q
-        phi_squared = 2 * np.log(1.0 / self.q) if self.q > 0 else 1.0
-        C_t = np.log(12 * self.dim**2 * t**2 / self.delta) / phi_squared
-        return max(C_t, 1.0)  # Ensure positive variance
-        
-    def compute_num_samples(self, t):
-        """
-        Compute M = floor(1/q * log(12K²t²/δ)) - number of posterior samples.
-        """
-        if t <= 0:
-            return 1
-        M = int(np.floor((1.0 / self.q) * np.log(12 * self.dim**2 * t**2 / self.delta)))
-        return max(1, min(M, 100))  # Cap at 100 for computational efficiency
+        phi_q = norm.isf(self.q)
+        C_t = np.log(12 * self.K**2 * t**2 / self.delta) / (phi_q**2)
+        return C_t
+    
+    def get_teff(self):
+        return np.diag(self.counter)
+    
+    def get_R(self):
+        return self.total_reward
 
-    def opti_selection(self):
-        """
-        Thompson Sampling selection using posterior sampling.
-        Implements exchange set mechanism from TS-Explore algorithm.
-        """
-        # Get total number of samples
-        t = int(np.trace(self.counter)) + 1
+    def play_round(self, n_rounds):
+        #! TODO
+        # t counter is incremented outside of class
+        t_eff = np.diag(self.counter)
+        t = np.sum(t_eff)
         
-        # Compute number of posterior samples
-        self.M = self.compute_num_samples(t)
-        
-        # Get empirical best arm
-        # Handle both 1D and 2D mean_estimate arrays
-        if len(self.mean_estimate.shape) == 2:
-            mean_values = self.mean_estimate[0]
-        else:
-            mean_values = self.mean_estimate
-            
-        empirical_best = np.argmax(mean_values)
-        if empirical_best not in self.remaining_nodes:
-            # If empirical best was eliminated, pick from remaining
-            remaining_means = np.array([mean_values[i] if i in self.remaining_nodes else -np.inf 
-                                       for i in range(self.dim)])
-            empirical_best = np.argmax(remaining_means)
-        
-        # Compute variance scaling factor
-        C_t = self.compute_variance_factor(t)
-        
-        # Track the sample with maximum disagreement
-        max_gap = -np.inf
-        selected_challenger = empirical_best
-        all_samples_agree = True
-        
-        # Cache mean_estimate shape check for performance
-        if len(self.mean_estimate.shape) == 2:
-            mean_values_cached = self.mean_estimate[0]
-        else:
-            mean_values_cached = self.mean_estimate
-        
-        for sample_idx in range(self.M):
+        # Calculate \hat{i}_t
+        self.estimate_mean()
+        # Convert from numpy.matrix to numpy.array and flatten
+        mu_hat_t = np.asarray(self.mean_estimate).flatten()
+        i_hat_t = np.argmax(mu_hat_t)
+
+        # For loops
+        floor = int(self.compute_floor_factor(t=t))
+        i_tilde_t_m = np.zeros(floor)
+        delta_hat_t_m = np.zeros((floor, self.K))
+        for m in range(floor):
             # Sample from posterior for each arm
-            theta_sample = np.zeros(self.dim)
-            
-            for i in self.remaining_nodes:
-                # Use effective number of plays (approximated by direct plays + regularization)
-                effective_plays = self.counter[i,i] + self.rho
-                
-                # Variance for posterior sampling
-                variance = C_t / max(1.0, effective_plays)
-                
-                # Sample from Gaussian posterior (using cached mean values)
-                theta_sample[i] = np.random.normal(
-                    mean_values_cached[i], 
-                    np.sqrt(variance)
+            theta_m_current = np.zeros(self.K)
+            for i in range(self.K):
+                variance = self.compute_variance_factor(t=t) / t_eff[i]
+                theta_m_current[i] = np.random.normal(
+                    mu_hat_t[i],
+                    variance**0.5
                 )
-            
-            # Set eliminated arms to -inf
-            for i in range(self.dim):
-                if i not in self.remaining_nodes:
-                    theta_sample[i] = -np.inf
-            
-            # Find sampled best arm
-            sampled_best = np.argmax(theta_sample)
-            
-            # Check for disagreement
-            if sampled_best != empirical_best:
-                all_samples_agree = False
-                # Compute gap for this sample
-                gap = theta_sample[sampled_best] - theta_sample[empirical_best]
-                if gap > max_gap:
-                    max_gap = gap
-                    selected_challenger = sampled_best
-                # Early break if we found disagreement and don't need to track all samples
-                if self.M > 10:  # Only break early for large M
-                    break
-        
-        # Update convergence status
-        self.converged = all_samples_agree
-        
-        # Select least sampled arm from exchange set {empirical_best, selected_challenger}
-        if selected_challenger == empirical_best:
-            return empirical_best
-        elif self.counter[empirical_best, empirical_best] <= self.counter[selected_challenger, selected_challenger]:
-            return empirical_best
-        else:
-            return selected_challenger
+            i_tilde_t_m[m] =  np.argmax(theta_m_current)
+            delta_hat_t_m[m] = theta_m_current - mu_hat_t
 
-    def eliminate_arms(self):
-        """
-        Override elimination for Thompson Sampling - no elimination based on UCB bounds.
-        Thompson Sampling maintains all arms until consensus is reached.
-        """
-        pass  # No elimination for Thompson Sampling
-    
-    def has_converged(self):
-        """
-        Check if Thompson Sampling has converged (all samples agree on best arm).
-        """
-        return self.converged
-    
-    def select_arm(self):
-        """
-        Select arm using Thompson Sampling with exchange set mechanism.
-        """
-        # Ensure we have valid remaining nodes
-        if len(self.remaining_nodes) == 0:
-            return 0
-        elif len(self.remaining_nodes) == 1:
-            return self.remaining_nodes[0]
-        
-        return self.opti_selection()
+        # Conditional statements
+        if np.all(i_tilde_t_m == i_hat_t):
+            self.converged = True
+            self.remaining_nodes = [i_hat_t]
+            return i_hat_t
+        else:
+            # Find which sample (m) had the largest difference for any arm
+            max_per_row = np.max(delta_hat_t_m, axis=1)  # Max difference in each row
+            m_star = np.argmax(max_per_row)  # Row with largest max difference
+            i_tilde_t = int(i_tilde_t_m[m_star])
+            self.play_arm(i_tilde_t)
