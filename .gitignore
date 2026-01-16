@@ -95,7 +95,7 @@ config.local.toml
 *.local.toml
 
 # Output files and plots
-*.png
+#*.png
 *.jpg
 *.jpeg
 *.pdf

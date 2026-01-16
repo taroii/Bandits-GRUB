@@ -14,7 +14,7 @@ def load_parameters():
     """
 
     Function to call graph_generator.py to provide graph data with the config setup from one of the following:
-    1. Loads the sample graph setup from 'sample_setup.toml'
+    1. Loads the sample graph setup from 'sample_setup.toml' (currently not working)
     2. Reading the setup from 'config.toml' and then generate graph.
     3. Generating graph from the default setup hardcodede in the function.
 
@@ -117,8 +117,8 @@ def run_algo(GB, printer, cluster_size, i=0, t=0):
 
 if __name__ == "__main__":
     """
-    Sample code where we run 3 different algorithms from graph_algo.py. 
-    Testing is performed by one run of each algorithm on a sample graph bandit problem from sample_setup.toml
+    Sample code where we run 6 different algorithms from graph_algo.py. 
+    Testing is performed by one run of each algorithm on a sample graph bandit problem from config.toml
     """
 
     """

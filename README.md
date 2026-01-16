@@ -1,4 +1,10 @@
 <!-- ABOUT THE PROJECT -->
+## New Contributions: 
+- ```sample_main.py``` now includes Thompson Sampling algorithm. It generates No. Remaining Arms vs Time Steps graph (figure 2 from paper)
+- ```sample_main2.py``` generates Stopping time vs Number of arms on standard graph set up. 
+
+TODO: 
+- Fix t_eff calculation (or lackthereof)
 
 ## About The Project
 

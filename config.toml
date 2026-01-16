@@ -3,5 +3,5 @@ node_per_cluster = 10
 clusters = 10
 p = 0.9
 q = 0.000
-graph = 'SBM'
+graph = 'complete'
 best_mean_factor = 1.30
