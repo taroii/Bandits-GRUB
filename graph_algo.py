@@ -223,8 +223,13 @@ class ThompsonSampling(algobase.AlgoBase):
         C_t = np.log(12 * self.K**2 * t**2 / self.delta) / (phi_q**2)
         return C_t
     
-    def get_teff(self):
-        return np.diag(self.counter)
+    def get_teff(self, i):
+        # t_eff,i = 1 / [(Σ e_πt e_πt^T + ρ L_G)^(-1)]_ii
+        # where Σ e_πt e_πt^T = self.counter (diagonal matrix of play counts)
+        # self.L (Laplacian) and self.rho (smoothness) inherited from AlgoBase
+        M = self.counter + self.rho * self.L
+        M_inv = np.linalg.inv(M)
+        return 1.0 / M_inv[i, i]
     
     def get_R(self):
         return self.total_reward
@@ -232,8 +237,7 @@ class ThompsonSampling(algobase.AlgoBase):
     def play_round(self, n_rounds):
         #! TODO
         # t counter is incremented outside of class
-        t_eff = np.diag(self.counter)
-        t = np.sum(t_eff)
+        t = np.trace(self.counter)
         
         # Calculate \hat{i}_t
         self.estimate_mean()
@@ -249,7 +253,7 @@ class ThompsonSampling(algobase.AlgoBase):
             # Sample from posterior for each arm
             theta_m_current = np.zeros(self.K)
             for i in range(self.K):
-                variance = self.compute_variance_factor(t=t) / t_eff[i]
+                variance = self.compute_variance_factor(t=t) / self.get_teff(i)
                 theta_m_current[i] = np.random.normal(
                     mu_hat_t[i],
                     variance**0.5
