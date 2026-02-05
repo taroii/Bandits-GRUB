@@ -271,4 +271,8 @@ class ThompsonSampling(algobase.AlgoBase):
             max_per_row = np.max(delta_hat_t_m, axis=1)  # Max difference in each row
             m_star = np.argmax(max_per_row)  # Row with largest max difference
             i_tilde_t = int(i_tilde_t_m[m_star])
-            self.play_arm(i_tilde_t)
+
+            if self.counter[i_tilde_t, i_tilde_t] < self.counter[i_hat_t, i_hat_t ]:
+                self.play_arm(i_tilde_t)
+            else:
+                self.play_arm(i_hat_t)
