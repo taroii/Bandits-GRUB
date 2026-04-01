@@ -1,3 +1,4 @@
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 import toml
@@ -5,6 +6,8 @@ import graph_algo
 import graph_generator
 import support_func
 
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 load_sample = False
 read_config = True
@@ -144,6 +147,7 @@ if __name__ == "__main__":
                                                                                        
     plt.xlabel("Number of arms")                                                                                                            
     plt.ylabel("Time steps (arm pulls)")                                                                                                       
-    plt.legend()                                                                                                                            
+    plt.legend()
+    plt.savefig(os.path.join(os.path.dirname(__file__), 'Figure_2.png'), dpi=150, bbox_inches='tight')
     plt.show()
 
