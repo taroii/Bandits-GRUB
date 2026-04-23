@@ -112,3 +112,9 @@ logs/
 *.tmp
 temp/
 tmp/
+
+# LaTeX
+*.tex
+
+# Notes
+*.md

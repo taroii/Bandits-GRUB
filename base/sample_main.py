@@ -173,16 +173,15 @@ if __name__ == "__main__":
     
     Run the choice of algorithms defined in graph_algo.py
     """
-    eta = 1.0
+    rho_lap = 1.0
 
     print("Checkpoint 2")
-    Cyc = graph_algo.CyclicAlgo(Degree, Adj, node_means, eta=eta)
-    GB = graph_algo.MaxVarianceArmAlgo(Degree, Adj, node_means, eta=eta)
-    GB_2 = graph_algo.MaxDiffVarAlgo(Degree, Adj, node_means, eta=eta, eps=0.0)
-    # GB_det = graph_algo.OneStepMinDetAlgo(Degree, Adj, node_means, eta=eta, eps=0.0)
-    GB_sum = graph_algo.OneStepMinSumAlgo(Degree, Adj, node_means, eta=eta, eps=0.0)
-    Base = graph_algo.NoGraphAlgo(Degree, Adj, node_means, eta=eta)
-    TS = graph_algo.ThompsonSampling(Degree, Adj, node_means, eta=eta, delta=0.0001, q=0.01, eps=0.0)
+    Cyc = graph_algo.CyclicAlgo(Degree, Adj, node_means, rho_lap=rho_lap)
+    GB = graph_algo.MaxVarianceArmAlgo(Degree, Adj, node_means, rho_lap=rho_lap)
+    GB_2 = graph_algo.MaxDiffVarAlgo(Degree, Adj, node_means, rho_lap=rho_lap)
+    GB_sum = graph_algo.OneStepMinSumAlgo(Degree, Adj, node_means, rho_lap=rho_lap)
+    Base = graph_algo.NoGraphAlgo(Degree, Adj, node_means)
+    TS = graph_algo.ThompsonSampling(Degree, Adj, node_means, rho_lap=rho_lap, delta=0.0001, q=0.01)
 
     Time_tracker_Cyc, _, _ = run_algo(Cyc, printer="Cyc", cluster_size=node_per_cluster)
     Time_tracker_GB, _, _ = run_algo(GB, printer="GB", cluster_size=node_per_cluster)

@@ -115,29 +115,29 @@ if __name__ == "__main__":
         # Set best arm to max * 1.2
         node_means[0] = max(node_means[1:]) * 1.2 
 
-        eta = 1.0
+        rho_lap = 1.0
 
-        Cyc = graph_algo.CyclicAlgo(Degree, Adj, node_means, eta=eta)
+        Cyc = graph_algo.CyclicAlgo(Degree, Adj, node_means, rho_lap=rho_lap)
         Time_tracker_Cyc, _, _ = run_algo(Cyc, printer="Cyc", cluster_size=node_per_cluster)
         results['Cyc'].append(Time_tracker_Cyc[-1])
 
-        GB = graph_algo.MaxVarianceArmAlgo(Degree, Adj, node_means, eta=eta)
+        GB = graph_algo.MaxVarianceArmAlgo(Degree, Adj, node_means, rho_lap=rho_lap)
         Time_tracker_GB, _, _ = run_algo(GB, printer="GB", cluster_size=node_per_cluster)
         results['GB'].append(Time_tracker_GB[-1])
 
-        GB_2 = graph_algo.MaxDiffVarAlgo(Degree, Adj, node_means, eta=eta, eps=0.0)
+        GB_2 = graph_algo.MaxDiffVarAlgo(Degree, Adj, node_means, rho_lap=rho_lap)
         Time_tracker_GB_2, _, _ = run_algo(GB_2, printer="GB_2", cluster_size=node_per_cluster)
         results['GB_2'].append(Time_tracker_GB_2[-1])
 
-        GB_sum = graph_algo.OneStepMinSumAlgo(Degree, Adj, node_means, eta=eta, eps=0.0)
+        GB_sum = graph_algo.OneStepMinSumAlgo(Degree, Adj, node_means, rho_lap=rho_lap)
         Time_tracker_GB_sum, _, _ = run_algo(GB_sum, printer="GB_sum", cluster_size=node_per_cluster)
         results['GB_sum'].append(Time_tracker_GB_sum[-1])
 
-        Base = graph_algo.NoGraphAlgo(Degree, Adj, node_means, eta=eta)
+        Base = graph_algo.NoGraphAlgo(Degree, Adj, node_means)
         Time_tracker_Base, _, _ = run_algo(Base, printer="Base", cluster_size=node_per_cluster)
         results['Base'].append(Time_tracker_Base[-1])
 
-        TS = graph_algo.ThompsonSampling(Degree, Adj, node_means, eta=eta, delta=0.0001, q=0.01, eps=0.0)
+        TS = graph_algo.ThompsonSampling(Degree, Adj, node_means, rho_lap=rho_lap, delta=0.0001, q=0.01)
         Time_tracker_TS, _, _ = run_algo(TS, printer="Thompson Sampling", cluster_size=node_per_cluster, t=TS.t)
         results['TS'].append(Time_tracker_TS[-1])
 
