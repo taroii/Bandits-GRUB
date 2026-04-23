@@ -115,7 +115,10 @@ tmp/
 
 # Phase 0: checked-out pre-refactor sources for regression test
 experiments/_prerefactor/
-experiments/outputs/
+# Keep exp*.png and exp*_results.npz tracked, but don't commit caches or
+# re-generated markdown reports inside experiments/outputs/.
+experiments/outputs/__pycache__/
+experiments/outputs/*.tmp
 
 # LaTeX
 *.tex

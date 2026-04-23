@@ -1,0 +1,9 @@
+# exp3 probe_rho_star output
+
+eps=1.000e+00  rho*=4.316e+01  rho_diag=1.0e-04  cond(V0)=3.02e+06  teff[min/med/max]=6.00e-04/6.00e-04/7.00e-04  rho*eps/[sigma0 sqrtL1] = 1.0000
+eps=3.162e-01  rho*=1.365e+02  rho_diag=1.4e-04  cond(V0)=7.00e+06  teff[min/med/max]=8.19e-04/8.19e-04/9.55e-04  rho*eps/[sigma0 sqrtL1] = 1.0000
+eps=1.000e-01  rho*=4.316e+02  rho_diag=4.3e-04  cond(V0)=7.00e+06  teff[min/med/max]=2.59e-03/2.59e-03/3.02e-03  rho*eps/[sigma0 sqrtL1] = 1.0000
+eps=3.162e-02  rho*=1.365e+03  rho_diag=1.4e-03  cond(V0)=7.00e+06  teff[min/med/max]=8.19e-03/8.19e-03/9.55e-03  rho*eps/[sigma0 sqrtL1] = 1.0000
+eps=1.000e-02  rho*=4.316e+03  rho_diag=4.3e-03  cond(V0)=7.00e+06  teff[min/med/max]=2.59e-02/2.59e-02/3.02e-02  rho*eps/[sigma0 sqrtL1] = 1.0000
+eps=3.162e-03  rho*=1.365e+04  rho_diag=1.4e-02  cond(V0)=7.00e+06  teff[min/med/max]=8.19e-02/8.19e-02/9.55e-02  rho*eps/[sigma0 sqrtL1] = 1.0000
+eps=1.000e-03  rho*=4.316e+04  rho_diag=4.3e-02  cond(V0)=7.00e+06  teff[min/med/max]=2.59e-01/2.59e-01/3.02e-01  rho*eps/[sigma0 sqrtL1] = 1.0000
