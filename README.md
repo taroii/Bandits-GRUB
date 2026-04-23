@@ -3,8 +3,18 @@
 - ```sample_main.py``` now includes Thompson Sampling algorithm. It generates No. Remaining Arms vs Time Steps graph (figure 2 from paper)
 - ```sample_main2.py``` generates Stopping time vs Number of arms on standard graph set up. 
 
-TODO: 
-- Fix t_eff calculation (or lackthereof)
+## Setup
+
+```
+conda create -n thompson python=3.9
+conda activate thompson
+pip install -r requirements.txt
+```
+
+It's important to use an older version of python, since some code is depracated. 
+
+## TODO: 
+- Nothing!
 
 ## About The Project
 

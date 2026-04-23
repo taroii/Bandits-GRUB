@@ -1,9 +1,13 @@
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 import toml
 import graph_algo
 import graph_generator
 import support_func
+
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 
 load_sample = False
@@ -207,4 +211,5 @@ if __name__ == "__main__":
     plt.ylabel("No. of remaining arms")
     plt.legend(loc='upper right', bbox_to_anchor=(1.0, 1.0))
     plt.grid()
+    plt.savefig(os.path.join(os.path.dirname(__file__), 'Figure_1.png'), dpi=150, bbox_inches='tight')
     plt.show()
