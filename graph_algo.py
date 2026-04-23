@@ -51,7 +51,7 @@ class CyclicAlgo(algobase.AlgoBase):
         if len(self.picking_order) > 1:
             last_index = self.picking_order[-1]
             ind = np.where(self.jumping_index == last_index)
-            ind = (int(ind[0]) + 1) % len(self.jumping_index)
+            ind = (int(ind[0][0]) + 1) % len(self.jumping_index)
             while self.jumping_index[ind] not in self.remaining_nodes:
                 ind += 1
                 ind %= len(self.jumping_index)
@@ -154,18 +154,16 @@ class BasicThompsonSampling:
         variances = C_t / np.maximum(self.counts, 1)
 
         floor = max(int(self.compute_floor_factor(t)), 1)
-        i_tilde_m = np.zeros(floor, dtype=int)
-        delta_hat_m = np.zeros((floor, self.K))
-        for m in range(floor):
-            theta = np.random.normal(mu_hat, np.sqrt(variances))
-            i_tilde_m[m] = int(np.argmax(theta))
-            delta_hat_m[m] = theta - mu_hat
+        sigma = np.sqrt(np.maximum(variances, 0.0))
+        thetas = mu_hat + sigma * np.random.randn(floor, self.K)
+        i_tilde_m = np.argmax(thetas, axis=1)
 
         if np.all(i_tilde_m == i_hat):
             self.converged = True
             self.remaining_nodes = [i_hat]
             return i_hat
 
+        delta_hat_m = thetas - mu_hat
         m_star = int(np.argmax(np.max(delta_hat_m, axis=1)))
         i_tilde = int(i_tilde_m[m_star])
         arm = i_tilde if self.counts[i_tilde] < self.counts[i_hat] else i_hat
@@ -236,18 +234,16 @@ class ThompsonSampling(algobase.AlgoBase):
         variances = C_t / teff
 
         floor = max(int(self.compute_floor_factor(t=t)), 1)
-        i_tilde_t_m = np.zeros(floor, dtype=int)
-        delta_hat_t_m = np.zeros((floor, self.K))
-        for m in range(floor):
-            theta_m = np.random.normal(mu_hat_t, np.sqrt(np.maximum(variances, 0.0)))
-            i_tilde_t_m[m] = int(np.argmax(theta_m))
-            delta_hat_t_m[m] = theta_m - mu_hat_t
+        sigma = np.sqrt(np.maximum(variances, 0.0))
+        thetas = mu_hat_t + sigma * np.random.randn(floor, self.K)
+        i_tilde_t_m = np.argmax(thetas, axis=1)
 
         if np.all(i_tilde_t_m == i_hat_t):
             self.converged = True
             self.remaining_nodes = [i_hat_t]
             return i_hat_t
 
+        delta_hat_t_m = thetas - mu_hat_t
         m_star = int(np.argmax(np.max(delta_hat_t_m, axis=1)))
         i_tilde_t = int(i_tilde_t_m[m_star])
 
@@ -338,18 +334,16 @@ class GraphFeedbackTS:
         variances = C_t / N_safe
 
         floor = max(int(self.compute_floor_factor(t)), 1)
-        i_tilde_m = np.zeros(floor, dtype=int)
-        delta_hat_m = np.zeros((floor, self.K))
-        for m in range(floor):
-            theta = np.random.normal(mu_hat, np.sqrt(np.maximum(variances, 0.0)))
-            i_tilde_m[m] = int(np.argmax(theta))
-            delta_hat_m[m] = theta - mu_hat
+        sigma = np.sqrt(np.maximum(variances, 0.0))
+        thetas = mu_hat + sigma * np.random.randn(floor, self.K)
+        i_tilde_m = np.argmax(thetas, axis=1)
 
         if np.all(i_tilde_m == i_hat):
             self.converged = True
             self.remaining_nodes = [i_hat]
             return i_hat
 
+        delta_hat_m = thetas - mu_hat
         m_star = int(np.argmax(np.max(delta_hat_m, axis=1)))
         i_tilde = int(i_tilde_m[m_star])
         candidates = {i_hat, i_tilde}

@@ -25,7 +25,7 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outputs')
 os.makedirs(OUT, exist_ok=True)
 
 
-def make_factories(D, A, mu, delta, rho_lap=1.0, q=0.01):
+def make_factories(D, A, mu, delta, rho_lap=1.0, q=0.1):
     return {
         'ThompsonSampling': lambda: graph_algo.ThompsonSampling(
             D, A, mu, rho_lap=rho_lap, delta=delta, q=q),
@@ -36,36 +36,51 @@ def make_factories(D, A, mu, delta, rho_lap=1.0, q=0.01):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--seeds', type=int, default=20)
+    parser.add_argument('--seeds', type=int, default=10)
     parser.add_argument('--n-jobs', type=int, default=1)
     parser.add_argument('--quick', action='store_true')
+    parser.add_argument('--q', type=float, default=0.1,
+                        help="TS tail quantile.  notes.md suggests 0.01 but "
+                             "that's empirically too strict on moderate-gap "
+                             "instances (K>=11 doesn't converge in 60s at "
+                             "q=0.01; q=0.1 converges in 90k rounds ~14s).")
     parser.add_argument('--delta-min', type=int, default=6,
                         help='log10(1/delta_min); default 6 -> delta down to 1e-6')
+    parser.add_argument('--n-clusters', type=int, default=2)
+    parser.add_argument('--nodes-per-cluster', type=int, default=5)
+    parser.add_argument('--best-factor', type=float, default=1.3)
+    parser.add_argument('--max-steps', type=int, default=300_000)
     args = parser.parse_args()
 
     if args.quick:
         deltas = [1e-2, 1e-3]
         seeds = list(range(max(args.seeds, 3)))
+        n_clusters, nodes_per_cluster, best_factor = 3, 2, 3.0
     else:
         deltas = [10.0 ** -k for k in range(1, args.delta_min + 1)]
         seeds = list(range(args.seeds))
+        n_clusters = args.n_clusters
+        nodes_per_cluster = args.nodes_per_cluster
+        best_factor = args.best_factor
 
     mu, A, D = instances.sbm_standard(
-        n_clusters=10, nodes_per_cluster=10, p=0.9, q=0.0,
-        best_factor=1.3, seed=0)
+        n_clusters=n_clusters, nodes_per_cluster=nodes_per_cluster,
+        p=0.9, q=0.0, best_factor=best_factor, seed=0)
     K = len(mu)
     H_c = hardness.classical_hardness(mu)
     H_g = hardness.graph_hardness(mu, A, D, rho=1.0)
-    print(f"K={K}, H_classical={H_c:.2f}, H_graph={H_g:.2f}")
-
+    print(f"K={K}, H_classical={H_c:.2f}, H_graph={H_g:.2f}, "
+          f"q={args.q}, max_steps={args.max_steps}, "
+          f"seeds={len(seeds)}, deltas={deltas}", flush=True)
     results = {name: {} for name in ('ThompsonSampling', 'BasicThompsonSampling')}
     for delta in deltas:
-        facs = make_factories(D, A, mu, delta)
+        facs = make_factories(D, A, mu, delta, q=args.q)
         for name, fac in facs.items():
             print(f"[exp1] delta={delta:.0e} algo={name}", flush=True)
             t0 = time.time()
             runs = runners.run_many(fac, seeds, n_jobs=args.n_jobs,
-                                    max_steps=1_000_000)
+                                    max_steps=args.max_steps,
+                                    progress=True)
             print(f"       took {time.time()-t0:.1f}s, "
                   f"t_med={np.median([r['stopping_time'] for r in runs])}",
                   flush=True)
@@ -123,7 +138,7 @@ def main():
     print(f"Saved {out_png}")
 
     # Regression slope
-    print("\nLinear fits  T = a·log(1/δ) + b:")
+    print("\nLinear fits  T = a*log(1/delta) + b:")
     summary = []
     for name in results:
         runs = np.array([[r['stopping_time'] for r in results[name][d]]

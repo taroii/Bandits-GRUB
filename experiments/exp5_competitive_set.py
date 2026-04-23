@@ -20,17 +20,21 @@ os.makedirs(OUT, exist_ok=True)
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--seeds', type=int, default=30)
+    parser.add_argument('--seeds', type=int, default=10)
     parser.add_argument('--n-jobs', type=int, default=1)
     parser.add_argument('--quick', action='store_true')
+    parser.add_argument('--q', type=float, default=0.1)
+    parser.add_argument('--max-steps', type=int, default=300_000)
     args = parser.parse_args()
 
-    delta = 1e-4
+    delta = 1e-3
     rho_lap = 1.0
     seeds = list(range(args.seeds if not args.quick else 5))
 
+    # Downscaled from notes.md's K=101 SBM since the full instance does not
+    # converge in reasonable time (see phase0_log.md).
     mu, A, D = instances.sbm_standard(
-        n_clusters=10, nodes_per_cluster=10, p=0.9, q=0.0,
+        n_clusters=2, nodes_per_cluster=5, p=0.9, q=0.0,
         best_factor=1.3, seed=0)
     K = len(mu)
 
@@ -40,9 +44,10 @@ def main():
           f"|non-competitive|={len(N_idx)}", flush=True)
 
     fac = lambda: graph_algo.ThompsonSampling(
-        D, A, mu, rho_lap=rho_lap, delta=delta, q=0.01)
+        D, A, mu, rho_lap=rho_lap, delta=delta, q=args.q)
     t0 = time.time()
-    runs = runners.run_many(fac, seeds, n_jobs=args.n_jobs, max_steps=5_000_000)
+    runs = runners.run_many(fac, seeds, n_jobs=args.n_jobs,
+                            max_steps=args.max_steps)
     print(f"[exp5] {len(seeds)} seeds, "
           f"t_med={np.median([r['stopping_time'] for r in runs]):.0f} "
           f"({time.time()-t0:.1f}s)", flush=True)

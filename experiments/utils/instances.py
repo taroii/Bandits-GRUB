@@ -31,8 +31,10 @@ def sbm_standard(n_clusters=10, nodes_per_cluster=10, p=0.9, q=0.0,
                  best_factor=1.3, seed=0):
     """SBM with one isolated best arm at index 0.
 
-    Cluster means are linearly spaced; after the isolated arm is inserted
-    at index 0 its mean is ``best_factor * max(cluster_means)``.
+    Cluster means are linearly spaced in [0.1, 1.0] (on the same scale as
+    the Gaussian reward noise, sigma=1, so gaps are comparable to the
+    noise level and the instance is actually hard).  After the isolated
+    arm is inserted at index 0 its mean is ``best_factor * max(cluster_means)``.
     """
     rng_state = np.random.get_state()
     np.random.seed(seed)
@@ -41,8 +43,7 @@ def sbm_standard(n_clusters=10, nodes_per_cluster=10, p=0.9, q=0.0,
         probs = (p - q) * np.eye(n_clusters) + q * np.ones((n_clusters, n_clusters))
         G = nx.stochastic_block_model(sizes, probs, seed=seed)
         A, D = _mats_from_graph(G)
-        cluster_means = nodes_per_cluster * n_clusters * np.ones(n_clusters) \
-            - nodes_per_cluster * np.arange(0, 1, 1.0 / n_clusters)
+        cluster_means = np.linspace(1.0, 0.1, n_clusters)
         mu = np.zeros(n_clusters * nodes_per_cluster)
         for c in range(n_clusters):
             mu[c * nodes_per_cluster:(c + 1) * nodes_per_cluster] = cluster_means[c]

@@ -41,27 +41,36 @@ def interpolate_curve(curve, t_grid):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--seeds', type=int, default=30)
+    parser.add_argument('--seeds', type=int, default=10)
     parser.add_argument('--n-jobs', type=int, default=1)
     parser.add_argument('--quick', action='store_true')
+    parser.add_argument('--q', type=float, default=0.1)
+    parser.add_argument('--max-steps', type=int, default=300_000)
     args = parser.parse_args()
 
     seeds = list(range(args.seeds if not args.quick else 3))
+    # Downscaled from notes.md's K=101 SBM for tractability
     mu, A, D = instances.sbm_standard(
-        n_clusters=10, nodes_per_cluster=10, p=0.9, q=0.0,
+        n_clusters=2, nodes_per_cluster=5, p=0.9, q=0.0,
         best_factor=1.3, seed=0)
     K = len(mu)
     rho_lap = 1.0
-    delta = 1e-4
-    q = 0.01
+    delta = 1e-3
+    q = args.q
 
     def make_factory(cls_name):
         cls = getattr(graph_algo, cls_name)
-        if cls_name == 'NoGraphAlgo':
-            return lambda: cls(D, A, mu)
         if cls_name == TS_NAME:
             return lambda: cls(D, A, mu, rho_lap=rho_lap, delta=delta, q=q)
-        return lambda: cls(D, A, mu, rho_lap=rho_lap)
+        # UCB baselines don't take delta in their constructor; AlgoBase
+        # hardcodes self.delta=0.0001.  Override post-init so they share
+        # delta with TS.
+        def _build(cls=cls, cls_name=cls_name):
+            inst = (cls(D, A, mu) if cls_name == 'NoGraphAlgo'
+                    else cls(D, A, mu, rho_lap=rho_lap))
+            inst.delta = delta
+            return inst
+        return _build
 
     curves = {}
     stop_times = {}
@@ -70,7 +79,7 @@ def main():
         print(f"[exp6] algo={name} ...", flush=True)
         t0 = time.time()
         runs = runners.run_many(fac, seeds, n_jobs=args.n_jobs,
-                                max_steps=2_000_000)
+                                max_steps=args.max_steps)
         curves[name] = [r['elimination_curve'] for r in runs]
         stop_times[name] = np.array([r['stopping_time'] for r in runs], dtype=float)
         print(f"    t_med={np.median(stop_times[name]):.0f} "

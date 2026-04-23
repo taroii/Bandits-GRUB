@@ -113,6 +113,10 @@ logs/
 temp/
 tmp/
 
+# Phase 0: checked-out pre-refactor sources for regression test
+experiments/_prerefactor/
+experiments/outputs/
+
 # LaTeX
 *.tex
 

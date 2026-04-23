@@ -68,10 +68,12 @@ def probe_rho_star(mu, A, D, epsilons, delta, sigma=1.0,
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--seeds', type=int, default=20)
+    parser.add_argument('--seeds', type=int, default=10)
     parser.add_argument('--n-jobs', type=int, default=1)
     parser.add_argument('--quick', action='store_true')
     parser.add_argument('--c0', type=float, default=4.0)
+    parser.add_argument('--q', type=float, default=0.1)
+    parser.add_argument('--max-steps', type=int, default=300_000)
     args = parser.parse_args()
 
     if args.quick:
@@ -142,18 +144,18 @@ def main():
         factories = {
             'TS_tuned': lambda eps=eps, rho_star=rho_star, rho_diag_val=rho_diag_val:
                 graph_algo.ThompsonSampling(
-                    D, A, mu, rho_lap=rho_star, delta=delta, q=0.01,
+                    D, A, mu, rho_lap=rho_star, delta=delta, q=args.q,
                     epsilon_nominal=eps, rho_diag=rho_diag_val),
             'TS_rho1': lambda eps=eps:
                 graph_algo.ThompsonSampling(
-                    D, A, mu, rho_lap=1.0, delta=delta, q=0.01,
+                    D, A, mu, rho_lap=1.0, delta=delta, q=args.q,
                     epsilon_nominal=eps),
-            'Basic': lambda: graph_algo.BasicThompsonSampling(mu, delta=delta, q=0.01),
+            'Basic': lambda: graph_algo.BasicThompsonSampling(mu, delta=delta, q=args.q),
         }
         for name, fac in factories.items():
             t0 = time.time()
             runs = runners.run_many(fac, seeds, n_jobs=args.n_jobs,
-                                    max_steps=500_000)
+                                    max_steps=args.max_steps)
             print(f"    {name}: t_med={np.median([r['stopping_time'] for r in runs]):.0f} "
                   f"({time.time()-t0:.1f}s)", flush=True)
             for si, r in enumerate(runs):

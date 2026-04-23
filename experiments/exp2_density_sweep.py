@@ -24,20 +24,25 @@ os.makedirs(OUT, exist_ok=True)
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--seeds', type=int, default=15)
+    parser.add_argument('--seeds', type=int, default=10)
     parser.add_argument('--n-jobs', type=int, default=1)
     parser.add_argument('--quick', action='store_true')
+    parser.add_argument('--q', type=float, default=0.1,
+                        help="TS tail quantile (see exp1 for why q=0.1 is used)")
+    parser.add_argument('--n', type=int, default=20,
+                        help="ER graph size; default 20 (was 50, too slow)")
+    parser.add_argument('--max-steps', type=int, default=300_000)
     args = parser.parse_args()
 
     delta = 1e-3
     if args.quick:
         ps = [0.1, 0.5, 1.0]
         seeds = list(range(max(args.seeds, 3)))
-        n = 25
+        n = 20
     else:
         ps = [0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0]
         seeds = list(range(args.seeds))
-        n = 50
+        n = args.n
 
     algo_names = ['ThompsonSampling', 'GraphFeedbackTS', 'BasicThompsonSampling']
     stop_times = {name: np.zeros((len(ps), len(seeds))) for name in algo_names}
@@ -55,17 +60,17 @@ def main():
 
         factories = {
             'ThompsonSampling': lambda D=D, A=A, mu=mu: graph_algo.ThompsonSampling(
-                D, A, mu, rho_lap=1.0, delta=delta, q=0.01),
+                D, A, mu, rho_lap=1.0, delta=delta, q=args.q),
             'GraphFeedbackTS': lambda D=D, A=A, mu=mu: graph_algo.GraphFeedbackTS(
-                D, A, mu, delta=delta, q=0.01),
+                D, A, mu, delta=delta, q=args.q),
             'BasicThompsonSampling': lambda mu=mu: graph_algo.BasicThompsonSampling(
-                mu, delta=delta, q=0.01),
+                mu, delta=delta, q=args.q),
         }
         for name, fac in factories.items():
             print(f"  algo={name} ...", end='', flush=True)
             t0 = time.time()
             runs = runners.run_many(fac, seeds, n_jobs=args.n_jobs,
-                                    max_steps=500_000)
+                                    max_steps=args.max_steps)
             print(f" done in {time.time()-t0:.1f}s (t_med="
                   f"{np.median([r['stopping_time'] for r in runs])})", flush=True)
             for si, r in enumerate(runs):

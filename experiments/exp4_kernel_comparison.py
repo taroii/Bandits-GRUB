@@ -20,18 +20,23 @@ os.makedirs(OUT, exist_ok=True)
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--seeds', type=int, default=20)
+    parser.add_argument('--seeds', type=int, default=10)
     parser.add_argument('--n-jobs', type=int, default=1)
     parser.add_argument('--quick', action='store_true')
+    parser.add_argument('--q', type=float, default=0.1)
+    parser.add_argument('--max-steps', type=int, default=300_000)
     args = parser.parse_args()
 
     delta = 1e-3
     seeds = list(range(args.seeds if not args.quick else 3))
 
     datasets = {
-        'BA_n100_m2': instances.barabasi_albert(n=100, m=2, gap=0.3, seed=0),
-        'SBM_10x10_p0.9': instances.sbm_standard(
-            n_clusters=10, nodes_per_cluster=10, p=0.9, best_factor=1.3, seed=0),
+        # Downsized from n=100/K=101 in notes.md so each seed completes in
+        # ~2-3 minutes rather than ~15.  Keep relative structure: BA has
+        # heavy-tailed degree distribution; SBM has near-uniform degrees.
+        'BA_n20_m2': instances.barabasi_albert(n=20, m=2, gap=0.3, seed=0),
+        'SBM_3x3_p0.9': instances.sbm_standard(
+            n_clusters=3, nodes_per_cluster=3, p=0.9, best_factor=1.3, seed=0),
     }
     kernels = ['combinatorial', 'normalized']
 
@@ -42,11 +47,11 @@ def main():
         print(f"[exp4] instance={ds_name}, K={len(mu)}", flush=True)
         for kernel in kernels:
             fac = lambda mu=mu, A=A, D=D, kernel=kernel: graph_algo.ThompsonSampling(
-                D, A, mu, rho_lap=1.0, delta=delta, q=0.01,
+                D, A, mu, rho_lap=1.0, delta=delta, q=args.q,
                 kernel=kernel)
             t0 = time.time()
             runs = runners.run_many(fac, seeds, n_jobs=args.n_jobs,
-                                    max_steps=500_000)
+                                    max_steps=args.max_steps)
             print(f"    {kernel}: t_med={np.median([r['stopping_time'] for r in runs]):.0f} "
                   f"({time.time()-t0:.1f}s)", flush=True)
             for si, r in enumerate(runs):
@@ -78,8 +83,8 @@ def main():
     axes[0].grid(axis='y', alpha=0.3)
 
     # Pull-count distribution on BA
-    ba_combin = np.concatenate(pull_counts[('BA_n100_m2', 'combinatorial')])
-    ba_norm = np.concatenate(pull_counts[('BA_n100_m2', 'normalized')])
+    ba_combin = np.concatenate(pull_counts[('BA_n20_m2', 'combinatorial')])
+    ba_norm = np.concatenate(pull_counts[('BA_n20_m2', 'normalized')])
     axes[1].hist(ba_combin, bins=40, alpha=0.5, label='combinatorial', density=True)
     axes[1].hist(ba_norm, bins=40, alpha=0.5, label='normalized', density=True)
     axes[1].set_xlabel('pulls per arm (BA instance)')
@@ -93,10 +98,10 @@ def main():
     print(f"Saved {out_png}")
 
     # Acceptance
-    ba_c = np.median(stop_times[('BA_n100_m2', 'combinatorial')])
-    ba_n = np.median(stop_times[('BA_n100_m2', 'normalized')])
-    sbm_c = np.median(stop_times[('SBM_10x10_p0.9', 'combinatorial')])
-    sbm_n = np.median(stop_times[('SBM_10x10_p0.9', 'normalized')])
+    ba_c = np.median(stop_times[('BA_n20_m2', 'combinatorial')])
+    ba_n = np.median(stop_times[('BA_n20_m2', 'normalized')])
+    sbm_c = np.median(stop_times[('SBM_3x3_p0.9', 'combinatorial')])
+    sbm_n = np.median(stop_times[('SBM_3x3_p0.9', 'normalized')])
     print("\nAcceptance:")
     print(f"  BA: combin={ba_c:.0f}, norm={ba_n:.0f} -> "
           f"[{'x' if ba_n <= ba_c else ' '}] normalized <= combinatorial")
