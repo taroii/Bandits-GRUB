@@ -20,7 +20,7 @@ single live experiment described below.
 |---|---|---|---|
 | Graph-smooth | `thm:main-graph` | `main_*.py` | **CURRENT FOCUS — design from scratch** |
 | Asymptotic tuning | `thm:main-mis` + `cor:eps-limit` | `mis_*.py` | Partial — `mis_1.py` produces a U-shape; flagged for resolution |
-| Graph feedback | `thm:correct-fb` / `thm:main-fb` | `fb_*.py` | Pending — old exp2 was clean, will revive |
+| Graph feedback | `thm:correct-fb` / `thm:main-fb` | `fb_*.py` | Promising — `fb_1.py` is clean on H_GF tracking; needs UCB-N / UCB-MaxN baselines (Caron et al. 2012) before reviewer-acceptable |
 | PSD kernel | `thm:kernel-ts` | `kernel_*.py` | Pending — old exp4 was a no-signal n=20 BA; redo properly |
 
 Naming convention: each script is `<theorem>_<n>.py` where `<theorem>` is one
@@ -148,8 +148,29 @@ Hold this line of work until `thm:main-graph` is closed.
 
 ---
 
-## 3. `thm:main-fb` and `thm:kernel-ts` — not started
+## 3. `thm:main-fb` — promising, baselines missing
 
-Old work in `old/experiments/exp2_density_sweep.py` (graph feedback) was
-the strongest of the six, but is not loaded. Old `exp4_kernel_comparison.py`
-was a non-signal — needs a redesign on n≥100 BA. Both wait.
+`experiments/fb_1.py` runs the density sweep on Erdős–Rényi `n=20`, gap
+`Δ=0.3`, 7 values of `p ∈ [0.05, 1.0]`, 10 seeds. Outputs
+`experiments/outputs/fb_1.png` and `fb_1_results.npz`. Headline
+results: `H_GF` shrinks 11× across the sweep and `TS-Explore-GF`'s
+median stopping time shrinks by the same factor; at `p=1` (clique)
+`TS-Explore-GF` is `16.4×` faster than graph-smooth `TS-Explore` and
+`16.6×` faster than `Basic TS`. Endpoints match the closed-form values
+in `cor:HGF-bounds`.
+
+**Outstanding before this is reviewer-acceptable:** the only baselines
+right now are `TS-Explore` (graph-smooth) and `Basic TS`, both of which
+are strawmen for the graph-feedback setting. A reviewer will demand at
+least one proper graph-feedback baseline — UCB-N or UCB-MaxN
+(Caron et al. 2012), or one of the side-observation algorithms from
+Mannor–Shamir / Cohen et al. Implementing one of these is the next step
+for `fb_1.py` (or a follow-on `fb_2.py`).
+
+Hold this line of work until `thm:main-graph` is closed.
+
+## 4. `thm:kernel-ts` — not started
+
+Old `exp4_kernel_comparison.py` (in `old/`) was a non-signal on n=20 BA.
+Needs a redesign on n≥100 BA before any meaningful comparison between
+combinatorial and normalised Laplacian. Waits.

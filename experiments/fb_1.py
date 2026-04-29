@@ -1,7 +1,13 @@
-"""Experiment 2 - Density sweep: graph-smooth vs graph-feedback.
+"""fb_1 — graph-feedback density sweep on Erdos-Renyi.
 
-Validates that H_GF << H_graph on dense graphs and that the three algorithms
-converge on sparse graphs.
+Targets ``thm:correct-fb`` and ``thm:main-fb``. Verifies that
+H_GF shrinks with edge density and that ``TS-Explore-GF``'s stopping
+time tracks ``H_GF * log(1/delta)`` across the sweep.
+
+Outstanding: needs UCB-N / UCB-MaxN baselines (Caron et al. 2012) before
+the figure is reviewer-acceptable for ``thm:main-fb``. The current
+baselines (``TS-Explore`` graph-smooth and ``Basic TS``) are strawmen for
+the graph-feedback setting.
 """
 from __future__ import annotations
 
@@ -28,7 +34,7 @@ def main():
     parser.add_argument('--n-jobs', type=int, default=1)
     parser.add_argument('--quick', action='store_true')
     parser.add_argument('--q', type=float, default=0.1,
-                        help="TS tail quantile (see exp1 for why q=0.1 is used)")
+                        help="TS tail quantile; q=0.1 is the loosest stopping rule")
     parser.add_argument('--n', type=int, default=20,
                         help="ER graph size; default 20 (was 50, too slow)")
     parser.add_argument('--max-steps', type=int, default=300_000)
@@ -54,7 +60,7 @@ def main():
         H_vals['H_classical'].append(hardness.classical_hardness(mu))
         H_vals['H_graph'].append(hardness.graph_hardness(mu, A, D, rho=1.0))
         H_vals['H_GF'].append(hardness.graph_feedback_hardness(mu, A))
-        print(f"[exp2] p={p}: H_classical={H_vals['H_classical'][-1]:.1f}, "
+        print(f"[fb_1] p={p}: H_classical={H_vals['H_classical'][-1]:.1f}, "
               f"H_graph={H_vals['H_graph'][-1]:.1f}, "
               f"H_GF={H_vals['H_GF'][-1]:.1f}", flush=True)
 
@@ -77,7 +83,7 @@ def main():
                 stop_times[name][pi, si] = r['stopping_time']
                 correct[name][pi, si] = r['correct']
 
-    np.savez(os.path.join(OUT, 'exp2_results.npz'),
+    np.savez(os.path.join(OUT, 'fb_1_results.npz'),
              ps=np.array(ps), seeds=np.array(seeds),
              **{f'{n}_stop': stop_times[n] for n in algo_names},
              **{f'{n}_correct': correct[n].astype(int) for n in algo_names},
@@ -101,7 +107,7 @@ def main():
     ax.legend(fontsize=8)
     ax.grid(alpha=0.3, which='both')
     fig.tight_layout()
-    out_png = os.path.join(OUT, 'exp2_density_sweep.png')
+    out_png = os.path.join(OUT, 'fb_1.png')
     fig.savefig(out_png, dpi=150, bbox_inches='tight')
     print(f"Saved {out_png}")
 
