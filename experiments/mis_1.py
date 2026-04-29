@@ -1,11 +1,12 @@
-"""Experiment 3 - smoothness asymptotics and phase transitions.
+"""mis_1 — smoothness asymptotics and phase transitions.
 
-Validates Theorem 4.4 and Corollary 4.5.  Sweeps nominal smoothness epsilon
-downward while tuning rho = rho^*(epsilon); expects stopping time to approach
-max_i 1/Delta_{i,c}^2 log(1/delta), with discrete drops at each epsilon_i^*.
+Targets ``thm:main-mis`` and ``cor:eps-limit``. Sweeps nominal smoothness
+epsilon downward while tuning rho = rho^*(epsilon); expects stopping time
+to approach max_i 1/Delta_{i,c}^2 log(1/delta), with discrete drops at
+each epsilon_i^*.
 
-The script also runs a `probe_rho_star()` sanity check before the main sweep
-and writes the probe output to ``experiments/outputs/exp3_sanity_check.txt``.
+The script runs a ``probe_rho_star()`` sanity check before the main sweep
+and writes the probe output to ``experiments/outputs/mis_1_sanity.txt``.
 """
 from __future__ import annotations
 
@@ -28,6 +29,32 @@ os.makedirs(OUT, exist_ok=True)
 
 def build_L(D, A, kernel='combinatorial'):
     return graph_algo.algobase.build_kernel(D, A, kernel)
+
+
+# Picklable factories (multiprocessing requires top-level callables).
+class TSTunedFactory:
+    def __init__(self, D, A, mu, rho_lap, delta, q, epsilon_nominal, rho_diag):
+        self.kw = dict(D=D, A=A, mu=mu, rho_lap=rho_lap, delta=delta, q=q,
+                       epsilon_nominal=epsilon_nominal, rho_diag=rho_diag)
+
+    def __call__(self):
+        return graph_algo.ThompsonSampling(**self.kw)
+
+
+class TSRho1Factory:
+    def __init__(self, D, A, mu, delta, q):
+        self.kw = dict(D=D, A=A, mu=mu, rho_lap=1.0, delta=delta, q=q)
+
+    def __call__(self):
+        return graph_algo.ThompsonSampling(**self.kw)
+
+
+class BasicFactory:
+    def __init__(self, mu, delta, q):
+        self.kw = dict(mu=mu, delta=delta, q=q)
+
+    def __call__(self):
+        return graph_algo.BasicThompsonSampling(**self.kw)
 
 
 def probe_rho_star(mu, A, D, epsilons, delta, sigma=1.0,
@@ -73,7 +100,8 @@ def main():
     parser.add_argument('--quick', action='store_true')
     parser.add_argument('--c0', type=float, default=4.0)
     parser.add_argument('--q', type=float, default=0.1)
-    parser.add_argument('--max-steps', type=int, default=300_000)
+    # eps=1.0 needs ~1.3M rounds on the K=31 SBM at q=0.1; budget conservatively.
+    parser.add_argument('--max-steps', type=int, default=2_000_000)
     args = parser.parse_args()
 
     if args.quick:
@@ -86,12 +114,12 @@ def main():
 
     mu, A, D = instances.sbm_phase_transition(seed=0)
     K = len(mu)
-    print(f"[exp3] K={K}, gaps^2 = "
+    print(f"[mis_1] K={K}, gaps^2 = "
           f"{np.sort((mu.max() - mu)[mu != mu.max()] ** 2)[:5]}", flush=True)
 
     # --- Sanity check --------------------------------------------------------
     probe = probe_rho_star(mu, A, D, eps_sweep, delta)
-    probe_lines = ["# exp3 probe_rho_star output\n"]
+    probe_lines = ["# mis_1 probe_rho_star output\n"]
     ok = True
     for row in probe:
         line = (f"eps={row['eps']:.3e}  rho*={row['rho_star']:.3e}  "
@@ -106,29 +134,52 @@ def main():
             ok = False
         if abs(row['rho_eps'] / row['sigma0_sqrtL1'] - 1.0) > 0.01:
             ok = False
-    with open(os.path.join(OUT, 'exp3_sanity_check.txt'), 'w') as f:
+    with open(os.path.join(OUT, 'mis_1_sanity.txt'), 'w') as f:
         f.write("\n".join(probe_lines) + "\n")
     print("\n".join(probe_lines), flush=True)
     if not ok:
-        print("[exp3] WARNING: sanity check raised flags - "
+        print("[mis_1] WARNING: sanity check raised flags - "
               "continuing but results may be unreliable.", flush=True)
 
     # --- eps_i^* predictions -------------------------------------------------
     T_est = hardness.classical_hardness(mu) * np.log(1 / delta)
     eps_critical = hardness.critical_epsilons(mu, A, D, T_est, delta,
                                               c0=args.c0)
-    print("[exp3] epsilon_i^* values (finite):")
+    print("[mis_1] epsilon_i^* values (finite):")
     for i, v in sorted(eps_critical.items(), key=lambda kv: kv[1]):
         if np.isfinite(v):
             print(f"  arm {i:3d}: eps_i^* = {v:.3e}", flush=True)
 
     # --- Sweep ---------------------------------------------------------------
+    # TS_rho1 and Basic are independent of eps (epsilon_nominal is not used by
+    # the TS sampling rule, it only enters the elimination bias term in
+    # eliminate_arms which TS doesn't call). Compute once per seed and broadcast.
     algo_names = ['TS_tuned', 'TS_rho1', 'Basic']
     stop_times = {name: np.zeros((len(eps_sweep), len(seeds))) for name in algo_names}
     correct = {name: np.zeros((len(eps_sweep), len(seeds)), dtype=bool)
                for name in algo_names}
     H_eps_vals = []
     comp_size = []
+
+    print("[mis_1] running eps-independent baselines once...", flush=True)
+    fac_rho1 = TSRho1Factory(D, A, mu, delta=delta, q=args.q)
+    fac_basic = BasicFactory(mu, delta=delta, q=args.q)
+    t0 = time.time()
+    runs_rho1 = runners.run_many(fac_rho1, seeds, n_jobs=args.n_jobs,
+                                 max_steps=args.max_steps)
+    print(f"  TS_rho1 baseline: t_med={np.median([r['stopping_time'] for r in runs_rho1]):.0f} "
+          f"({time.time()-t0:.1f}s)", flush=True)
+    t0 = time.time()
+    runs_basic = runners.run_many(fac_basic, seeds, n_jobs=args.n_jobs,
+                                  max_steps=args.max_steps)
+    print(f"  Basic   baseline: t_med={np.median([r['stopping_time'] for r in runs_basic]):.0f} "
+          f"({time.time()-t0:.1f}s)", flush=True)
+    for si, r in enumerate(runs_rho1):
+        stop_times['TS_rho1'][:, si] = r['stopping_time']
+        correct['TS_rho1'][:, si] = r['correct']
+    for si, r in enumerate(runs_basic):
+        stop_times['Basic'][:, si] = r['stopping_time']
+        correct['Basic'][:, si] = r['correct']
 
     for ei, eps in enumerate(eps_sweep):
         rho_star = hardness.rho_star(eps, K, T_est, delta)
@@ -138,31 +189,22 @@ def main():
         H_set, N_set = hardness.competitive_set_epsilon(
             mu, A, D, eps, T_est, delta, c0=args.c0)
         comp_size.append(len(H_set))
-        print(f"[exp3] eps={eps:.3e} rho*={rho_star:.3e} H_eps={H_eps_vals[-1]:.2f} "
+        print(f"[mis_1] eps={eps:.3e} rho*={rho_star:.3e} H_eps={H_eps_vals[-1]:.2f} "
               f"|comp|={len(H_set)}", flush=True)
 
-        factories = {
-            'TS_tuned': lambda eps=eps, rho_star=rho_star, rho_diag_val=rho_diag_val:
-                graph_algo.ThompsonSampling(
-                    D, A, mu, rho_lap=rho_star, delta=delta, q=args.q,
-                    epsilon_nominal=eps, rho_diag=rho_diag_val),
-            'TS_rho1': lambda eps=eps:
-                graph_algo.ThompsonSampling(
-                    D, A, mu, rho_lap=1.0, delta=delta, q=args.q,
-                    epsilon_nominal=eps),
-            'Basic': lambda: graph_algo.BasicThompsonSampling(mu, delta=delta, q=args.q),
-        }
-        for name, fac in factories.items():
-            t0 = time.time()
-            runs = runners.run_many(fac, seeds, n_jobs=args.n_jobs,
-                                    max_steps=args.max_steps)
-            print(f"    {name}: t_med={np.median([r['stopping_time'] for r in runs]):.0f} "
-                  f"({time.time()-t0:.1f}s)", flush=True)
-            for si, r in enumerate(runs):
-                stop_times[name][ei, si] = r['stopping_time']
-                correct[name][ei, si] = r['correct']
+        fac_tuned = TSTunedFactory(D, A, mu, rho_lap=rho_star, delta=delta,
+                                   q=args.q, epsilon_nominal=eps,
+                                   rho_diag=rho_diag_val)
+        t0 = time.time()
+        runs = runners.run_many(fac_tuned, seeds, n_jobs=args.n_jobs,
+                                max_steps=args.max_steps)
+        print(f"    TS_tuned: t_med={np.median([r['stopping_time'] for r in runs]):.0f} "
+              f"({time.time()-t0:.1f}s)", flush=True)
+        for si, r in enumerate(runs):
+            stop_times['TS_tuned'][ei, si] = r['stopping_time']
+            correct['TS_tuned'][ei, si] = r['correct']
 
-    np.savez(os.path.join(OUT, 'exp3_results.npz'),
+    np.savez(os.path.join(OUT, 'mis_1_results.npz'),
              eps=np.array(eps_sweep),
              seeds=np.array(seeds),
              H_eps=np.array(H_eps_vals),
@@ -176,13 +218,16 @@ def main():
     log_eps = np.log10(eps_sweep)
 
     # Panel A: stopping time
-    for name, label in [('TS_tuned', 'TS (rho^*)'),
-                        ('TS_rho1', 'TS (rho=1)'),
-                        ('Basic', 'Basic TS (classical)')]:
-        style = plotting.style_for('ThompsonSampling' if name != 'Basic'
-                                   else 'BasicThompsonSampling')
+    panel_a_styles = {
+        'TS_tuned': {'color': '#d62728', 'marker': 's', 'ls': '-'},
+        'TS_rho1':  {'color': '#ff9896', 'marker': 'o', 'ls': '--'},
+        'Basic':    {'color': '#2ca02c', 'marker': '^', 'ls': ':'},
+    }
+    for name, label in [('TS_tuned', 'TS (rho* tuned)'),
+                        ('TS_rho1', 'TS (rho=1, fixed)'),
+                        ('Basic', 'Basic TS (no graph)')]:
         plotting.plot_with_ci(axes[0], log_eps, stop_times[name], label=label,
-                              **style)
+                              **panel_a_styles[name])
     # vertical lines at each eps_i^*
     for i, v in eps_critical.items():
         if np.isfinite(v) and v > 0:
@@ -222,7 +267,7 @@ def main():
     axes[2].grid(alpha=0.3)
 
     fig.tight_layout()
-    out_png = os.path.join(OUT, 'exp3_smoothness_asymptotics.png')
+    out_png = os.path.join(OUT, 'mis_1.png')
     fig.savefig(out_png, dpi=150, bbox_inches='tight')
     print(f"Saved {out_png}")
 

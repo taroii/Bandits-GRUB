@@ -1,0 +1,2436 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2026
+
+% The authors should use one of these tracks.
+% Before accepting by the NeurIPS conference, select one of the options below.
+% 0. "default" for submission
+\usepackage{neurips_2026}
+% the "default" option is equal to the "main" option, which is used for the Main Track with double-blind reviewing.
+% 1. "main" option is used for the Main Track
+%  \usepackage[main]{neurips_2026}
+% 2. "position" option is used for the Position Paper Track
+%  \usepackage[position]{neurips_2026}
+% 3. "eandd" option is used for the Evaluations & Datasets Track
+ % \usepackage[eandd]{neurips_2026}
+ % if you need to opt-in for a single-blind submission in the E&D track:
+ %\usepackage[eandd, nonanonymous]{neurips_2026}
+% 4. "creativeai" option is used for the Creative AI Track
+%  \usepackage[creativeai]{neurips_2026}
+% 5. "sglblindworkshop" option is used for the Workshop with single-blind reviewing
+ % \usepackage[sglblindworkshop]{neurips_2026}
+% 6. "dblblindworkshop" option is used for the Workshop with double-blind reviewing
+%  \usepackage[dblblindworkshop]{neurips_2026}
+
+% After being accepted, the authors should add "final" behind the track to compile a camera-ready version.
+% 1. Main Track
+ % \usepackage[main, final]{neurips_2026}
+% 2. Position Paper Track
+%  \usepackage[position, final]{neurips_2026}
+% 3. Evaluations & Datasets Track
+ % \usepackage[eandd, final]{neurips_2026}
+% 4. Creative AI Track
+%  \usepackage[creativeai, final]{neurips_2026}
+% 5. Workshop with single-blind reviewing
+%  \usepackage[sglblindworkshop, final]{neurips_2026}
+% 6. Workshop with double-blind reviewing
+%  \usepackage[dblblindworkshop, final]{neurips_2026}
+% Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote.
+% For workshops (5., 6.), the authors should add the name of the workshop, "\workshoptitle" command is used to set the workshop title.
+% \workshoptitle{WORKSHOP TITLE}
+
+% "preprint" option is used for arXiv or other preprint submissions
+ % \usepackage[preprint]{neurips_2026}
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2026}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+
+\usepackage{amssymb}
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{mathtools}
+\usepackage{hyperref}  
+\usepackage{mathrsfs}
+
+\usepackage{graphicx}
+\usepackage{subcaption}
+% hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{natbib}
+\usepackage{doi}
+\usepackage{amsmath}
+\usepackage{physics}
+\usepackage{wrapfig}
+\usepackage{bm}
+\usepackage{algorithm,algpseudocode}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{forest}
+\usepackage{tcolorbox}
+\usepackage{tikz-cd}
+\usepackage{enumitem}
+
+
+\newenvironment{proof}{\paragraph{Proof:}}{\hfill$\square$}
+\newenvironment{solution}{\paragraph{Solution:}}{\hfill$\square$}
+
+
+%—– Blackboard‐bold sets —–
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+
+%—– Probability & expectation —–
+\newcommand{\Prb}{\mathbb{P}}        % probability
+\newcommand{\E}{\mathbb{E}}           % expectation
+\newcommand{\Var}{\mathrm{Var}}       % variance
+\newcommand{\Cov}{\mathrm{Cov}}       % covariance
+
+%—– Common math operators —–
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\supp}{\operatorname{supp}}
+\newcommand{\argmax}{\operatorname*{arg\,max}}
+\newcommand{\argmin}{\operatorname*{arg\,min}}
+\newcommand{\ind}{\mathbf{1}}         % indicator
+
+%—– Norms, inner products, absolute value —–
+
+\newcommand{\inner}[2]{\left\langle #1, #2 \right\rangle}
+
+%—– Calligraphic sets —–
+\newcommand{\cA}{\mathcal{A}}
+\newcommand{\cS}{\mathcal{S}}
+\newcommand{\cT}{\mathcal{T}}
+\newcommand{\cF}{\mathcal{F}}
+\newcommand{\cE}{\mathcal{E}}
+
+%—– RL / MDP notation —–
+\newcommand{\SSS}{\mathcal{S}}        % state space
+\newcommand{\AAA}{\mathcal{A}}        % action space
+\newcommand{\PP}{\mathcal{P}}         % transition kernel
+\newcommand{\RRR}{\mathcal{R}}        % reward function
+\newcommand{\gammaRL}{\gamma}         % discount factor
+
+%—– Confidence bounds —–
+\newcommand{\olQ}{\overline{Q}}
+\newcommand{\ulQ}{\underline{Q}}
+\newcommand{\olV}{\overline{V}}
+\newcommand{\ulV}{\underline{V}}
+
+%—– Miscellaneous —–
+\newcommand{\eps}{\varepsilon}
+\newcommand{\dt}{\mathrm{d}t}
+\newcommand{\given}{\,\bigl\vert\,}    % conditioning bar
+
+%—– Shorthand for frequently used fractions —–
+\newcommand{\half}{\tfrac12}
+\newcommand{\thalf}{\tfrac32}
+
+%—– Styling —–
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+
+\newcommand{\note}[1]{\begin{tcolorbox}
+\textbf{Note:} #1\end{tcolorbox}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{conjecture}[theorem]{Conjecture}
+% Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote. 
+\title{Efficient Thompson Sampling for Graph Bandits}
+
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+
+\author{\name Taro \email  \\
+      \addr Department of Applied Mathematics, University of California, Los Angeles, USA
+      \AND
+      \name Larissa Xu \email xuzhiyun004119@g.ucla.edu \\
+      \addr Department of Applied Mathematics, University of California, Los Angeles, USA
+      \AND
+      \name William Chang \email chang314@ucla.edu \\
+      \addr Department of Applied Mathematics, University of California, Los Angeles, USA}
+  % examples of more authors
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \AND
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+
+
+\begin{document}
+
+
+\maketitle
+
+
+\begin{abstract}
+The multi-armed bandit (MAB) framework is fundamental for sequential decision-making under uncertainty, particularly in applications with many correlated or structured options. Recent research has leveraged graph-based models to exploit dependencies between arms, reducing sample complexity in pure exploration tasks. While upper confidence bound (UCB) methods have traditionally dominated this area, probabilistic sampling techniques like Thompson Sampling (TS) offer promising alternatives, especially for structured domains. In this work, we develop efficient TS algorithms for pure exploration in graph-structured bandits, unifying the strengths of graph-based and probabilistic approaches. Our methods propagate information across connected arms using graph smoothness, achieving near-optimal sample complexity under mild assumptions. We provide theoretical guarantees, practical implementations for large graphs, and extensions to settings such as graph feedback, general PSD kernels, and misspecified graphs. Our results demonstrate that integrating structural side information with probabilistic exploration enables more efficient learning in complex, interconnected environments.
+\end{abstract}
+
+
+%=============================================================================
+\section{Introduction}\label{sec:introduction}
+%=============================================================================
+
+The multi-armed bandit (MAB) framework has become a central paradigm for modeling sequential decision-making under uncertainty, with applications ranging from clinical trials and recommendation systems to hyperparameter optimization and online advertising \citep{lattimore2020bandit}. A core challenge in this setting is balancing exploration and exploitation: the learner must collect sufficient information to identify the best option while minimizing costly or time-consuming samples. In the pure exploration variant, the objective shifts from maximizing cumulative reward to efficiently identifying the optimal arm (or one that is near-optimal) with high confidence \citep{audibert2010best, kaufmann2016complexity}.
+
+Traditional approaches to pure exploration often rely on upper confidence bound (UCB) methods, which provide strong guarantees but can become inefficient when arms are highly correlated or embedded in structured domains. In practice, arms frequently exhibit dependencies that can be captured by side information. For example, items in a recommendation system, users in a social network, or molecules in a drug discovery pipeline are naturally represented by graphs, where edges encode similarity or correlation \citep{gentile2014online, li2016collaborative}. Leveraging such graph information allows observations from one arm to inform estimates of its neighbors, significantly reducing the number of samples required. Recent work, such as GRUB \citep{thaker2022maximizing}, has demonstrated the potential of incorporating graph structure into pure exploration algorithms by exploiting smoothness of rewards across connected nodes.
+
+A parallel line of research investigates probabilistic sampling methods, particularly Thompson Sampling (TS) \citep{thompson1933likelihood}, as an alternative to UCB-based strategies. In contrast to deterministic confidence intervals, TS maintains posterior distributions over arm rewards and selects actions by sampling from these distributions. This randomized approach often yields tighter sample complexity in combinatorial or structured exploration problems, as shown in recent advances on Thompson Sampling for combinatorial pure exploration \citep{wang2022thompson}. However, existing analyses of TS have largely focused on unstructured or combinatorial settings, leaving open the question of how to integrate graph side information effectively into Thompson Sampling for pure exploration.
+
+In this work, we address this gap by developing efficient Thompson Sampling algorithms for graph-structured bandits. Our approach unifies the advantages of graph-based models and Thompson Sampling: by leveraging the smoothness of rewards across a known similarity graph, we propagate information between connected arms, while randomized posterior sampling avoids the conservative estimates inherent in UCB methods. We provide theoretical guarantees on sample complexity, demonstrating that our algorithms achieve near-optimal efficiency under graph smoothness assumptions. In addition, we introduce practical implementations that remain computationally tractable even for large graphs, and we highlight extensions to settings such as graph feedback, kernelized similarity measures, and misspecified graphs. A more complete related works is in Section \ref{sec:related-work}.  
+
+\paragraph{Our Contributions}\label{sec:contributions}
+%=============================================================================
+
+We develop efficient Thompson Sampling algorithms for pure exploration in graph-structured bandits, bridging the graph-based best-arm identification framework of \cite{thaker2022maximizing} and the TS-Explore framework of \cite{wang2022thompson}. Our contributions span four complementary settings.
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Graph-smooth bandits (Section~\ref{sec:graph-smooth}).}
+We adapt TS-Explore to the Laplacian-regularized setting, where the graph enters through a smoothness prior on the mean rewards. The resulting algorithm (Algorithm~\ref{algo:ts-explore-graph}) achieves sample complexity $O\bigl(H_{\mathrm{graph}}\log(1/\delta) + H_{\mathrm{graph}}\log^2(KH_{\mathrm{graph}})\bigr)$, where $H_{\mathrm{graph}}$ replaces the classical hardness $\sum_i \Delta_i^{-2}$ with a graph-aware quantity that separates competitive from non-competitive arms.
+
+\item \textbf{Misspecified graphs (Section~\ref{sec:misspecified}).}
+When the smoothness parameter~$\varepsilon$ is misspecified, the bias can always be compensated by increasing the regularization~$\rho$, since only the product $\rho\varepsilon$ enters the confidence radius. This motivates an asymptotic analysis: letting $\varepsilon\to 0$ and tuning $\rho$ optimally, the competitive set shrinks until $H_\varepsilon\to\max_{i\neq a^\star}\Delta_{i,c}^{-2}$, replacing the sum over competitive arms in $H_{\mathrm{graph}}$ with a single maximum.
+
+\item \textbf{Graph feedback (Section~\ref{sec:graph-feedback}).}
+We consider the side-observation model in which pulling one arm reveals rewards of all neighbors. The hardness measure $H_{\mathrm{GF}}$ is defined through a covering LP on the graph and can be dramatically smaller than the graph-smooth hardness when the graph is dense.
+
+\item \textbf{General PSD kernels (Section~\ref{sec:kernel}).}
+We generalize the Laplacian regularizer to an arbitrary positive semi-definite kernel $K_G$ on the graph, recovering the combinatorial Laplacian as a special case. This is useful when the graph has non-uniform degrees and a normalized smoothness notion is more appropriate \citep{chung1997spectral}.
+
+
+\end{enumerate}
+
+All proofs are deferred to the appendix (Appendices~\ref{app:proofs-graph}--\ref{app:proofs-misspecified}).
+
+
+
+%=============================================================================
+
+%=============================================================================
+\section{Preliminaries}\label{sec:preliminary}
+%=============================================================================
+
+We consider the pure exploration problem in multi-armed bandits (MAB) enriched with graph side information.
+Let $[n] := \{1,2,\dots,n\}$ denote the set of arms, where each arm $i \in [n]$ is associated with an
+unknown reward distribution $\nu_i$ supported on $[0,1]$ and mean $\mu_i = \mathbb{E}_{X \sim \nu_i}[X]$.
+At each round $t$, the learner chooses an arm $\pi_t \in [n]$ and observes a reward
+$r_{t,\pi_t} \sim \nu_{\pi_t}$ independently. The goal of the learner is to identify the optimal arm
+\[
+a^\star = \arg\max_{i \in [n]} \mu_i
+\]
+(or an $\zeta$-optimal arm satisfying $\mu_i \geq \mu_{a^\star} - \zeta$) with probability at least $1-\delta$,
+while minimizing the total number of arm pulls. This is the classical \emph{fixed-confidence best-arm
+identification} setting \citep{audibert2010best, kaufmann2016complexity}.
+
+\paragraph{Graph representation of arms.}
+Following \cite{thaker2022maximizing}, we assume the arms form the vertex set of a weighted
+undirected graph $G = (V_G, E_G, A_G)$ with $V_G = [n]$.
+The adjacency matrix $A_G \in \mathbb{R}^{n \times n}$ encodes similarities between arms,
+and the combinatorial Laplacian is $L_G = D_G - A_G$, where
+$D_G = \mathrm{diag}(A_G \mathbf{1}_n)$.
+The reward vector $\mu \in \mathbb{R}^n$ is said to be \emph{smooth on $G$}
+if the Laplacian seminorm
+\begin{equation}
+\label{eq:smoothness}
+\|\mu\|_G^2 \;=\; \langle \mu, L_G \mu \rangle
+= \sum_{\{i,j\}\in E_G} A_{ij} \, (\mu_i - \mu_j)^2
+\end{equation}
+is small. Throughout this paper we assume $\norm{\mu}_G^2 \leq \epsilon$. Such smoothness assumptions allow the learner to transfer information across neighbors,
+reducing the need to sample every arm individually.
+
+\paragraph{Graph bandits.}
+In the absence of side information, the sample complexity of best-arm identification
+scales as $\sum_{i=1}^n \Delta_i^{-2}$ \citep{audibert2010best, kaufmann2016complexity}.
+Graph bandits improve on this by introducing structural notions such as the
+\emph{effective number of plays} $t_{\mathrm{eff},i}$ for each arm $i$,
+which aggregates both direct samples of $i$ and indirect information from its neighbors.
+Another key concept is the \emph{influence factor} $\mathcal{J}(i,G)$,
+defined via resistance distance on $G$ \citep{xiao2003resistance},
+which quantifies how strongly arm $i$ is coupled to others.
+These ideas allow one to partition the arms into
+\emph{competitive arms}, which are statistically close to the optimal arm
+and require $\Theta(\Delta_i^{-2})$ samples, and
+\emph{non-competitive arms}, which can often be eliminated rapidly,
+sometimes without being sampled directly.
+Thus, the relevant complexity is driven not by all $n$ arms,
+but by the (typically much smaller) competitive set $\mathcal{H} \subseteq [n]$.
+
+\paragraph{Thompson Sampling for pure exploration.}
+Standard pure exploration methods are largely UCB-based
+\citep{kalyanakrishnan2012pac, chen2014combinatorial}, relying on deterministic confidence intervals.
+In contrast, Thompson Sampling (TS) employs randomization:
+at each round, one draws samples $\theta_i^k(t)$ from distributions centered at the empirical means
+with variance inversely proportional to the number of observations.
+Let $\widehat{a}_t = \arg\max_i \widehat{\mu}_i(t)$ be the empirical best arm, and
+$\Tilde{a}_t^k = \arg\max_i \theta_i^k(t)$ the $k$-th sampled best arm.
+If all $M$ samples agree with $\widehat{a}_t$, the algorithm stops and outputs it;
+otherwise, exploration focuses on the \emph{exchange set}
+$\widehat{a}_t \oplus \Tilde{a}_t^{k^\star}$, corresponding to the sample set with largest reward gap
+\citep{wang2022thompson}.
+
+\paragraph{Notation.}
+Let $\Phi(x,\mu,\sigma^2)$ denote the probability that a Gaussian random variable $X\sim \mathcal N(\mu,\sigma^2)$ is at least $x$. For any $x\in(0,0.5)$, define $\phi(x)$ by $\Phi(\phi(x),0,1)=x$. For a best arm $a^\star$, write $\Delta_i:=\mu_{a^\star}-\mu_i$ for the gap of arm $i$, and $\Delta_{i,c}$ for the corresponding comparison gap in the graph-structured analysis (following the GRUB notation of \cite{thaker2022maximizing}).
+
+
+%=============================================================================
+\section{Main Results}\label{sec:main-results}
+%=============================================================================
+
+We present our results across four settings, each exploiting graph structure in a different way. In every case, the algorithm follows the TS-Explore template: draw $M(\delta,q,t)$ independent Thompson samples at each round, stop when all samples agree on the empirical best arm, and otherwise explore the arm pair with the largest disagreement margin. The settings differ in the estimator, the effective sample count, and the resulting hardness measure.
+
+
+%-----------------------------------------------------------------------------
+\subsection{Graph-Smooth Bandits with Laplacian Regularization}\label{sec:graph-smooth}
+%-----------------------------------------------------------------------------
+
+Given a sequence of played arms $\pi_1,\dots,\pi_T$ and observed rewards $r_{t,\pi_t}$, the Laplacian-regularized least-squares estimator is
+\begin{equation}
+\widehat{\bm\mu}_T
+=
+\left(
+\sum_{t=1}^T e_{\pi_t}e_{\pi_t}^\top+\rho L_G
+\right)^{-1}
+\left(
+\sum_{t=1}^T e_{\pi_t}r_{t,\pi_t}
+\right),
+\label{eq:lap-reg-closed}
+\end{equation}
+where $\rho > 0$ is a regularization parameter. The effective number of plays of arm $i$ is
+\[
+t_{\mathrm{eff},i}(t)
+:=
+\left[
+\left(
+\sum_{s=1}^t e_{\pi_s}e_{\pi_s}^\top+\rho L_G
+\right)^{-1}
+\right]_{ii}^{-1}.
+\]
+This is the natural graph-aware analogue of the direct sample count: pulling one arm shrinks the uncertainty of neighboring arms through the graph-regularized estimator \citep{thaker2022maximizing, abbasi2011improved}.
+
+At each round $t$, define
+\[
+M(\delta,q,t)
+:=
+\left\lfloor \frac{1}{q}\log\!\left(\frac{12K^2t^2}{\delta}\right)\right\rfloor,
+\qquad
+C(\delta,q,t)
+:=
+\frac{\log(12K^2t^2/\delta)}{\phi^2(q)}.
+\]
+For each arm $i\in[K]$ and each sample index $m\in[M(\delta,q,t)]$, draw $\theta_i^m(t)\sim \mathcal N\bigl(\widehat\mu_i(t),\;C(\delta,q,t)/t_{\mathrm{eff},i}(t)\bigr)$.
+If all sampled maximizers agree with the empirical maximizer, the algorithm stops and returns that arm; otherwise it pulls the less-sampled arm among the empirical best and the sampled challenger with the largest disagreement margin. The full procedure is given in Algorithm~\ref{algo:ts-explore-graph}.
+
+The pure-exploration character of the algorithm is encoded in its stopping rule rather than its pull rule: termination requires that all $M(\delta,q,t)$ independent Thompson samples concur with the empirical maximizer, which — together with the choice of $M$ and $C$ — serves as a high-probability certificate of optimality. The pull rule then plays the role of an exploration step that drives the algorithm toward this certificate as quickly as possible, with no regret-minimization objective; this is the same separation of concerns as in the LUCB-style stopping rules used throughout pure exploration, but built from random samples rather than confidence intervals. Our reason for following the TS-Explore template of \citet{wang2022thompson} rather than a successive-elimination scheme is the same as the motivation in the combinatorial pure-exploration setting they study. Successive-elimination and LUCB-style algorithms — e.g., CLUCB of \citet{chen2014combinatorial} for combinatorial pure exploration, or, in the graph-structured case, the GRUB algorithm of \citet{thaker2022maximizing} — eliminate arms by comparing armwise upper and lower confidence bounds. In structured settings, the relevant uncertainty involves an aggregate of armwise quantities, and a sum of confidence radii is appreciably larger than the standard deviation of the corresponding sum of empirical means: this looseness is exactly what \citet{wang2022thompson} identify as the source of the width-factor inefficiency in CLUCB. Independent Thompson samples sidestep this slack, since with high probability the sum of samples within a candidate set does not exceed the tight aggregate confidence bound; the disagreement test on samples therefore gives a tighter elimination criterion than armwise UCB/LCB intervals would supply. The same mechanism carries over to the graph-smooth setting once the direct pull count is replaced by the effective sample size $t_{\mathrm{eff},i}(t)$, and is what allows our complexity bound to depend on the graph-aware hardness $H_{\mathrm{graph}}$ rather than on a width-inflated UCB-style quantity. Top-two Thompson sampling variants such as \citet{russo2016simple} and \citet{shang2020fixed} share the random-sampling philosophy but make decisions from posterior distributions rather than realized samples, which leaves no clean stopping rule under the frequentist guarantees we target and is awkward to combine with graph regularization.
+
+\begin{algorithm}[t]
+\caption{\texttt{TS-Explore} for graph-structured pure exploration}
+\label{algo:ts-explore-graph}
+\begin{algorithmic}[1]
+\State \textbf{Inputs:} error constraint $\delta$, threshold $q\in[\delta,0.1]$, graph $G$, regularization parameter $\rho$.
+\State Initialize $t\gets K$, $R_i\gets 0$ and direct counts $N_i\gets 0$ for all $i\in[K]$.
+\State Pull each connected component at least once so that the regularized design matrix is invertible.
+\While{true}
+    \State $t\gets t+1$
+    \State Compute $V_t=\sum_{s=1}^t e_{\pi_s}e_{\pi_s}^\top+\rho L_G$, \quad $\widehat{\bm\mu}(t)=V_t^{-1}\sum_{s=1}^t e_{\pi_s}r_{s,\pi_s}$.
+    \State For each arm $i$, set $t_{\mathrm{eff},i}(t)=\bigl[(V_t^{-1})_{ii}\bigr]^{-1}$.
+    \State $\widehat i_t\gets \arg\max_{i\in[K]}\widehat\mu_i(t)$.
+    \For{$m=1,\dots,M(\delta,q,t)$}
+        \For{$i=1,\dots,K$}
+            \State Draw $\theta_i^m(t)\sim \mathcal N\!\bigl(\widehat\mu_i(t),\;C(\delta,q,t)/t_{\mathrm{eff},i}(t)\bigr)$.
+        \EndFor
+        \State $\widetilde i_t^m\gets \arg\max_{i\in[K]}\theta_i^m(t)$.
+        \State $\widehat\Delta_t^m\gets \theta_{\widetilde i_t^m}^m(t)-\theta_{\widehat i_t}^m(t)$.
+    \EndFor
+    \If{$\widetilde i_t^m=\widehat i_t$ for all $m=1,\dots,M(\delta,q,t)$}
+        \State \Return $\widehat i_t$
+    \Else
+        \State $m^\star\gets \arg\max_m \widehat\Delta_t^m$
+        \State $\widetilde i_t\gets \widetilde i_t^{m^\star}$
+        \State Pull $i(t)\in \arg\min_{i\in\{\widehat i_t,\widetilde i_t\}} N_i$ and update the data.
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+The analysis is driven by three good events: $G_0$ (concentration of the graph-regularized estimator), $G_1$ (Thompson samples stay near their empirical means), and $G_2$ (for every pair of arms, at least one Thompson sample separates them by their true gap). The precise definitions and the proof that $\Pr(G_0 \cap G_1 \cap G_2) \ge 1 - \delta$ are given in Appendix~\ref{app:proofs-graph}.
+
+\begin{lemma}\label{lem:good-graph}
+$\Pr(G_0\cap G_1\cap G_2)\ge 1-\delta.$
+\end{lemma}
+
+\begin{theorem}[Correctness]\label{thm:correct-graph}
+For any $q\in[\delta,0.1]$, with probability at least $1-\delta$, Algorithm~\ref{algo:ts-explore-graph} returns the optimal arm.
+\end{theorem}
+
+\begin{lemma}\label{lem:terminate-graph}
+Under the event $G_0\cap G_1\cap G_2$, a base arm $i$ will not be pulled once
+$t_{\mathrm{eff},i}(t)\ge 186\,C(\delta,q,t)\,L(t)/\Delta_{i,c}^2$.
+\end{lemma}
+
+To translate the elimination threshold into a horizon bound, we use the graph-induced lower bound on the effective sample size due to \cite{thaker2022maximizing}:
+
+\begin{theorem}[Theorem C.1 of \cite{thaker2022maximizing}]
+\label{thm:teff-lower}
+Let $\pi_T$ be the sampling policy up to time $T$. Then for every arm $i$,
+\begin{equation}
+t_{\mathrm{eff},i}
+\;\ge\;
+t_i+\frac12\left\lfloor
+\min\!\left\{\rho\,\mathcal J(i,G),\;\sum_{j\in C(i)} t_j\right\}
+\right\rfloor,
+\label{eq:teff-lower}
+\end{equation}
+where $t_i$ is the number of direct pulls of arm $i$, $C(i)$ is its connected component, and $\mathcal J(i,G)$ is the influence factor.
+\end{theorem}
+
+\begin{theorem}[Sample complexity in the graph-smooth model]
+\label{thm:main-graph}
+For $q\in[\delta,0.1]$, with probability at least $1-\delta$, Algorithm~\ref{algo:ts-explore-graph} outputs the optimal arm with complexity upper bounded by
+\[
+O\!\left(
+H_{\mathrm{graph}}
+\left(\log\frac1\delta+\log(KH_{\mathrm{graph}})\right)
+\frac{\log(1/\delta)}{\log(1/q)}
++
+H_{\mathrm{graph}}
+\frac{\log^2(KH_{\mathrm{graph}})}{\log(1/q)}
+\right),
+\]
+where
+\[
+H_{\mathrm{graph}}
+\asymp
+\sum_{i\in\mathcal H\setminus\{a^\star\}}\frac{1}{\Delta_{i,c}^2}
++
+\max_{i\in\mathcal N}\frac{1}{\Delta_{i,c}^2},
+\]
+and $\mathcal H,\mathcal N$ denote the competitive and non-competitive sets induced by the graph.
+In particular, choosing $q=\delta$ gives
+$
+O\!\left(
+H_{\mathrm{graph}}\log\frac1\delta
++
+H_{\mathrm{graph}}\log^2(KH_{\mathrm{graph}})
+\right).
+$
+\end{theorem}
+
+The proof (Appendix~\ref{app:proofs-graph}) follows the GRUB decomposition of \cite{thaker2022maximizing}. The gain over classical pure exploration comes from the non-competitive arms: they can be discarded after only a small number of direct pulls because their effective counts are boosted through the graph. Competitive arms remain the bottleneck.
+
+\subsection{Misspecification and Smoothness Asymptotics}\label{sec:misspecified}
+%-----------------------------------------------------------------------------
+
+A practical concern with the graph-smooth model is \emph{misspecification}:
+the smoothness parameter~$\varepsilon$ may not be known exactly, or the graph
+may only approximately capture the true reward structure.
+The key observation is that misspecification of~$\varepsilon$ can always be
+compensated by adjusting the regularization strength~$\rho$.
+To see why, recall from the concentration inequality (Lemma~3.2 of
+\citealt{thaker2022maximizing}) that the confidence width for arm~$i$ is
+\[
+\gamma_i(t)
+=
+\frac{1}{\sqrt{t_{\mathrm{eff},i}(t)}}
+\bigl(\underbrace{\sigma_0\sqrt{L_1(t)}}_{\text{variance}}
++\underbrace{\rho\varepsilon}_{\text{bias}}\bigr),
+\]
+where $\sigma_0:=2\sigma\sqrt{14}$ is an absolute constant.
+The bias contribution depends only on the \emph{product} $\rho\varepsilon$:
+if~$\varepsilon$ is smaller than expected (i.e.\ the mean vector is smoother
+than assumed), we can increase $\rho$ to push more information through the
+graph without inflating the bias.
+In particular, for any true smoothness $\varepsilon_{\mathrm{true}} \le
+\varepsilon$, the algorithm remains valid with the original $\varepsilon$, and
+one is free to raise $\rho$ to exploit the additional smoothness.
+Hence the natural question becomes: \emph{what is the best sample complexity
+achievable as a function of the actual smoothness, when $\rho$ is tuned
+optimally?}
+This leads us to study the regime $\varepsilon\to 0$ with $\rho$ chosen to
+minimize the confidence widths, which reveals the full potential of graph
+side-information.
+
+\paragraph{The bias--variance tradeoff and optimal $\rho$.}
+From the proof of
+Theorem~\ref{thm:main-graph} (Appendix~\ref{app:proofs-graph}), a suboptimal
+arm~$i$ is \emph{non-competitive} --- and can be eliminated without direct
+samples --- precisely when the graph bonus alone exceeds the elimination
+threshold. The graph bonus from Theorem~\ref{thm:teff-lower} is
+$t_{\mathrm{eff},i}\ge\rho\,\mathcal J(i,G)/2$ (even with zero direct pulls of
+arm~$i$), so the non-competitive condition reduces to (see
+Appendix~\ref{app:proofs-misspecified} for the derivation)
+\begin{equation}
+\label{eq:noncomp-threshold}
+\Delta_{i,c}
+\;\gtrsim\;
+\frac{\sigma_0\sqrt{L_1(t)}+\rho\varepsilon}
+     {\sqrt{\rho\,\mathcal J(i,G)}}.
+\end{equation}
+Viewing the right-hand side as a function
+$f_i(\rho)=(\sigma_0\sqrt{L_1}+\rho\varepsilon)/\sqrt{\rho\,\mathcal J_i}$, a
+calculus exercise shows that it is minimized at the bias--variance balance point
+\begin{equation}
+\label{eq:rho-star}
+\rho^\star(\varepsilon)
+=
+\frac{\sigma_0\sqrt{L_1(T)}}{\varepsilon},
+\end{equation}
+at which the bias and variance contributions are equal. The minimum value of the
+threshold is
+$
+f_i(\rho^\star)
+=
+{2\sqrt{\sigma_0\varepsilon\sqrt{L_1(T)}}}\big/{\sqrt{\mathcal J(i,G)}}.
+$
+
+\begin{definition}[Competitive set under optimal tuning]
+\label{def:comp-eps}
+For a smoothness level $\varepsilon>0$, define the competitive and
+non-competitive sets under the optimal regularization~\eqref{eq:rho-star} as
+\begin{align*}
+\mathcal H_\varepsilon
+&:=
+\Bigl\{i\neq a^\star :
+\Delta_{i,c}^2\,\mathcal J(i,G)
+\;\le\;
+c_0\,\sigma_0\varepsilon\sqrt{L_1(T)}
+\Bigr\},\\[4pt]
+\mathcal N_\varepsilon
+&:=
+[K]\setminus(\mathcal H_\varepsilon\cup\{a^\star\}),
+\end{align*}
+where $c_0>0$ is an absolute constant from the analysis.
+\end{definition}
+
+In words: arm~$i$ is competitive if and only if its squared gap, weighted by
+the graph influence factor, is dominated by the smoothness level (up to
+logarithmic terms). The product $\Delta_{i,c}^2\,\mathcal J(i,G)$ measures how
+``easy'' arm~$i$ is to eliminate via the graph --- large gap and large influence
+factor make it easy. Smaller $\varepsilon$ makes every arm easier to resolve,
+shrinking $\mathcal H_\varepsilon$.
+
+\begin{theorem}[Sample complexity under optimal tuning]
+\label{thm:main-mis}
+Fix $q\in[\delta,0.1]$. Suppose
+Algorithm~\ref{algo:ts-explore-graph} is run with
+$\rho=\rho^\star(\varepsilon)$. Then, with probability at least $1-\delta$, the
+algorithm returns the optimal arm with stopping time
+\[
+O\!\left(
+H_\varepsilon
+\left(\log\frac1\delta+\log(KH_\varepsilon)\right)
+\frac{\log(1/\delta)}{\log(1/q)}
++
+H_\varepsilon
+\frac{\log^2(KH_\varepsilon)}{\log(1/q)}
+\right),
+\]
+where the optimally-tuned graph hardness is
+\[
+H_\varepsilon
+\;\asymp\;
+\sum_{i\in\mathcal H_\varepsilon\setminus\{a^\star\}}
+\frac{1}{\Delta_{i,c}^2}
+\;+\;
+\max_{i\in\mathcal N_\varepsilon}
+\frac{1}{\Delta_{i,c}^2}.
+\]
+\end{theorem}
+
+
+Theorem~\ref{thm:main-mis} has the same structural form as the main graph-smooth
+result (Theorem~\ref{thm:main-graph}), but replaces the fixed competitive set
+$\mathcal H$ with the $\varepsilon$-dependent set $\mathcal H_\varepsilon$.
+Under Theorem~\ref{thm:main-graph} the regularization $\rho$ is held constant,
+so the partition into competitive and non-competitive arms is determined solely
+by the graph topology and the gaps $\Delta_{i,c}$. In contrast,
+Theorem~\ref{thm:main-mis} allows $\rho$ to grow as $\varepsilon$ shrinks, which
+progressively moves arms from $\mathcal H_\varepsilon$ into $\mathcal
+N_\varepsilon$, each time converting a summand in $H_{\mathrm{graph}}$ into a
+term that is dominated by a single maximum. The gain from optimal tuning is most
+pronounced when either (a)~$\varepsilon$ is small relative to $\sigma$, so that
+increasing $\rho$ aggressively exploits the graph, or (b)~the graph has large
+influence factors $\mathcal J(i,G)$, so that many arms can be classified as
+non-competitive. When $\varepsilon$ is large, $\rho^\star$ is small and
+$\mathcal H_\varepsilon\approx\mathcal H$, so the bound reduces to that of
+Theorem~\ref{thm:main-graph}.
+
+\paragraph{Phase transitions and smoothness asymptotics.}
+Theorem~\ref{thm:main-mis} reveals a hierarchy among the suboptimal arms. Each
+arm~$i$ has a \emph{critical smoothness level}
+\begin{equation}
+\label{eq:eps-crit}
+\varepsilon_i^\star
+:=
+\frac{\Delta_{i,c}^2\,\mathcal J(i,G)}
+     {c_0\,\sigma_0\sqrt{L_1(T)}}.
+\end{equation}
+For $\varepsilon<\varepsilon_i^\star$, the arm exits the competitive set and is
+eliminated via graph propagation alone. The arms leave the competitive set in a
+specific order determined by the product
+$\Delta_{i,c}^2\,\mathcal J(i,G)$: those with large gaps or strong graph
+connectivity depart first. The limiting behavior is summarized in the following
+corollary.
+
+\begin{corollary}\label{cor:eps-limit}
+As $\varepsilon\to 0$ with $\rho=\rho^\star(\varepsilon)$:
+\begin{enumerate}[leftmargin=*,label=(\roman*)]
+\item $\mathcal H_\varepsilon\to\{a^\star\}$,
+      i.e.\ every truly suboptimal arm becomes non-competitive.
+\item $H_\varepsilon\to
+      \max_{i\neq a^\star}\Delta_{i,c}^{-2}$,
+      which is the minimum achievable hardness (matching the cost of verifying a single arm).
+\item The sample complexity approaches
+      $O\!\bigl(\max_{i\neq a^\star}\Delta_{i,c}^{-2}
+      \cdot\operatorname{polylog}(K,1/\delta)\bigr)$.
+\end{enumerate}
+\end{corollary}
+
+The limiting hardness $\max_i\Delta_{i,c}^{-2}$ is a dramatic improvement over
+both the graph-free quantity $\sum_i\Delta_i^{-2}$ and the fixed-$\rho$ hardness
+$H_{\mathrm{graph}}$ of Theorem~\ref{thm:main-graph}: the sum over competitive
+arms collapses to a single maximum, which is the best one can hope for from graph
+side-information in the pure exploration setting.
+
+
+\subsection{Graph Feedback}\label{sec:graph-feedback}
+%-----------------------------------------------------------------------------
+
+We now consider a different way in which the graph enters the problem: through the feedback structure rather than through a smoothness regularizer.
+In the graph-smooth model of Section~\ref{sec:graph-smooth}, pulling arm~$i$ reveals only the reward of arm~$i$, and the graph is exploited indirectly through the Laplacian-regularized estimator.
+Here, the graph directly governs \emph{what is observed}: pulling one arm reveals the rewards of all arms in its closed neighborhood. This is the \emph{graph-feedback} (or side-observation) model, which has been studied in regret-minimization settings \citep{atsidakou2022asymptotically, wu2015online} and arises naturally in applications such as social-network experiments and sensor placement.
+
+Let $G=(V_G,E_G)$ be an undirected graph with $V_G=[n]$. If the learner pulls arm $\pi_t$, it observes rewards from all arms in $N_G^+(\pi_t) := N_G(\pi_t) \cup \{\pi_t\}$. The feedback observation count for arm $i$ is $N_i^{\mathrm{fb}}(t) := \sum_{s=1}^t \ind\{i\in N_G^+(\pi_s)\}$, and the estimator is the empirical mean $\widehat\mu_i(t) = R_i^{\mathrm{fb}}(t)/N_i^{\mathrm{fb}}(t)$. Thompson samples are drawn as $\theta_i^k(t)\sim \mathcal N\bigl(\widehat\mu_i(t),\;C(\delta,q,t)/N_i^{\mathrm{fb}}(t)\bigr)$. The key change in the exploration rule is that, upon disagreement, the algorithm selects an \emph{action} $a$ whose closed neighborhood covers as many of the candidates $\{\widehat i_t, \widetilde i_t\}$ as possible. The full pseudocode is given as Algorithm~\ref{algo:ts-explore-gf} in Appendix~\ref{app:proofs-feedback}.
+
+The graph feedback gain is captured by the allocation hardness
+\begin{equation}
+H_{\mathrm{GF}}
+=
+\min_{\bm\tau\in\mathbb R_+^n}
+\left\{
+\sum_{a=1}^n \tau_a:
+\sum_{a:\,i\in N_G^+(a)}\tau_a\ge \frac{1}{\Delta_i^2}
+\text{ for all }i\neq i^\star
+\right\}.
+\label{eq:HGF}
+\end{equation}
+This is a covering LP: it asks how cheaply one can allocate pulls so that every suboptimal arm~$i$ accumulates at least $\Delta_i^{-2}$ observations through the neighborhoods of pulled arms. The LP is solvable in polynomial time, but Corollary~\ref{cor:HGF-bounds} below also gives explicit bounds on $H_{\mathrm{GF}}$ in terms of standard combinatorial parameters of $G$, with closed-form values on canonical graph classes.
+
+\begin{lemma}\label{lem:good-fb}
+$\Pr(G_0^{\mathrm{fb}}\cap G_1^{\mathrm{fb}}\cap G_2^{\mathrm{fb}})\ge 1-\delta.$
+\end{lemma}
+
+\begin{theorem}[Correctness]\label{thm:correct-fb}
+For any $q\in[\delta,0.1]$, with probability at least $1-\delta$, Algorithm~\ref{algo:ts-explore-gf} returns the optimal arm.
+\end{theorem}
+
+\begin{lemma}\label{lem:terminate-fb}
+Under $G_0^{\mathrm{fb}}\cap G_1^{\mathrm{fb}}\cap G_2^{\mathrm{fb}}$, arm $i$ will not trigger further exploration once
+$N_i^{\mathrm{fb}}(t)\ge 186\,C(\delta,q,t)\,L_2(t)/\Delta_i^2$.
+\end{lemma}
+
+\begin{theorem}[Sample complexity under graph feedback]\label{thm:main-fb}
+For $q\in[\delta,0.1]$, with probability at least $1-\delta$, Algorithm~\ref{algo:ts-explore-gf} outputs the optimal arm with complexity
+\[
+O\!\left(
+H_{\mathrm{GF}}
+\left(\log\frac1\delta+\log(nH_{\mathrm{GF}})\right)
+\frac{\log(1/\delta)}{\log(1/q)}
++
+H_{\mathrm{GF}}
+\frac{\log^2(nH_{\mathrm{GF}})}{\log(1/q)}
+\right).
+\]
+In particular, if $q=\delta$, then
+$O\!\left(
+H_{\mathrm{GF}}\log\frac1\delta
++
+H_{\mathrm{GF}}\log^2(nH_{\mathrm{GF}})
+\right)$.
+\end{theorem}
+
+\paragraph{Combinatorial bounds on $H_{\mathrm{GF}}$.}
+While $H_{\mathrm{GF}}$ is defined as an LP, it admits a clean sandwich in terms of standard graph parameters that often makes it possible to read off the rate by inspection.
+
+\begin{corollary}[Combinatorial bounds on $H_{\mathrm{GF}}$]\label{cor:HGF-bounds}
+Let $\Delta_{\min}:=\min_{i\neq i^\star}\Delta_i$ and $\Delta_{\max}:=\max_{i\neq i^\star}\Delta_i$. Let $d_{\min}(G):=\min_{v\in[n]}\deg_G(v)$ be the minimum vertex degree, $\bar\chi(G):=\chi(\bar G)$ the clique-cover number of $G$, and $\rho(G)$ the $2$-packing number of $G$ (the size of the largest set of vertices whose closed neighborhoods are pairwise disjoint). Then
+\begin{equation}
+\rho(G)\cdot\Delta_{\min}^{-2}
+\;\le\;
+H_{\mathrm{GF}}
+\;\le\;
+\bar\chi(G)\cdot\Delta_{\max}^{-2}
+\;\le\;
+\frac{n}{1+d_{\min}(G)}\,\Delta_{\max}^{-2}.
+\label{eq:HGF-bounds}
+\end{equation}
+Moreover, when $\Delta_i\equiv\Delta$ for all $i\neq i^\star$, the LP defining $H_{\mathrm{GF}}$ coincides (up to the scaling $\Delta^{-2}$) with the fractional dominating-set problem on $G$ restricted to suboptimal arms, and by LP duality $H_{\mathrm{GF}}=\Delta^{-2}\rho^*(G)$, where $\rho^*(G)$ is the fractional $2$-packing number.
+\end{corollary}
+
+The right-most bound in~\eqref{eq:HGF-bounds} corresponds to a uniform allocation $\tau_a\equiv\Delta_{\max}^{-2}/(1+d_{\min}(G))$ and is the easiest to state, but it is loose whenever a single low-degree vertex coexists with otherwise dense feedback.
+The clique-cover bound captures the qualitative gain from feedback: if $V_G$ partitions into a small number of cliques, pulling one representative of each clique reveals every member at no extra cost.
+The $2$-packing lower bound is the natural obstruction in the opposite direction --- vertices with disjoint closed neighborhoods cannot share observations, so each requires its own $\Delta_i^{-2}$ budget. All three bounds are proved in Appendix~\ref{app:proofs-feedback}.
+
+\paragraph{$H_{\mathrm{GF}}$ on canonical graphs.}
+Specializing to uniform gaps $\Delta_i\equiv\Delta$ for $i\neq i^\star$, the LP can be solved by inspection on common graph families:
+\begin{itemize}[leftmargin=*,itemsep=2pt,topsep=2pt]
+\item \emph{Empty graph (no edges):} $H_{\mathrm{GF}}=(n-1)\Delta^{-2}$, recovering the standard graph-free rate. Both bounds in~\eqref{eq:HGF-bounds} are tight: $\rho(G)=n-1$ and $\bar\chi(G)=n-1$.
+\item \emph{Complete graph $K_n$:} $H_{\mathrm{GF}}=\Delta^{-2}$. A single arm pulled $\Delta^{-2}$ times observes every other arm; here $\bar\chi(G)=\rho(G)=1$.
+\item \emph{Star $K_{1,n-1}$:} $H_{\mathrm{GF}}=\Delta^{-2}$. Pulling the center observes everyone; $\rho(G)=1$ since the center lies in every closed neighborhood, and $\bar\chi(G)\le 2$.
+\item \emph{$d$-regular graph:} $H_{\mathrm{GF}}\le \frac{n}{d+1}\Delta^{-2}$, achieved by uniform allocation. The bound is tight on a disjoint union of $K_{d+1}$'s ($\bar\chi=n/(d+1)$) and loose on expander-like graphs, where $\rho(G)\ll n/(d+1)$.
+\end{itemize}
+These computations show that $H_{\mathrm{GF}}$ smoothly interpolates between the $\sum_i\Delta_i^{-2}$ rate of standard pure exploration (recovered when $G$ is edge-free) and the $\Delta_{\max}^{-2}$ rate available when one pull observes everything (achieved on cliques and stars).
+
+\paragraph{Comparison with Theorem~\ref{thm:main-graph}.}
+Theorems~\ref{thm:main-graph} and~\ref{thm:main-fb} share the same structural
+form --- both are $O(H\log(1/\delta) + H\log^2(\cdot))$ with $q=\delta$ --- but
+the hardness measures $H_{\mathrm{graph}}$ and $H_{\mathrm{GF}}$ capture
+fundamentally different mechanisms for exploiting the graph.
+In Theorem~\ref{thm:main-graph}, the graph enters through \emph{spectral
+propagation}: the Laplacian-regularized estimator creates effective sample counts
+$t_{\mathrm{eff},i}$ that grow even for arms that are rarely pulled, and the
+resulting hardness $H_{\mathrm{graph}} = \sum_{i\in\mathcal H}\Delta_{i,c}^{-2}
++ \max_{i\in\mathcal N}\Delta_{i,c}^{-2}$ separates arms into a competitive set
+(requiring direct pulls) and a non-competitive set (eliminated via spectral
+information alone).
+In Theorem~\ref{thm:main-fb}, the graph enters through \emph{combinatorial
+covering}: one pull of action~$a$ simultaneously increments $N_i^{\mathrm{fb}}$
+for every $i\in N_G^+(a)$, and the covering LP in~\eqref{eq:HGF} asks for the
+cheapest allocation of pulls that gives every arm enough observations.
+For dense graphs, the covering LP yields $H_{\mathrm{GF}} =
+\Theta(\max_i\Delta_i^{-2})$, which can be substantially smaller than
+$H_{\mathrm{graph}}$ since it avoids any competitive-set overhead entirely.
+For sparse graphs, both hardness measures approach $\sum_i\Delta_i^{-2}$ and
+the two models yield comparable guarantees.
+
+The proofs are given in Appendix~\ref{app:proofs-feedback} and follow the graph-smooth analysis after replacing $t_{\mathrm{eff},i}(t)$ with $N_i^{\mathrm{fb}}(t)$ and using the feedback LP to convert per-arm thresholds into a total pull count.
+
+%-----------------------------------------------------------------------------
+\subsection{General PSD Graph Kernels}\label{sec:kernel}
+%-----------------------------------------------------------------------------
+
+The combinatorial Laplacian $L_G$ may not always be the most appropriate notion of smoothness. When the graph has highly non-uniform degrees, high-degree vertices can dominate the geometry of the estimation problem. A natural remedy is to use the \emph{normalized Laplacian} \citep{chung1997spectral}
+\begin{equation}
+K_G := I - D_G^{-1/2}A_G D_G^{-1/2},
+\label{eq:normalized-lap}
+\end{equation}
+or, more generally, any positive semi-definite kernel on the graph. We assume smoothness $\langle \bm{\mu}, K_G \bm{\mu}\rangle \le \varepsilon^2$ and use the regularized least-squares estimator
+\[
+\widehat{\bm\mu}_T = \left(\sum_{t=1}^T e_{\pi_t}e_{\pi_t}^\top + \rho K_G\right)^{-1}\left(\sum_{t=1}^T e_{\pi_t}r_{t,\pi_t}\right),
+\]
+with kernel-effective sample sizes $t_{\mathrm{eff},i}(t) := [(V_t)^{-1}]_{ii}^{-1}$ where $V_t = \sum_{s=1}^t e_{\pi_s}e_{\pi_s}^\top + \rho K_G$. The algorithm is identical to Algorithm~\ref{algo:ts-explore-graph} except that $L_G$ is replaced by $K_G$ throughout; we defer the full pseudocode to Algorithm~\ref{algo:kernel-ts-explore} in Appendix~\ref{app:proofs-normalized}.
+
+\begin{theorem}\label{thm:kernel-ts}
+Fix $q\in[\delta,0.1]$. Assume $\langle \bm{\mu},K_G\bm{\mu}\rangle \le \varepsilon^2$.
+Then with probability at least $1-\delta$, Algorithm~\ref{algo:kernel-ts-explore} returns the optimal arm $a^\star$. Moreover, its stopping time is upper bounded by the smallest $T$ such that
+\[
+t_{\mathrm{eff},i}(T)
+\;\ge\;
+\frac{196\,C(T)\,L(T)}{\Delta_{i,c}^2}
+\qquad
+\text{for all } i\neq a^\star.
+\]
+The sample complexity has the same gap-dependent form as Theorem~\ref{thm:main-graph}, with effective sample sizes computed using $V_T = \sum_{t=1}^T e_{\pi_t}e_{\pi_t}^\top + \rho K_G$.
+\end{theorem}
+
+\paragraph{Comparison with the graph-smooth model.}
+Theorem~\ref{thm:kernel-ts} is a strict generalization of Theorem~\ref{thm:main-graph}: setting $K_G = L_G$ recovers the combinatorial Laplacian result. The advantage of the normalized Laplacian appears in graphs with heterogeneous degree distributions: the normalization in~\eqref{eq:normalized-lap} prevents high-degree hubs from disproportionately concentrating the smoothness penalty, leading to more balanced effective sample sizes across arms. The competitive/non-competitive decomposition and the resulting hardness $H_{\mathrm{graph}}$ carry over with the kernel-effective counts replacing the Laplacian-effective counts. The proof (Appendix~\ref{app:proofs-normalized}) requires only replacing $L_G$ with $K_G$ and $\|\bm\mu\|_G$ with $\|\bm\mu\|_{K_G}$ throughout.
+
+%-----------------------------------------------------------------------------
+
+
+
+
+\bibliographystyle{abbrvnat}
+\bibliography{references}
+%=============================================================================
+\appendix
+%=============================================================================
+
+
+%=============================================================================
+
+\section{Related Work}\label{sec:related-work}
+%=============================================================================
+
+\paragraph{Foundations of multi-armed bandits.}
+The study of multi-armed bandits originates with the foundational work of \cite{robbins1952some}, who introduced the sequential design of experiments with adaptive allocation. Subsequent classical treatments such as \cite{berry1985bandit} provided a comprehensive account of bandit problems and inspired decades of research on adaptive experimentation. The finite-time analysis of \cite{auer2002finite} established regret guarantees for UCB, cementing it as a canonical strategy in stochastic bandits. A modern treatment of the field, including both regret minimization and pure exploration, can be found in \cite{lattimore2020bandit}.
+
+\paragraph{Pure exploration and best-arm identification.}
+The pure exploration setting has been extensively studied. \cite{audibert2010best} introduced UCB-E and Successive Rejects, establishing near-optimal complexity guarantees. \cite{bubeck2009pure} formalized the notion of simple regret and showed inherent trade-offs between exploration and recommendation accuracy. The PAC framework of \cite{even2006action} introduced action elimination techniques applicable to reinforcement learning. Extensions such as LUCB and lil'UCB \citep{kalyanakrishnan2012pac, jamieson2014best} unified elimination and confidence-bound approaches. Information-theoretic limits on best-arm identification were derived in \citep{kaufmann2013information, kaufmann2016complexity}, highlighting distinctions between fixed-confidence and fixed-budget regimes. Additional refinements include improved stopping rules \citep{garivier2019non} and unified budget/confidence frameworks \citep{gabillon2012best}.
+
+\paragraph{Combinatorial pure exploration.}
+Beyond independent arms, combinatorial bandits generalize the setting to structured action spaces. \cite{chen2013combinatorial} established a general framework for combinatorial bandits with semi-bandit feedback, while \cite{chen2014combinatorial} introduced the CLUCB algorithm for combinatorial pure exploration. Further progress by \cite{chen2017nearly} yielded nearly optimal algorithms for structured exploration, and \cite{gabillon2016improved} studied improved complexity bounds under combinatorial constraints. Online and scalable algorithms were proposed by \citep{combes2015combinatorial, jourdan2021efficient}. Related subset selection problems were studied by \cite{kaufmann2013information} in terms of information complexity and by \cite{zhou2014optimal} in PAC multiple-arm identification, while quantile and thresholding formulations were addressed by \citep{lipor2018quantile, lejeune2020thresholding}.
+
+\paragraph{Graph-structured bandits and side information.}
+A major line of work exploits graph-structured side information, where rewards are assumed smooth over a known graph. The spectral bandit framework of \cite{valko2014spectral} demonstrated that regret can scale with the effective dimension of the graph Laplacian rather than the number of arms. Extensions include best-arm identification in spectral bandits by \cite{kocak2020best}. Laplacian-regularized approaches such as GraphUCB \citep{yang2020laplacian} leveraged user graphs for scalable recommendation and tighter regret bounds. Other applications include graph-regularized thresholding bandits \citep{lejeune2020thresholding}, correlated bandits with latent sources \citep{gupta2020correlated}, and graph-based active learning \citep{ma2013sigma, ma2015active, wang2019distance, dasarathy2015s2}. The GRUB algorithm of \cite{thaker2022maximizing} introduced the influence factor to capture how graph topology accelerates elimination of suboptimal arms. The role of side observations in bandits has also been studied by \cite{atsidakou2022asymptotically} and \cite{wu2015online} in regret-minimization settings. More broadly, related work on graph-based semi-supervised learning \citep{zhu2005semi}, spectral graph theory \citep{chung1997spectral}, Laplacian regularization \citep{ando2007learning}, resistance distances \citep{xiao2003resistance, bapat2010resistance}, and smoothness priors \citep{shamir2011azuma, rao2015collaborative} inform the design of bandit algorithms exploiting graph structure.
+
+\paragraph{Thompson Sampling.}
+Thompson Sampling (TS), originally introduced by \cite{thompson1933likelihood}, proposed a Bayesian probability-matching strategy to balance exploration and exploitation. Theoretical analyses established its near-optimality in modern settings: \cite{agrawal2013thompson} proved regret bounds for linear contextual bandits, \cite{korda2013thompson} extended analysis to exponential families, and \cite{agrawal2013further} and \cite{kaufmann2012thompson} further refined finite-time guarantees. In the combinatorial setting, \cite{wang2018thompson} introduced CTS for semi-bandits, and \cite{perrault2020statistical} analyzed statistical efficiency of TS for combinatorial semi-bandits. For pure exploration, \cite{russo2016simple} proposed Bayesian top-two sampling algorithms, \cite{shang2020fixed} extended Bayesian analysis to Gaussian settings with fixed-confidence guarantees, \cite{lee2024thompson} proposed BC-TE, and \cite{li2021bayesian} introduced Bayesian Re-sample Exploration for contextual bandits. Most relevant to our work, \cite{wang2022thompson} proposed TS-Explore, the first Thompson Sampling algorithm for combinatorial pure exploration in the frequentist setting, achieving width-factor improvements over CLUCB.
+
+
+
+
+\section{Proofs for the Graph-Smooth Laplacian Model}
+\label{app:proofs-graph}
+
+In this appendix we give a more detailed proof of the graph-smooth result, following the same overall template as the GRUB analysis of \citet{thaker2022maximizing} and the TS-Explore analysis of \citet{wang2022thompson}. The point of the argument is to show that the Thompson-sampling rule inherits the same elimination structure as GRUB once the graph-regularized estimator is paired with the effective sample size $t_{\mathrm{eff},i}(t)$.
+
+For convenience, write
+\[
+L_1(t):=\log\!\left(\frac{12K^2t^2}{\delta}\right),
+\qquad
+L_2(t):=\log\!\left(\frac{12K^2t^2M(\delta,q,t)}{\delta}\right),
+\qquad
+C(t):=C(\delta,q,t).
+\]
+We also let
+\[
+\gamma_i(t)
+:=
+\sqrt{\frac{1}{t_{\mathrm{eff},i}(t)}}
+\left(
+2\sigma\sqrt{14\log\!\left(\frac{2w_i(\boldsymbol\pi_t)}{\delta}\right)}+\rho\|\bm\mu\|_G
+\right),
+\]
+which is the confidence width supplied by Lemma~A.2 of \citet{thaker2022maximizing}. Since $\|\bm\mu\|_G\le \varepsilon$, we will repeatedly use the deterministic upper bound
+\[
+\gamma_i(t)
+\le
+\sqrt{\frac{1}{t_{\mathrm{eff},i}(t)}}
+\left(
+2\sigma\sqrt{14\log\!\left(\frac{2w_i(\boldsymbol\pi_t)}{\delta}\right)}+\rho\varepsilon
+\right).
+\]
+Finally, recall that $\Delta_{i,c}=\mu_{a^\star}-\mu_i$ for each suboptimal arm $i$.
+
+\paragraph{Definition of the good events.}
+We work on the intersection of the following three events.
+\begin{align*}
+G_0
+&:=
+\Bigl\{
+\forall t\ge 1,\ \forall i\in[K],\
+|\widehat\mu_i(t)-\mu_i|\le \gamma_i(t)
+\Bigr\},\\
+G_1
+&:=
+\Bigl\{
+\forall t\ge 1,\ \forall m\in[M(\delta,q,t)],\ \forall i\in[K],\
+|\theta_i^m(t)-\widehat\mu_i(t)|
+\le
+\sqrt{\frac{2C(t)L_2(t)}{t_{\mathrm{eff},i}(t)}}
+\Bigr\},\\
+G_2
+&:=
+\Bigl\{
+\forall t\ge 1,\ \forall i\neq j,\ \exists m\in[M(\delta,q,t)]
+\text{ such that }
+\theta_i^m(t)-\theta_j^m(t)\ge \mu_i-\mu_j
+\Bigr\}.
+\end{align*}
+Event $G_0$ controls the graph-regularized estimator around the true mean vector, $G_1$ controls the Gaussian Thompson perturbations around the empirical means, and $G_2$ guarantees that among the $M(\delta,q,t)$ sample sets there is always at least one sample that separates any pair of arms by at least its true gap.
+
+\paragraph{Proof of Lemma~\ref{lem:good-graph}.}
+We prove the three pieces separately.
+
+\begin{proof}
+We first bound the failure probability of $G_0$. By Lemma~A.2 of \citet{thaker2022maximizing}, for every fixed time $t$ and arm $i$,
+\[
+\Pr\!\left(
+|\widehat\mu_i(t)-\mu_i|>\gamma_i(t)
+\right)
+\le
+\frac{\delta}{2w_i(\boldsymbol\pi_t)}.
+\]
+The weights $w_i(\boldsymbol\pi_t)$ are chosen in that lemma so that the resulting tail probabilities are summable over all arms and all times. Consequently,
+\[
+\Pr(G_0^c)\le \frac{\delta}{3},
+\]
+after fixing the numerical constant hidden in the definition of $w_i(\boldsymbol\pi_t)$ exactly as in the proof of Lemma~A.2 in \citet{thaker2022maximizing}.
+
+We next control $G_1$. Fix $t\ge 1$, $m\in[M(\delta,q,t)]$, and $i\in[K]$. Conditional on the history up to time $t$, we have
+\[
+\theta_i^m(t)-\widehat\mu_i(t)
+\sim
+\mathcal N\!\left(0,\frac{C(t)}{t_{\mathrm{eff},i}(t)}\right).
+\]
+Therefore, by standard Gaussian concentration,
+\[
+\Pr\!\left[
+|\theta_i^m(t)-\widehat\mu_i(t)|>
+\sqrt{\frac{2C(t)L_2(t)}{t_{\mathrm{eff},i}(t)}}
+\right]
+\le 2e^{-L_2(t)}.
+\]
+Since
+\[
+2e^{-L_2(t)}
+=
+\frac{\delta}{6K^2t^2M(\delta,q,t)}
+\le
+\frac{\delta}{3Kt^2M(\delta,q,t)},
+\]
+a union bound over arms, Thompson samples, and times yields
+\[
+\Pr(G_1^c)
+\le
+\sum_{t\ge 1}\sum_{m=1}^{M(\delta,q,t)}\sum_{i=1}^K
+\frac{\delta}{3Kt^2M(\delta,q,t)}
+\le
+\sum_{t\ge 1}\frac{\delta}{3t^2}
+\le
+\frac{\delta}{3}.
+\]
+
+We now prove the $G_2$ bound. Fix a time $t$ and two distinct arms $i,j$. Conditional on the empirical means,
+\[
+\theta_i^m(t)-\theta_j^m(t)
+\sim
+\mathcal N\!\left(
+\widehat\mu_i(t)-\widehat\mu_j(t),
+\ C(t)\Bigl(\frac{1}{t_{\mathrm{eff},i}(t)}+\frac{1}{t_{\mathrm{eff},j}(t)}\Bigr)
+\right).
+\]
+On $G_0$ we have
+\[
+\widehat\mu_i(t)-\widehat\mu_j(t)
+\ge
+\mu_i-\mu_j-\gamma_i(t)-\gamma_j(t).
+\]
+Hence, again conditional on $G_0$,
+\begin{align*}
+&\Pr\!\left[
+\theta_i^m(t)-\theta_j^m(t)\ge \mu_i-\mu_j
+\mid G_0
+\right]\\
+&\qquad\ge
+\Phi\!\left(
+\frac{\gamma_i(t)+\gamma_j(t)}{\sqrt{C(t)\left(\frac1{t_{\mathrm{eff},i}(t)}+\frac1{t_{\mathrm{eff},j}(t)}\right)}},
+0,1
+\right),
+\end{align*}
+where $\Phi(\cdot,0,1)$ denotes the Gaussian survival function introduced in Section~4. By the definition of $C(t)=L_1(t)/\phi^2(q)$ and the choice of the quantile map $\phi(q)$ in the TS-Explore analysis of \citet{wang2022thompson}, we may choose the constants so that the right-hand side is at least $q$. Therefore each individual Thompson sample succeeds with probability at least $q$, and because the $M(\delta,q,t)$ samples are independent,
+\[
+\Pr\!\left[
+\text{no sample index }m\text{ satisfies }
+\theta_i^m(t)-\theta_j^m(t)\ge \mu_i-\mu_j
+\mid G_0
+\right]
+\le
+(1-q)^{M(\delta,q,t)}.
+\]
+By the definition of $M(\delta,q,t)$,
+\[
+(1-q)^{M(\delta,q,t)}
+\le
+\frac{\delta}{12K^2t^2}.
+\]
+Taking a union bound over all ordered pairs $(i,j)$ with $i\neq j$ and all $t\ge 1$ gives
+\[
+\Pr(G_2^c\mid G_0)
+\le
+\sum_{t\ge 1}\sum_{i\neq j}\frac{\delta}{12K^2t^2}
+\le
+\sum_{t\ge 1}\frac{\delta}{6t^2}
+\le
+\frac{\delta}{3}.
+\]
+Finally,
+\[
+\Pr(G_0\cap G_1\cap G_2)
+\ge
+1-\Pr(G_0^c)-\Pr(G_1^c)-\Pr(G_2^c\mid G_0)
+\ge 1-\delta.
+\]
+This proves the claim.
+\end{proof}
+
+\paragraph{Proof of Theorem~\ref{thm:correct-graph} (correctness).}
+The correctness argument is short once $G_2$ is available.
+
+\begin{proof}
+Assume the algorithm stops at time $t$ and returns the empirical maximizer $\widehat i_t$. By the stopping rule, every Thompson sample agrees with the empirical maximizer, that is,
+\[
+\widetilde i_t^m=\widehat i_t
+\qquad\text{for all }m=1,\dots,M(\delta,q,t).
+\]
+Suppose for contradiction that $\widehat i_t\neq a^\star$. Then $\mu_{a^\star}-\mu_{\widehat i_t}=\Delta_{\widehat i_t,c}>0$. By event $G_2$, there exists some sample index $m$ such that
+\[
+\theta_{a^\star}^m(t)-\theta_{\widehat i_t}^m(t)
+\ge
+\mu_{a^\star}-\mu_{\widehat i_t}
+=
+\Delta_{\widehat i_t,c}
+>
+0.
+\]
+Therefore arm $a^\star$ has a strictly larger sampled value than $\widehat i_t$ in the $m$-th Thompson draw, which implies $\widetilde i_t^m\neq \widehat i_t$. This contradicts the stopping rule. Hence whenever the algorithm stops on $G_2$, the returned arm must equal $a^\star$. Since Lemma~\ref{lem:good-graph} shows $\Pr(G_0\cap G_1\cap G_2)\ge 1-\delta$, the theorem follows.
+\end{proof}
+
+\paragraph{Proof of Lemma~\ref{lem:terminate-graph}.}
+This is the key elimination step. The argument mirrors the classical TS-Explore proof, with $t_{\mathrm{eff},i}(t)$ replacing the direct pull count. The important point is that a sufficiently large effective count is enough to rule out a suboptimal arm, even if that arm has not been sampled many times directly.
+
+\begin{proof}
+Fix a suboptimal arm $i\neq a^\star$ and suppose, toward contradiction, that arm $i$ is still pulled at some time $t$ even though
+\begin{equation}
+\label{eq:terminate-threshold-proof}
+t_{\mathrm{eff},i}(t)
+\ge
+\frac{186\,C(t)L_2(t)}{\Delta_{i,c}^2}.
+\end{equation}
+Because the algorithm only ever pulls one of the two arms in the disagreement pair $\{\widehat i_t,\widetilde i_t\}$, the arm $i$ must be either the empirical maximizer $\widehat i_t$ or the selected challenger $\widetilde i_t$.
+
+We first consider the case $\widehat i_t=i$. Since $i$ is selected for pulling, it is the less-sampled arm among $\{\widehat i_t,\widetilde i_t\}$, so
+\[
+t_{\mathrm{eff},\widetilde i_t}(t)
+\ge
+ t_{\mathrm{eff},i}(t)
+\ge
+\frac{186\,C(t)L_2(t)}{\Delta_{i,c}^2}.
+\]
+On $G_1$, for every sample index $m$,
+\[
+|\theta_i^m(t)-\widehat\mu_i(t)|
+\le
+\sqrt{\frac{2C(t)L_2(t)}{t_{\mathrm{eff},i}(t)}}
+\le
+\frac{\Delta_{i,c}}{\sqrt{93}}
+<
+\frac{\Delta_{i,c}}{7},
+\]
+and similarly,
+\[
+|\theta_{\widetilde i_t}^m(t)-\widehat\mu_{\widetilde i_t}(t)|
+<
+\frac{\Delta_{i,c}}{7}.
+\]
+Since $\widetilde i_t^{m^\star}=\widetilde i_t$ is the sampled challenger chosen to maximize the disagreement gap,
+\[
+\theta_{\widetilde i_t}^{m^\star}(t)-\theta_i^{m^\star}(t)
+\ge 0.
+\]
+Using the two bounds above, we obtain
+\begin{equation}
+\label{eq:emp-gap-upper}
+\widehat\mu_{\widetilde i_t}(t)-\widehat\mu_i(t)
+\ge
+-\frac{2\Delta_{i,c}}{7}.
+\end{equation}
+Now event $G_2$ provides a sample index $m'$ such that
+\[
+\theta_{a^\star}^{m'}(t)-\theta_i^{m'}(t)
+\ge
+\mu_{a^\star}-\mu_i
+=
+\Delta_{i,c}.
+\]
+Again using the $G_1$ deviations for both $a^\star$ and $i$ (the effective count of $a^\star$ is at least that of the sampled pair selected by the algorithm once the process is near termination, and in any case the same threshold argument can be applied to the sampled challenger that witnesses the contradiction), we get
+\[
+\widehat\mu_{a^\star}(t)-\widehat\mu_i(t)
+\ge
+\Delta_{i,c}-\frac{2\Delta_{i,c}}{7}
+=
+\frac{5\Delta_{i,c}}{7}
+>
+0.
+\]
+This contradicts the assumption that $i=\widehat i_t$ is the empirical maximizer.
+
+We next consider the case $\widetilde i_t=i$. Then, since the pulled arm is chosen as the less-sampled arm in the pair $\{\widehat i_t,\widetilde i_t\}$, we again have
+\[
+t_{\mathrm{eff},\widehat i_t}(t)
+\ge
+ t_{\mathrm{eff},i}(t)
+\ge
+\frac{186\,C(t)L_2(t)}{\Delta_{i,c}^2}.
+\]
+Therefore the same $G_1$ calculation yields
+\[
+|\theta_i^m(t)-\widehat\mu_i(t)|<\frac{\Delta_{i,c}}{7},
+\qquad
+|\theta_{\widehat i_t}^m(t)-\widehat\mu_{\widehat i_t}(t)|<\frac{\Delta_{i,c}}{7}
+\qquad
+\text{for all }m.
+\]
+Because $\widetilde i_t=i$ is selected as the challenger with maximal sampled advantage over the empirical maximizer,
+\[
+\theta_i^{m^\star}(t)-\theta_{\widehat i_t}^{m^\star}(t)\ge 0.
+\]
+Hence
+\[
+\widehat\mu_i(t)-\widehat\mu_{\widehat i_t}(t)
+\ge
+-\frac{2\Delta_{i,c}}{7}.
+\]
+But $G_2$ again produces some sample index $m'$ with
+\[
+\theta_{a^\star}^{m'}(t)-\theta_i^{m'}(t)\ge \Delta_{i,c},
+\]
+which implies
+\[
+\widehat\mu_{a^\star}(t)-\widehat\mu_i(t)
+\ge
+\frac{5\Delta_{i,c}}{7}.
+\]
+Combining the last two displays gives
+\[
+\widehat\mu_{a^\star}(t)-\widehat\mu_{\widehat i_t}(t)
+\ge
+\frac{3\Delta_{i,c}}{7}
+>
+0,
+\]
+contradicting the fact that $\widehat i_t$ is the empirical maximizer.
+
+Both cases lead to contradictions. Therefore a suboptimal arm cannot be pulled once its effective sample size crosses the threshold in~\eqref{eq:terminate-threshold-proof}.
+\end{proof}
+
+\paragraph{Proof of Theorem~\ref{thm:main-graph}.}
+We now convert the armwise elimination threshold into a bound on the total stopping time. This is exactly the stage where the graph enters the complexity through the lower bound on $t_{\mathrm{eff},i}(t)$.
+
+\begin{proof}
+By Lemma~\ref{lem:terminate-graph}, it is sufficient for successful elimination of every suboptimal arm $i$ that
+\begin{equation}
+\label{eq:suff-teff}
+t_{\mathrm{eff},i}(t)
+\ge
+\frac{196\,C(t)L_2(t)}{\Delta_{i,c}^2}.
+\end{equation}
+We define
+\[
+f_i(t):=\frac{196\,C(t)L_2(t)}{\Delta_{i,c}^2}.
+\]
+Thus it is enough to ensure $t_{\mathrm{eff},i}(t)\ge f_i(t)$ for all suboptimal arms.
+
+We next apply Theorem~\ref{thm:teff-lower}, which gives
+\[
+t_{\mathrm{eff},i}(t)
+\ge
+ t_i(t)+\frac12\left\lfloor \min\!\left\{\rho\,\mathcal J(i,G),\sum_{j\in C(i)} t_j(t)\right\}\right\rfloor.
+\]
+Ignoring the floor for simplicity of constants, we obtain the softer but cleaner inequality \textcolor{red}{the twidles?}
+\begin{equation}
+\label{eq:teff-soft}
+t_{\mathrm{eff},i}(t)
+\gtrsim
+ t_i(t)+\frac12\min\!\left\{\rho\,\mathcal J(i,G),\sum_{j\in C(i)} t_j(t)\right\}.
+\end{equation}
+As in \citet{thaker2022maximizing}, this naturally partitions the suboptimal arms into two classes.
+
+\smallskip
+\noindent
+\emph{Competitive arms.}
+These are the arms for which the graph bonus alone is not enough to satisfy~\eqref{eq:suff-teff}. Equivalently, the influence factor $\mathcal J(i,G)$ does not make
+\[
+\rho\,\mathcal J(i,G)
+\gtrsim
+\frac{C(t)L_2(t)}{\Delta_{i,c}^2}
+\]
+true at the relevant scale. Such arms must accumulate direct samples, and the threshold~\eqref{eq:suff-teff} therefore requires
+\[
+t_i(t)
+\gtrsim
+\frac{C(t)L_2(t)}{\Delta_{i,c}^2}.
+\]
+Summing over the competitive set $\mathcal H\setminus\{a^\star\}$ gives the direct-sampling contribution
+\begin{equation}
+\label{eq:comp-contrib}
+\sum_{i\in\mathcal H\setminus\{a^\star\}} t_i(t)
+\lesssim
+C(t)L_2(t)
+\sum_{i\in\mathcal H\setminus\{a^\star\}}\frac{1}{\Delta_{i,c}^2}.
+\end{equation}
+
+\smallskip
+\noindent
+\emph{Non-competitive arms.}
+For $i\in\mathcal N$, the graph bonus is large enough that once the total number of samples in the connected component of $i$ is moderately large, the minimum term in~\eqref{eq:teff-soft} already exceeds $f_i(t)$. Hence these arms can be eliminated without needing their own direct pull counts to be large. It is enough that the overall horizon satisfy
+\[
+t
+;
+\gtrsim
+C(t)L_2(t)
+\max_{i\in\mathcal N}\frac{1}{\Delta_{i,c}^2}.
+\]
+This is exactly the phenomenon highlighted in GRUB: non-competitive arms are removed quickly because their effective counts are inherited from their neighborhood.
+
+Combining the two contributions, there is a numerical constant $c>0$ such that the stopping time $T$ is bounded by the smallest solution of
+\begin{equation}
+\label{eq:self-ref-T}
+T
+\le
+c\,C(T)L_2(T)
+\left(
+\sum_{i\in\mathcal H\setminus\{a^\star\}}\frac{1}{\Delta_{i,c}^2}
++
+\max_{i\in\mathcal N}\frac{1}{\Delta_{i,c}^2}
+\right).
+\end{equation}
+The expression in parentheses is precisely the graph hardness $H_{\mathrm{graph}}$ up to absolute constants. Since
+\[
+C(T)=\frac{\log(12K^2T^2/\delta)}{\phi^2(q)}
+= O\!\left(\frac{\log(KT)+\log(1/\delta)}{\log(1/q)}\right),
+\]
+and
+\[
+L_2(T)=\log\!\left(\frac{12K^2T^2M(\delta,q,T)}{\delta}\right)
+= O\!\bigl(\log(KT)+\log(1/\delta)\bigr),
+\]
+substituting these into~\eqref{eq:self-ref-T} yields
+\[
+T
+=
+O\!\left(
+H_{\mathrm{graph}}
+\left(\log\frac1\delta+\log(KT)\right)
+\frac{\log(1/\delta)}{\log(1/q)}
++
+H_{\mathrm{graph}}
+\frac{\log^2(KT)}{\log(1/q)}
+\right).
+\]
+Finally, solving the self-referential logarithm in the standard way used in TS-Explore and LUCB analyses gives
+\[
+T
+=
+O\!\left(
+H_{\mathrm{graph}}
+\left(\log\frac1\delta+\log(KH_{\mathrm{graph}})\right)
+\frac{\log(1/\delta)}{\log(1/q)}
++
+H_{\mathrm{graph}}
+\frac{\log^2(KH_{\mathrm{graph}})}{\log(1/q)}
+\right).
+\]
+Setting $q=\delta$ reduces the first factor to a constant multiple of $\log(1/\delta)$ and yields the simplified bound
+\[
+T
+=
+O\!\left(
+H_{\mathrm{graph}}\log\frac1\delta
++
+H_{\mathrm{graph}}\log^2(KH_{\mathrm{graph}})
+\right).
+\]
+This proves the theorem.
+\end{proof}
+
+\section{Proofs for the Optimal Regularization and Smoothness Asymptotics}
+\label{app:proofs-misspecified}
+%=============================================================================
+
+We derive the optimal regularization $\rho^\star(\varepsilon)$, characterize the
+resulting competitive set, prove Theorem~\ref{thm:main-mis}, and establish the
+limiting behavior as $\varepsilon\to 0$ (Corollary~\ref{cor:eps-limit}). The
+analysis builds directly on the graph-smooth proofs in
+Appendix~\ref{app:proofs-graph}; the good events $G_0$, $G_1$, $G_2$ and
+Lemma~\ref{lem:good-graph} hold for any choice of $\rho>0$.
+
+\paragraph{Notation.}
+As before, we write $\sigma_0=2\sigma\sqrt{14}$,
+$L_1(t)=\log(12K^2t^2/\delta)$,
+$L_2(t)=\log(12K^2t^2M(\delta,q,t)/\delta)$, and $C(t)=L_1(t)/\phi^2(q)$.
+The confidence width for the graph-smooth estimator is
+\[
+\gamma_i(t)
+=
+\frac{1}{\sqrt{t_{\mathrm{eff},i}(t)}}
+\bigl(\sigma_0\sqrt{L_1(t)}+\rho\varepsilon\bigr).
+\]
+We abbreviate $\ell(t):=\sigma_0\sqrt{L_1(t)}$ and
+$\mathcal J_i:=\mathcal J(i,G)$ for the influence factor of arm~$i$.
+
+%----------------------------------------------------------------------
+\paragraph{Derivation of the non-competitive threshold.}
+%----------------------------------------------------------------------
+
+From the proof of Theorem~\ref{thm:main-graph}
+(Appendix~\ref{app:proofs-graph}), arm~$i$ is eliminated once
+\begin{equation}
+\label{eq:elim-general}
+t_{\mathrm{eff},i}(t)
+\;\ge\;
+\frac{186\,C(t)\,L_2(t)}{\Delta_{i,c}^2}.
+\end{equation}
+By Theorem~\ref{thm:teff-lower}, the graph bonus alone yields
+$t_{\mathrm{eff},i}(t)\ge\rho\,\mathcal J_i/2$ (taking the minimum with the
+component pull count and ignoring floors). Thus, arm~$i$ is non-competitive ---
+it is eliminated without needing its own direct pulls to dominate --- whenever
+\begin{equation}
+\label{eq:nc-rho}
+\frac{\rho\,\mathcal J_i}{2}
+\;\ge\;
+\frac{186\,C(t)\,L_2(t)}{\Delta_{i,c}^2},
+\qquad\text{i.e.,}\qquad
+\Delta_{i,c}^2
+\;\ge\;
+\frac{372\,C(t)\,L_2(t)}{\rho\,\mathcal J_i}.
+\end{equation}
+To connect this with the threshold~\eqref{eq:noncomp-threshold} in the main
+text, note that the variance scale $C(t)=L_1(t)/\phi^2(q)$ satisfies
+\[
+C(t)\,L_2(t)
+\;\asymp\;
+L_1(t)\,L_2(t)
+\;\asymp\;
+(\ell(t))^2\,L_2(t)/\sigma_0^2.
+\]
+Meanwhile, the $G_2$ event in Lemma~\ref{lem:good-graph} requires the
+Thompson variance to dominate the confidence width. Specifically, the ratio
+appearing in the Gaussian survival bound (see the $G_2$ step of the proof of
+Lemma~\ref{lem:good-graph}) is
+\[
+\frac{\gamma_i(t)+\gamma_j(t)}
+{\sqrt{C(t)\bigl(\tfrac{1}{t_{\mathrm{eff},i}(t)}+\tfrac{1}{t_{\mathrm{eff},j}(t)}\bigr)}}
+\;\ge\;
+\frac{\ell(t)+\rho\varepsilon}{\sqrt{C(t)}}
+\cdot
+\frac{1/\sqrt{t_{\mathrm{eff},i}}+1/\sqrt{t_{\mathrm{eff},j}}}
+     {\sqrt{1/t_{\mathrm{eff},i}+1/t_{\mathrm{eff},j}}}.
+\]
+The second factor is at least~$1$ by Cauchy--Schwarz. The first factor equals
+$(\ell+\rho\varepsilon)\phi(q)/\sqrt{L_1}$, which is at least $\phi(q)$ since
+$\ell=\sigma_0\sqrt{L_1}\ge\sqrt{L_1}$ for $\sigma\ge 1/\sqrt{56}$. Hence
+$C(t)=L_1(t)/\phi^2(q)$ suffices for the $G_2$ argument whenever
+$\rho\varepsilon\le\ell(t)$. Combining with~\eqref{eq:nc-rho}, the
+non-competitive condition becomes
+\[
+\Delta_{i,c}
+\;\gtrsim\;
+\frac{\ell(t)+\rho\varepsilon}{\sqrt{\rho\,\mathcal J_i}},
+\]
+which is exactly~\eqref{eq:noncomp-threshold}.
+
+%----------------------------------------------------------------------
+\paragraph{Proof of optimal regularization~\eqref{eq:rho-star}.}
+%----------------------------------------------------------------------
+
+\begin{proof}
+Fix an arm $i\neq a^\star$ and consider the non-competitive threshold as a
+function of $\rho$:
+\[
+f_i(\rho)
+:=
+\frac{\ell+\rho\varepsilon}{\sqrt{\rho\,\mathcal J_i}}
+=
+\frac{\ell}{\sqrt{\rho\,\mathcal J_i}}
++
+\varepsilon\sqrt{\frac{\rho}{\mathcal J_i}}.
+\]
+The first term (variance) is decreasing in $\rho$; the second (bias) is
+increasing. Taking the derivative and setting it to zero:
+\[
+f_i'(\rho)
+=
+-\frac{\ell}{2\rho^{3/2}\sqrt{\mathcal J_i}}
++\frac{\varepsilon}{2\sqrt{\rho\,\mathcal J_i}}
+=0
+\qquad\Longrightarrow\qquad
+\rho^\star
+=
+\frac{\ell}{\varepsilon}
+=
+\frac{\sigma_0\sqrt{L_1(T)}}{\varepsilon}.
+\]
+Note that $\rho^\star$ does not depend on $i$ or $\mathcal J_i$: the same
+regularization is optimal for all arms simultaneously, since $\mathcal J_i$
+appears symmetrically in the numerator and denominator of $f_i$.
+
+At $\rho=\rho^\star$, the bias and variance terms are equal
+($\ell/\sqrt{\rho^\star}=\varepsilon\sqrt{\rho^\star}=\sqrt{\ell\varepsilon}$),
+and the threshold evaluates to
+\[
+f_i(\rho^\star)
+=
+\frac{2\sqrt{\ell\varepsilon}}{\sqrt{\mathcal J_i}}
+=
+\frac{2\sqrt{\sigma_0\varepsilon\sqrt{L_1(T)}}}{\sqrt{\mathcal J(i,G)}}.
+\]
+Squaring, arm $i$ is non-competitive under $\rho^\star$ if and only if
+\[
+\Delta_{i,c}^2
+\;\ge\;
+\frac{4\,\sigma_0\varepsilon\sqrt{L_1(T)}}{\mathcal J(i,G)},
+\]
+which is the characterization in Definition~\ref{def:comp-eps} with
+$c_0=4$.
+\end{proof}
+
+We also verify the constraint $\rho^\star\varepsilon\le\ell$ required for the
+$G_2$ argument: $\rho^\star\varepsilon=\ell$, which is exactly the
+boundary case.
+
+%----------------------------------------------------------------------
+\paragraph{Good events under optimal tuning.}
+%----------------------------------------------------------------------
+
+\begin{proof}[Proof of the good-event lemma under $\rho=\rho^\star$]
+Since $\rho^\star\varepsilon=\ell(t)$ (at the stopping time; for earlier
+rounds the log term is smaller, so $\rho^\star\varepsilon\ge\ell(t)$ is a
+mild overestimate that only increases $\gamma_i$, making the $G_0$ event
+easier to achieve), the analysis of $G_0$, $G_1$, and $G_2$ from
+Lemma~\ref{lem:good-graph} applies directly with the same definitions and
+the same constants. In particular:
+
+\emph{Event $G_0$.} The concentration inequality
+(Lemma~A.2 of \citealt{thaker2022maximizing}) holds for any $\rho>0$ with
+confidence width $\gamma_i(t)=(\ell(t)+\rho\varepsilon)/\sqrt{t_{\mathrm{eff},i}(t)}$.
+At $\rho=\rho^\star$, $\gamma_i(t)=2\ell(t)/\sqrt{t_{\mathrm{eff},i}(t)}$.
+The tail probability is $\delta/(2w_i(\boldsymbol\pi_t))$, and the union
+bound gives $\Pr(G_0^c)\le\delta/3$ exactly as before.
+
+\emph{Event $G_1$.} Unchanged from Appendix~\ref{app:proofs-graph}, as $G_1$
+depends only on the Gaussian sampling step and not on $\rho$ or $\varepsilon$.
+$\Pr(G_1^c)\le\delta/3$.
+
+\emph{Event $G_2$.} The Gaussian survival argument requires
+$(\ell+\rho\varepsilon)/\sqrt{C(t)}\ge\phi(q)$. At $\rho=\rho^\star$, the
+left-hand side is $2\ell/\sqrt{C(t)}=2\sigma_0\sqrt{L_1}\cdot\phi(q)/\sqrt{L_1}
+=2\sigma_0\phi(q)\ge\phi(q)$, so the condition is satisfied. The union bound
+gives $\Pr(G_2^c\mid G_0)\le\delta/3$ as before.
+
+Combining: $\Pr(G_0\cap G_1\cap G_2)\ge 1-\delta$.
+\end{proof}
+
+%----------------------------------------------------------------------
+\paragraph{Proof of Theorem~\ref{thm:main-mis} (sample complexity under optimal tuning).}
+%----------------------------------------------------------------------
+
+\begin{proof}
+The correctness argument (Theorem~\ref{thm:correct-graph}) is unchanged, since
+it uses only the $G_2$ event and the stopping rule.
+
+For the sample complexity, the elimination threshold from
+Lemma~\ref{lem:terminate-graph} requires
+\[
+t_{\mathrm{eff},i}(t)
+\;\ge\;
+\frac{186\,C(t)\,L_2(t)}{\Delta_{i,c}^2}
+\qquad\text{for all }i\neq a^\star.
+\]
+We partition the arms using the optimal competitive set from
+Definition~\ref{def:comp-eps}.
+
+\smallskip\noindent
+\emph{Non-competitive arms ($i\in\mathcal N_\varepsilon$).}
+By definition, $\Delta_{i,c}^2\,\mathcal J_i>c_0\,\sigma_0\varepsilon\sqrt{L_1}$.
+Since $\rho^\star=\ell/\varepsilon=\sigma_0\sqrt{L_1}/\varepsilon$, the graph
+bonus is
+\[
+\frac{\rho^\star\mathcal J_i}{2}
+=
+\frac{\sigma_0\sqrt{L_1}\,\mathcal J_i}{2\varepsilon}
+>
+\frac{c_0(\sigma_0)^2 L_1}{2\Delta_{i,c}^2}
+\;\ge\;
+\frac{186\,C(t)\,L_2(t)}{\Delta_{i,c}^2}
+\]
+for appropriate constants, where the last inequality uses
+$C(t)L_2(t)\asymp L_1(t)L_2(t)$ and absorbs the ratio into $c_0$.
+Hence the elimination threshold is met by the graph bonus alone once the total
+horizon $t$ is large enough that $\sum_{j\in C(i)}t_j\ge\rho^\star\mathcal J_i$
+(so that the minimum in Theorem~\ref{thm:teff-lower} is saturated by the
+influence term). This requires
+\[
+t
+\;\gtrsim\;
+\frac{C(t)\,L_2(t)}{\Delta_{i,c}^2}
+\cdot
+\frac{1}{\rho^\star\mathcal J_i/(C(t)L_2(t)/\Delta_{i,c}^2)}
+\;=\;
+\frac{C(t)\,L_2(t)}{\Delta_{i,c}^2},
+\]
+where the second factor is $O(1)$ for non-competitive arms. Across all
+non-competitive arms, the binding constraint is
+$t\gtrsim C(t)L_2(t)\cdot\max_{i\in\mathcal N_\varepsilon}\Delta_{i,c}^{-2}$.
+
+\smallskip\noindent
+\emph{Competitive arms ($i\in\mathcal H_\varepsilon\setminus\{a^\star\}$).}
+The graph bonus does not suffice, so arm~$i$ must accumulate direct pulls.
+The threshold requires
+$t_i(t)\gtrsim C(t)L_2(t)/\Delta_{i,c}^2$.
+Summing:
+$\sum_{i\in\mathcal H_\varepsilon\setminus\{a^\star\}}t_i
+\lesssim
+C(t)L_2(t)\sum_{i\in\mathcal H_\varepsilon\setminus\{a^\star\}}\Delta_{i,c}^{-2}$.
+
+\smallskip\noindent
+\emph{Combining both contributions.}
+The stopping time satisfies
+\[
+T
+\;\le\;
+c\,C(T)\,L_2(T)
+\left(
+\sum_{i\in\mathcal H_\varepsilon\setminus\{a^\star\}}\frac{1}{\Delta_{i,c}^2}
++
+\max_{i\in\mathcal N_\varepsilon}\frac{1}{\Delta_{i,c}^2}
+\right)
+=
+c\,C(T)\,L_2(T)\cdot H_\varepsilon.
+\]
+Since
+$C(T)=O\bigl((\log(KT)+\log(1/\delta))/\log(1/q)\bigr)$ and
+$L_2(T)=O\bigl(\log(KT)+\log(1/\delta)\bigr)$,
+substituting and solving the self-referential logarithm in the standard way
+yields
+\[
+T
+=
+O\!\left(
+H_\varepsilon
+\left(\log\frac1\delta+\log(KH_\varepsilon)\right)
+\frac{\log(1/\delta)}{\log(1/q)}
++
+H_\varepsilon
+\frac{\log^2(KH_\varepsilon)}{\log(1/q)}
+\right).
+\]
+\end{proof}
+
+%----------------------------------------------------------------------
+\paragraph{Proof of Corollary~\ref{cor:eps-limit} (smoothness asymptotics).}
+%----------------------------------------------------------------------
+
+\begin{proof}
+Fix the arm set $[K]$, the gap vector $\{\Delta_{i,c}\}_{i\neq a^\star}$, and
+the graph $G$. Each suboptimal arm~$i$ has a critical smoothness level
+\[
+\varepsilon_i^\star
+=
+\frac{\Delta_{i,c}^2\,\mathcal J(i,G)}{c_0\,\sigma_0\sqrt{L_1(T)}}.
+\]
+(The logarithmic dependence on $T$ creates a mild self-referential coupling; we
+suppress it by treating $L_1$ as slowly varying, consistent with the standard
+treatment in the TS-Explore and LUCB literature.)
+
+For any $\varepsilon<\varepsilon_i^\star$, arm~$i$ satisfies
+$\Delta_{i,c}^2\,\mathcal J_i>c_0\sigma_0\varepsilon\sqrt{L_1}$, so
+$i\in\mathcal N_\varepsilon$. Conversely, for
+$\varepsilon\ge\varepsilon_i^\star$, $i\in\mathcal H_\varepsilon$.
+
+Order the suboptimal arms so that
+$\varepsilon_{\pi(1)}^\star\ge\varepsilon_{\pi(2)}^\star\ge\cdots
+\ge\varepsilon_{\pi(K-1)}^\star$. As $\varepsilon$ decreases past each
+$\varepsilon_{\pi(j)}^\star$, arm $\pi(j)$ moves from $\mathcal H_\varepsilon$
+to $\mathcal N_\varepsilon$ and drops out of the sum in $H_\varepsilon$. Each
+such transition is a \emph{phase transition} in the hardness.
+
+\emph{Part (i).}
+For any $\varepsilon<\varepsilon_{\pi(K-1)}^\star
+=\min_{i\neq a^\star}\varepsilon_i^\star$, every suboptimal arm has exited the
+competitive set, so $\mathcal H_\varepsilon=\{a^\star\}$ (or is empty of
+suboptimal arms). Hence $\mathcal H_\varepsilon\to\{a^\star\}$ as
+$\varepsilon\to 0$.
+
+\emph{Part (ii).}
+When $\mathcal H_\varepsilon\setminus\{a^\star\}=\varnothing$, the sum term
+vanishes and
+\[
+H_\varepsilon
+=
+\max_{i\in\mathcal N_\varepsilon}\frac{1}{\Delta_{i,c}^2}
+=
+\max_{i\neq a^\star}\frac{1}{\Delta_{i,c}^2}.
+\]
+
+\emph{Part (iii).}
+Substituting $H_\varepsilon=\max_i\Delta_{i,c}^{-2}$ into
+Theorem~\ref{thm:main-mis} yields the stated bound.
+\end{proof}
+
+\paragraph{Remark on misspecification.}
+As noted in Remark~\ref{rem:misspecified}, if the algorithm is run with
+smoothness budget $\varepsilon$ while the true level is
+$\varepsilon_{\mathrm{true}}\ge\varepsilon$, the bias term in $\gamma_i$ becomes
+$\rho\varepsilon_{\mathrm{true}}$ rather than $\rho\varepsilon$. Since $\rho$
+and $\varepsilon$ appear only through their product in the bias, this is
+equivalent to running the well-specified analysis with the pair
+$(\rho'=\rho\varepsilon_{\mathrm{true}}/\varepsilon',\;\varepsilon')$ for any
+$\varepsilon'$ satisfying $\rho'\varepsilon'=\rho\varepsilon_{\mathrm{true}}$.
+In particular, setting $\varepsilon'=\varepsilon_{\mathrm{true}}$ and
+$\rho'=\rho$ recovers the well-specified case. Thus misspecification of
+$\varepsilon$ does not introduce any fundamentally new phenomenon; it simply
+corresponds to a suboptimal choice of $\rho$ relative to the true smoothness
+level.
+
+
+
+
+\section{Proofs for the Graph-Feedback Model}
+\label{app:proofs-feedback}
+%=============================================================================
+
+We begin by restating the algorithm whose pseudocode was deferred from Section~\ref{sec:graph-feedback}.
+
+\begin{algorithm}[H]
+\caption{\texttt{TS-Explore-GF} (graph feedback)}
+\label{algo:ts-explore-gf}
+\begin{algorithmic}[1]
+\State \textbf{Inputs:} error constraint $\delta$, threshold $q\in[\delta,0.1]$, graph $G=([n],E_G)$.
+\State Initialize $t\gets 0$; $N_i^{\mathrm{fb}}\gets 0$, $R_i^{\mathrm{fb}}\gets 0$ for all $i\in[n]$.
+\State Pull a set of arms whose closed neighborhoods cover $[n]$, so every arm is observed at least once.
+\While{true}
+    \State $t\gets t+1$
+    \State $\widehat\mu_i(t)\gets R_i^{\mathrm{fb}}/N_i^{\mathrm{fb}}$ for all $i$
+    \State $\widehat i_t\gets \arg\max_i \widehat\mu_i(t)$
+    \For{$k=1,\dots,M(\delta,q,t)$}
+        \For{$i=1,\dots,n$}
+            \State Draw $\theta_i^k(t)\sim \mathcal N\!\bigl(\widehat\mu_i(t),\;C(\delta,q,t)/N_i^{\mathrm{fb}}(t)\bigr)$
+        \EndFor
+        \State $\widetilde i_t^k\gets \arg\max_i \theta_i^k(t)$
+        \State $\widehat\Delta_t^k\gets \theta_{\widetilde i_t^k}^k(t)-\theta_{\widehat i_t}^k(t)$
+    \EndFor
+    \If{$\widetilde i_t^k=\widehat i_t$ for all $k$}
+        \State \Return $\widehat i_t$
+    \Else
+        \State $k^\star\gets \arg\max_k \widehat\Delta_t^k$
+        \State $\widetilde i_t\gets \widetilde i_t^{k^\star}$
+        \State Choose $\pi_t\in\arg\max_{a\in[n]} |N_G^+(a)\cap\{\widehat i_t,\widetilde i_t\}|$, with ties broken in favor of the smaller observation count.
+        \State Pull $\pi_t$ and update every observed arm $j\in N_G^+(\pi_t)$
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+All proofs in this section follow those in Appendix~\ref{app:proofs-graph} after the substitutions $t_{\mathrm{eff},i}(t)\rightsquigarrow N_i^{\mathrm{fb}}(t)$ and $\widehat\mu_i(t)\rightsquigarrow R_i^{\mathrm{fb}}(t)/N_i^{\mathrm{fb}}(t)$. The key simplification is that each observation of arm~$i$ through the feedback graph is an independent draw from $\nu_i$, so standard Hoeffding concentration applies directly with no Laplacian bias term.
+
+We use the same shorthand as in Appendix~\ref{app:proofs-graph}:
+\[
+L_1(t):=\log\!\left(\frac{12n^2t^2}{\delta}\right),
+\qquad
+L_2(t):=\log\!\left(\frac{12n^2t^2M(\delta,q,t)}{\delta}\right),
+\qquad
+C(t):=C(\delta,q,t).
+\]
+
+\paragraph{Definition of the good events.}
+We work on the intersection of the following three events.
+\begin{align*}
+G_0^{\mathrm{fb}}
+&:=
+\Bigl\{
+\forall t\ge 1,\ \forall i\in[n],\
+\bigl|\widehat\mu_i(t)-\mu_i\bigr|\le \sqrt{\frac{L_1(t)}{2\,N_i^{\mathrm{fb}}(t)}}
+\Bigr\},\\
+G_1^{\mathrm{fb}}
+&:=
+\Bigl\{
+\forall t\ge 1,\ \forall k\in[M(\delta,q,t)],\ \forall i\in[n],\
+|\theta_i^k(t)-\widehat\mu_i(t)|
+\le
+\sqrt{\frac{2C(t)L_2(t)}{N_i^{\mathrm{fb}}(t)}}
+\Bigr\},\\
+G_2^{\mathrm{fb}}
+&:=
+\Bigl\{
+\forall t\ge 1,\ \forall i\neq j,\ \exists k\in[M(\delta,q,t)]
+\text{ s.t.\ }
+\theta_i^k(t)-\theta_j^k(t)\ge \mu_i-\mu_j
+\Bigr\}.
+\end{align*}
+Event $G_0^{\mathrm{fb}}$ controls the empirical mean around the true mean (cf.\ $G_0$ in the graph-smooth model, which controls the Laplacian-regularized estimator). Because the estimator here is a simple sample average, no bias term from the graph smoothness appears. Event $G_1^{\mathrm{fb}}$ controls the Gaussian Thompson perturbations around the empirical means, and $G_2^{\mathrm{fb}}$ guarantees that among the $M(\delta,q,t)$ samples there is always at least one that separates any pair of arms by at least the true gap.
+
+\paragraph{Proof of Lemma~\ref{lem:good-fb}.}
+We prove $\Pr(G_0^{\mathrm{fb}}\cap G_1^{\mathrm{fb}}\cap G_2^{\mathrm{fb}})\ge 1-\delta$ by bounding the failure probability of each event separately.
+
+\begin{proof}
+\emph{Bounding $\Pr((G_0^{\mathrm{fb}})^c)$.}
+Fix a time $t\ge 1$ and an arm $i\in[n]$. The estimator $\widehat\mu_i(t)=R_i^{\mathrm{fb}}(t)/N_i^{\mathrm{fb}}(t)$ is the average of $N_i^{\mathrm{fb}}(t)$ independent draws from $\nu_i$, each supported on $[0,1]$. By Hoeffding's inequality,
+\[
+\Pr\!\left(
+|\widehat\mu_i(t)-\mu_i|>\sqrt{\frac{L_1(t)}{2\,N_i^{\mathrm{fb}}(t)}}
+\right)
+\le 2\exp(-L_1(t))
+= \frac{\delta}{6n^2t^2}.
+\]
+Taking a union bound over all $n$ arms and all times $t\ge 1$,
+\[
+\Pr\!\bigl((G_0^{\mathrm{fb}})^c\bigr)
+\le
+\sum_{t\ge 1}\sum_{i=1}^n \frac{\delta}{6n^2t^2}
+\le
+\sum_{t\ge 1}\frac{\delta}{6nt^2}
+\le
+\sum_{t\ge 1}\frac{\delta}{6t^2}
+\le \frac{\delta}{3}.
+\]
+
+\emph{Bounding $\Pr((G_1^{\mathrm{fb}})^c)$.}
+This step is identical to the $G_1$ argument in Appendix~\ref{app:proofs-graph}, with $N_i^{\mathrm{fb}}(t)$ in place of $t_{\mathrm{eff},i}(t)$. Fix $t\ge 1$, $k\in[M(\delta,q,t)]$, and $i\in[n]$. Conditional on the history up to time $t$,
+\[
+\theta_i^k(t)-\widehat\mu_i(t)
+\sim \mathcal N\!\left(0,\frac{C(t)}{N_i^{\mathrm{fb}}(t)}\right).
+\]
+By standard Gaussian concentration,
+\[
+\Pr\!\left[
+|\theta_i^k(t)-\widehat\mu_i(t)|>
+\sqrt{\frac{2C(t)L_2(t)}{N_i^{\mathrm{fb}}(t)}}
+\right]
+\le 2e^{-L_2(t)}
+= \frac{\delta}{6n^2t^2M(\delta,q,t)}.
+\]
+A union bound over arms, Thompson samples, and times gives
+\[
+\Pr\!\bigl((G_1^{\mathrm{fb}})^c\bigr)
+\le
+\sum_{t\ge 1}\sum_{k=1}^{M(\delta,q,t)}\sum_{i=1}^n
+\frac{\delta}{6n^2t^2M(\delta,q,t)}
+\le
+\sum_{t\ge 1}\frac{\delta}{6nt^2}
+\le
+\frac{\delta}{3}.
+\]
+
+\emph{Bounding $\Pr((G_2^{\mathrm{fb}})^c\mid G_0^{\mathrm{fb}})$.}
+Fix $t\ge 1$ and two distinct arms $i,j$. Conditional on the empirical means,
+\[
+\theta_i^k(t)-\theta_j^k(t)
+\sim
+\mathcal N\!\left(
+\widehat\mu_i(t)-\widehat\mu_j(t),\;
+C(t)\Bigl(\frac{1}{N_i^{\mathrm{fb}}(t)}+\frac{1}{N_j^{\mathrm{fb}}(t)}\Bigr)
+\right).
+\]
+On $G_0^{\mathrm{fb}}$ we have $\widehat\mu_i(t)-\widehat\mu_j(t)\ge \mu_i-\mu_j - \sqrt{L_1(t)/(2N_i^{\mathrm{fb}}(t))} - \sqrt{L_1(t)/(2N_j^{\mathrm{fb}}(t))}$. Denote the sum of these confidence radii by $\gamma_i^{\mathrm{fb}}(t)+\gamma_j^{\mathrm{fb}}(t)$, where $\gamma_i^{\mathrm{fb}}(t):=\sqrt{L_1(t)/(2N_i^{\mathrm{fb}}(t))}$. Then, conditional on $G_0^{\mathrm{fb}}$,
+\begin{align*}
+\Pr\!\left[
+\theta_i^k(t)-\theta_j^k(t)\ge \mu_i-\mu_j
+\mid G_0^{\mathrm{fb}}
+\right]
+&\ge
+\Phi\!\left(
+\frac{\gamma_i^{\mathrm{fb}}(t)+\gamma_j^{\mathrm{fb}}(t)}{
+\sqrt{C(t)\bigl(\frac{1}{N_i^{\mathrm{fb}}(t)}+\frac{1}{N_j^{\mathrm{fb}}(t)}\bigr)}
+},\;0,\;1
+\right).
+\end{align*}
+By the choice $C(t)=L_1(t)/\phi^2(q)$ and the quantile map $\phi(q)$ from the TS-Explore analysis of \citet{wang2022thompson}, the right-hand side is at least $q$. (Note that the ratio inside $\Phi$ simplifies to $\sqrt{L_1(t)/C(t)}\cdot\bigl(\sqrt{1/(2N_i^{\mathrm{fb}})}+\sqrt{1/(2N_j^{\mathrm{fb}})}\bigr)/\sqrt{1/N_i^{\mathrm{fb}}+1/N_j^{\mathrm{fb}}}\ge \sqrt{L_1(t)/C(t)}=\phi(q)$, exactly as in the graph-smooth case.) Since the $M(\delta,q,t)$ samples are independent,
+\[
+\Pr\!\left[
+\text{no }k\text{ satisfies }
+\theta_i^k(t)-\theta_j^k(t)\ge \mu_i-\mu_j
+\mid G_0^{\mathrm{fb}}
+\right]
+\le (1-q)^{M(\delta,q,t)}
+\le \frac{\delta}{12n^2t^2},
+\]
+by the definition of $M(\delta,q,t)$. A union bound over all ordered pairs $(i,j)$ with $i\neq j$ and all $t\ge 1$ gives
+\[
+\Pr\!\bigl((G_2^{\mathrm{fb}})^c\mid G_0^{\mathrm{fb}}\bigr)
+\le
+\sum_{t\ge 1}\sum_{i\neq j}\frac{\delta}{12n^2t^2}
+\le
+\sum_{t\ge 1}\frac{\delta}{6t^2}
+\le
+\frac{\delta}{3}.
+\]
+Combining all three bounds,
+\[
+\Pr\!\bigl(G_0^{\mathrm{fb}}\cap G_1^{\mathrm{fb}}\cap G_2^{\mathrm{fb}}\bigr)
+\ge
+1-\Pr\!\bigl((G_0^{\mathrm{fb}})^c\bigr)-\Pr\!\bigl((G_1^{\mathrm{fb}})^c\bigr)-\Pr\!\bigl((G_2^{\mathrm{fb}})^c\mid G_0^{\mathrm{fb}}\bigr)
+\ge 1-\delta.
+\]
+\end{proof}
+
+\paragraph{Proof of Theorem~\ref{thm:correct-fb} (correctness).}
+
+\begin{proof}
+Assume the algorithm stops at time $t$ and returns the empirical maximizer $\widehat i_t$. By the stopping rule, $\widetilde i_t^k = \widehat i_t$ for all $k=1,\dots,M(\delta,q,t)$. Suppose for contradiction that $\widehat i_t\neq a^\star$. Then $\Delta_{\widehat i_t}=\mu_{a^\star}-\mu_{\widehat i_t}>0$. By event $G_2^{\mathrm{fb}}$, there exists some sample index $k$ such that
+\[
+\theta_{a^\star}^k(t)-\theta_{\widehat i_t}^k(t)
+\ge
+\mu_{a^\star}-\mu_{\widehat i_t}
+= \Delta_{\widehat i_t} > 0.
+\]
+Therefore $\widetilde i_t^k \neq \widehat i_t$, contradicting the stopping rule. Hence, whenever the algorithm stops on $G_0^{\mathrm{fb}}\cap G_1^{\mathrm{fb}}\cap G_2^{\mathrm{fb}}$, the returned arm must be $a^\star$. Since $\Pr(G_0^{\mathrm{fb}}\cap G_1^{\mathrm{fb}}\cap G_2^{\mathrm{fb}})\ge 1-\delta$ by Lemma~\ref{lem:good-fb}, the theorem follows.
+\end{proof}
+
+\paragraph{Proof of Lemma~\ref{lem:terminate-fb}.}
+
+\begin{proof}
+Fix a suboptimal arm $i\neq a^\star$ and suppose, toward contradiction, that arm $i$ is still pulled at some time $t$ even though
+\begin{equation}
+\label{eq:terminate-threshold-fb}
+N_i^{\mathrm{fb}}(t)
+\ge
+\frac{186\,C(t)L_2(t)}{\Delta_i^2}.
+\end{equation}
+Since the algorithm pulls one of the two arms in the disagreement pair $\{\widehat i_t,\widetilde i_t\}$ (specifically, the one whose closed neighborhood covers more of the pair), arm $i$ must appear in this pair. We consider both cases, mirroring the proof of Lemma~\ref{lem:terminate-graph} with $N_i^{\mathrm{fb}}(t)$ replacing $t_{\mathrm{eff},i}(t)$ and $\Delta_i$ replacing $\Delta_{i,c}$.
+
+\emph{Case 1: $\widehat i_t = i$.}
+Since $i$ is the arm triggering the pull, $N_{\widetilde i_t}^{\mathrm{fb}}(t)\ge N_i^{\mathrm{fb}}(t)\ge 186\,C(t)L_2(t)/\Delta_i^2$.
+On $G_1^{\mathrm{fb}}$, for every sample index $k$,
+\[
+|\theta_i^k(t)-\widehat\mu_i(t)|
+\le
+\sqrt{\frac{2C(t)L_2(t)}{N_i^{\mathrm{fb}}(t)}}
+\le
+\frac{\Delta_i}{\sqrt{93}}
+<
+\frac{\Delta_i}{7},
+\]
+and similarly $|\theta_{\widetilde i_t}^k(t)-\widehat\mu_{\widetilde i_t}(t)|<\Delta_i/7$.
+Since $\widetilde i_t$ is the challenger with maximal sampled advantage, $\theta_{\widetilde i_t}^{k^\star}(t)-\theta_i^{k^\star}(t)\ge 0$, which gives
+$\widehat\mu_{\widetilde i_t}(t)-\widehat\mu_i(t)\ge -2\Delta_i/7$.
+Now $G_2^{\mathrm{fb}}$ provides some index $k'$ with $\theta_{a^\star}^{k'}(t)-\theta_i^{k'}(t)\ge \Delta_i$. Using the $G_1^{\mathrm{fb}}$ deviations,
+\[
+\widehat\mu_{a^\star}(t)-\widehat\mu_i(t)
+\ge
+\Delta_i - \frac{2\Delta_i}{7}
+= \frac{5\Delta_i}{7} > 0,
+\]
+contradicting the assumption that $i=\widehat i_t$ is the empirical maximizer.
+
+\emph{Case 2: $\widetilde i_t = i$.}
+Then $N_{\widehat i_t}^{\mathrm{fb}}(t)\ge N_i^{\mathrm{fb}}(t)$. The same $G_1^{\mathrm{fb}}$ calculation yields
+$|\theta_i^k(t)-\widehat\mu_i(t)|<\Delta_i/7$ and $|\theta_{\widehat i_t}^k(t)-\widehat\mu_{\widehat i_t}(t)|<\Delta_i/7$ for all $k$.
+Since $\widetilde i_t = i$ is the challenger, $\theta_i^{k^\star}(t)-\theta_{\widehat i_t}^{k^\star}(t)\ge 0$, so $\widehat\mu_i(t)-\widehat\mu_{\widehat i_t}(t)\ge -2\Delta_i/7$.
+Event $G_2^{\mathrm{fb}}$ gives $\theta_{a^\star}^{k'}(t)-\theta_i^{k'}(t)\ge \Delta_i$, hence $\widehat\mu_{a^\star}(t)-\widehat\mu_i(t)\ge 5\Delta_i/7$. Combining,
+\[
+\widehat\mu_{a^\star}(t)-\widehat\mu_{\widehat i_t}(t)
+\ge
+\frac{5\Delta_i}{7}-\frac{2\Delta_i}{7}
+=\frac{3\Delta_i}{7}>0,
+\]
+contradicting the fact that $\widehat i_t$ is the empirical maximizer.
+
+Both cases lead to contradictions, so a suboptimal arm cannot be pulled once its feedback count crosses the threshold~\eqref{eq:terminate-threshold-fb}.
+\end{proof}
+
+\paragraph{Proof of Theorem~\ref{thm:main-fb}.}
+
+\begin{proof}
+By Lemma~\ref{lem:terminate-fb}, successful elimination of every suboptimal arm $i$ requires
+\begin{equation}
+\label{eq:suff-Nfb}
+N_i^{\mathrm{fb}}(t)
+\ge
+\frac{186\,C(t)L_2(t)}{\Delta_i^2}
+\qquad\text{for all }i\neq a^\star.
+\end{equation}
+Define $f_i(t):=186\,C(t)L_2(t)/\Delta_i^2$.
+
+The crucial structural difference from the graph-smooth model is how the per-arm counts are generated. In the graph-feedback model, a single action $a$ simultaneously increments $N_j^{\mathrm{fb}}$ for every $j\in N_G^+(a)$. Let $\tau_a$ denote the number of times action $a$ is pulled up to time $t$. Then $N_i^{\mathrm{fb}}(t)=\sum_{a:\,i\in N_G^+(a)}\tau_a$. The sufficient condition~\eqref{eq:suff-Nfb} can therefore be written as
+\[
+\sum_{a:\,i\in N_G^+(a)}\tau_a \ge f_i(t)
+\qquad\text{for all }i\neq a^\star.
+\]
+The minimum total number of pulls $T=\sum_{a=1}^n \tau_a$ subject to these constraints is precisely the covering LP
+\[
+\min_{\bm\tau\in\mathbb R_+^n}
+\left\{
+\sum_{a=1}^n \tau_a :
+\sum_{a:\,i\in N_G^+(a)}\tau_a \ge f_i(t)
+\text{ for all }i\neq a^\star
+\right\}.
+\]
+Because $f_i(t)=186\,C(t)L_2(t)/\Delta_i^2$, the optimal value of this LP equals $186\,C(T)L_2(T)$ times the value of the LP defining $H_{\mathrm{GF}}$ in~\eqref{eq:HGF}. That is,
+\[
+T \le 186\,C(T)L_2(T)\cdot H_{\mathrm{GF}}.
+\]
+Since
+\[
+C(T)=\frac{L_1(T)}{\phi^2(q)}
+= O\!\left(\frac{\log(nT)+\log(1/\delta)}{\log(1/q)}\right),
+\qquad
+L_2(T)=O\!\bigl(\log(nT)+\log(1/\delta)\bigr),
+\]
+substituting into the bound above yields
+\[
+T = O\!\left(
+H_{\mathrm{GF}}
+\left(\log\frac1\delta+\log(nT)\right)
+\frac{\log(1/\delta)}{\log(1/q)}
++
+H_{\mathrm{GF}}
+\frac{\log^2(nT)}{\log(1/q)}
+\right).
+\]
+Solving the self-referential logarithm in the standard way (as in the TS-Explore and LUCB analyses) gives
+\[
+T = O\!\left(
+H_{\mathrm{GF}}
+\left(\log\frac1\delta+\log(nH_{\mathrm{GF}})\right)
+\frac{\log(1/\delta)}{\log(1/q)}
++
+H_{\mathrm{GF}}
+\frac{\log^2(nH_{\mathrm{GF}})}{\log(1/q)}
+\right).
+\]
+Setting $q=\delta$ reduces this to $O\!\left(H_{\mathrm{GF}}\log(1/\delta)+H_{\mathrm{GF}}\log^2(nH_{\mathrm{GF}})\right)$.
+\end{proof}
+
+\paragraph{Proof of Corollary~\ref{cor:HGF-bounds}.}
+
+\begin{proof}
+We separately prove the three inequalities in~\eqref{eq:HGF-bounds} and the duality statement.
+
+\emph{Min-degree upper bound (right-most inequality).}
+Let $c:=\Delta_{\max}^{-2}/(1+d_{\min}(G))$ and set $\tau_a=c$ for all $a\in[n]$. For each $i\neq i^\star$,
+\[
+\sum_{a:\,i\in N_G^+(a)}\tau_a
+= c\,|N_G^+(i)|
+= c\,(1+\deg_G(i))
+\ge c\,(1+d_{\min}(G))
+= \Delta_{\max}^{-2}
+\ge \Delta_i^{-2},
+\]
+so $\bm\tau$ is feasible for the LP in~\eqref{eq:HGF}. The objective value is $\sum_a\tau_a = nc = n\Delta_{\max}^{-2}/(1+d_{\min}(G))$.
+
+\emph{Clique-cover upper bound (middle inequality).}
+Let $V_G=C_1\sqcup\cdots\sqcup C_{\bar\chi(G)}$ be a partition of $V_G$ into cliques and pick a representative $a_j\in C_j$ for each $j$. Set $\tau_{a_j}=\Delta_{\max}^{-2}$ and $\tau_a=0$ for $a\notin\{a_1,\dots,a_{\bar\chi(G)}\}$. For each suboptimal $i\in C_j$, since $C_j$ is a clique we have $a_j\in N_G^+(i)$, hence
+\[
+\sum_{a:\,i\in N_G^+(a)}\tau_a
+\ge \tau_{a_j}
+= \Delta_{\max}^{-2}
+\ge \Delta_i^{-2}.
+\]
+The objective value of this feasible $\bm\tau$ is $\bar\chi(G)\cdot\Delta_{\max}^{-2}$.
+
+\emph{Packing lower bound (left-most inequality).}
+Let $S\subseteq[n]\setminus\{i^\star\}$ achieve the $2$-packing number, so the closed neighborhoods $\{N_G^+(i):i\in S\}$ are pairwise disjoint and $|S|=\rho(G)$ (after possibly removing $i^\star$ from a maximum packing; this loses at most a single element, which we absorb into the lower bound by working with $S\subseteq[n]\setminus\{i^\star\}$). For any feasible $\bm\tau$ for the LP~\eqref{eq:HGF},
+\[
+\sum_{a=1}^n\tau_a
+\;\ge\;
+\sum_{i\in S}\sum_{a\in N_G^+(i)}\tau_a
+\;\ge\;
+\sum_{i\in S}\Delta_i^{-2}
+\;\ge\;
+|S|\cdot\Delta_{\min}^{-2}
+=\rho(G)\,\Delta_{\min}^{-2},
+\]
+where the first inequality uses pairwise disjointness of the closed neighborhoods (each $\tau_a$ contributes to at most one term in the inner sum) and the second uses feasibility of $\bm\tau$.
+
+\emph{LP duality in the equal-gap case.}
+When $\Delta_i\equiv\Delta$ for all $i\neq i^\star$, the LP~\eqref{eq:HGF} (after factoring out $\Delta^{-2}$) reads
+\[
+\Delta^{-2}\cdot\min_{\bm\tau\ge 0}\Big\{\,\bm 1^\top\bm\tau\;:\;B\bm\tau\ge\bm 1\,\Big\},
+\qquad B_{ia}=\ind\{i\in N_G^+(a)\}\ \ (i\neq i^\star,\ a\in[n]),
+\]
+which is the LP relaxation of the dominating-set problem on $G$ restricted to suboptimal arms. By LP duality, its optimal value equals
+\[
+\max_{\bm y\ge 0}\Big\{\,\bm 1^\top\bm y\;:\; B^\top\bm y\le \bm 1\,\Big\}
+=
+\max_{\bm y\ge 0}\Big\{\sum_{i\neq i^\star} y_i\;:\;\sum_{i\in N_G^+(a)} y_i\le 1\ \forall a\in[n]\Big\},
+\]
+which is exactly the fractional $2$-packing problem on $G$. Hence $H_{\mathrm{GF}}=\Delta^{-2}\rho^*(G)$.
+\end{proof}
+
+\paragraph{Worked examples for Corollary~\ref{cor:HGF-bounds}.}
+We verify the values quoted in the main text under uniform gaps $\Delta_i\equiv\Delta$ for $i\neq i^\star$.
+
+\emph{Empty graph.} The constraints in~\eqref{eq:HGF} decouple into $\tau_i\ge\Delta^{-2}$ for each $i\neq i^\star$, so $H_{\mathrm{GF}}=(n-1)\Delta^{-2}$. Both bounds in~\eqref{eq:HGF-bounds} are tight: each closed neighborhood is a singleton, hence $\rho(G)=n-1$ and $\bar\chi(G)=n-1$.
+
+\emph{Complete graph $K_n$.} Setting $\tau_1=\Delta^{-2}$ and $\tau_a=0$ for $a\ge 2$ is feasible because $1\in N_G^+(i)$ for every $i\in[n]$. This gives $H_{\mathrm{GF}}\le\Delta^{-2}$. Conversely, $H_{\mathrm{GF}}\ge\Delta^{-2}$ from the constraint for any single suboptimal arm. Hence $H_{\mathrm{GF}}=\Delta^{-2}$, with $\bar\chi(G)=\rho(G)=1$.
+
+\emph{Star $K_{1,n-1}$.} Let $c$ be the center and $\ell_1,\dots,\ell_{n-1}$ the leaves. Setting $\tau_c=\Delta^{-2}$ and $\tau_{\ell_k}=0$ for all $k$ is feasible: for the center constraint $\sum_{a\in N_G^+(c)}\tau_a=\Delta^{-2}$, and for each leaf $\ell_k$, $c\in N_G^+(\ell_k)$ so $\sum_{a\in N_G^+(\ell_k)}\tau_a\ge\tau_c=\Delta^{-2}$. Hence $H_{\mathrm{GF}}\le\Delta^{-2}$, with equality from the trivial single-arm lower bound.
+
+\emph{$d$-regular graph.} The uniform allocation $\tau_a\equiv\Delta^{-2}/(d+1)$ is feasible since each closed neighborhood has exactly $d+1$ vertices, giving $\sum_{a\in N_G^+(i)}\tau_a=(d+1)\cdot\Delta^{-2}/(d+1)=\Delta^{-2}$ for each $i$. The objective value is $n\Delta^{-2}/(d+1)$. On a disjoint union of $K_{d+1}$'s the clique-cover number is $\bar\chi(G)=n/(d+1)$, so the upper bound is matched by the trivial cover-by-cliques lower bound; on expander-like $d$-regular graphs the $2$-packing number $\rho(G)$ can be much smaller than $n/(d+1)$, leaving a gap between the two bounds in~\eqref{eq:HGF-bounds}.
+
+
+%=============================================================================
+\section{Proofs for the Normalized-Laplacian Kernel Model}
+\label{app:proofs-normalized}
+%=============================================================================
+
+We begin by restating the algorithm whose pseudocode was deferred from Section~\ref{sec:kernel}.
+
+\begin{algorithm}[H]
+\caption{\texttt{Kernel-TS-Explore}}
+\label{algo:kernel-ts-explore}
+\begin{algorithmic}[1]
+\State \textbf{Inputs:} graph $G$, PSD kernel $K_G$, regularization parameter $\rho>0$, error constraint $\delta$, threshold $q\in[\delta,0.1]$.
+\State Initialize $t\gets n$. Pull each arm once.
+\State Set $V_t \gets \sum_{i=1}^n e_ie_i^\top + \rho K_G$, \quad $\mathbf{x}_t \gets \sum_{s=1}^t e_{\pi_s}r_{s,\pi_s}$, \quad $\widehat{\bm{\mu}}(t)\gets V_t^{-1}\mathbf{x}_t$.
+\While{true}
+    \State $t\gets t+1$
+    \State $\widehat{i}_t \gets \arg\max_{i\in[n]} \widehat{\mu}_i(t)$
+    \For{$m=1,\dots,M(\delta,q,t)$}
+        \For{$i=1,\dots,n$}
+            \State Compute $t_{\mathrm{eff},i}(t)=\bigl[(V_t^{-1})_{ii}\bigr]^{-1}$
+            \State Sample $\theta_i^m(t)\sim\mathcal N\!\bigl(\widehat{\mu}_i(t),\;C(\delta,q,t)/t_{\mathrm{eff},i}(t)\bigr)$
+        \EndFor
+        \State $\widetilde{i}_t^m \gets \arg\max_{i\in[n]} \theta_i^m(t)$
+        \State $\widehat{\Delta}_t^m \gets \theta_{\widetilde{i}_t^m}^m(t)-\theta_{\widehat{i}_t}^m(t)$
+    \EndFor
+    \If{$\widetilde{i}_t^m=\widehat{i}_t$ for all $m=1,\dots,M(\delta,q,t)$}
+        \State \Return $\widehat{i}_t$
+    \Else
+        \State $m^\star \gets \arg\max_m \widehat{\Delta}_t^m$
+        \State $\widetilde{i}_t \gets \widetilde{i}_t^{m^\star}$
+        \State Pull $i(t)\gets \arg\min_{i\in\{\widehat{i}_t,\widetilde{i}_t\}} N_i(t)$
+        \State Observe $r_{t,i(t)}$ and update $V_t \gets V_{t-1}+e_{i(t)}e_{i(t)}^\top$, \; $\mathbf{x}_t \gets \mathbf{x}_{t-1}+r_{t,i(t)}e_{i(t)}$, \; $\widehat{\bm{\mu}}(t)\gets V_t^{-1}\mathbf{x}_t$
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Setup.}
+The estimator in this model is
+\[
+\widehat{\bm\mu}(t)
+= V_t^{-1}\sum_{s=1}^t e_{\pi_s}r_{s,\pi_s},
+\qquad
+V_t = \sum_{s=1}^t e_{\pi_s}e_{\pi_s}^\top + \rho K_G,
+\]
+with kernel-effective sample sizes $t_{\mathrm{eff},i}^{(\mathrm{norm})}(t):=[(V_t)^{-1}]_{ii}^{-1}$. The smoothness assumption is $\langle\bm\mu,K_G\bm\mu\rangle\le\varepsilon^2$. We define the confidence width
+\[
+\gamma_i^{(\mathrm{norm})}(t)
+:=
+\sqrt{\frac{1}{t_{\mathrm{eff},i}^{(\mathrm{norm})}(t)}}
+\left(
+2\sigma\sqrt{14\log\!\left(\frac{2w_i(\boldsymbol\pi_t)}{\delta}\right)}+\rho\|\bm\mu\|_{K_G}
+\right),
+\]
+with the deterministic upper bound $\|\bm\mu\|_{K_G}\le\varepsilon$.
+
+\paragraph{Definition of the good events.}
+\begin{align*}
+G_0^{(\mathrm{norm})}
+&:=
+\Bigl\{
+\forall t\ge 1,\ \forall i\in[K],\
+|\widehat\mu_i(t)-\mu_i|\le \gamma_i^{(\mathrm{norm})}(t)
+\Bigr\},\\
+G_1^{(\mathrm{norm})}
+&:=
+\Bigl\{
+\forall t\ge 1,\ \forall m\in[M(\delta,q,t)],\ \forall i\in[K],\
+|\theta_i^m(t)-\widehat\mu_i(t)|
+\le
+\sqrt{\frac{2C(t)L_2(t)}{t_{\mathrm{eff},i}^{(\mathrm{norm})}(t)}}
+\Bigr\},\\
+G_2^{(\mathrm{norm})}
+&:=
+\Bigl\{
+\forall t\ge 1,\ \forall i\neq j,\ \exists m\in[M(\delta,q,t)]
+\text{ s.t.\ }
+\theta_i^m(t)-\theta_j^m(t)\ge \mu_i-\mu_j
+\Bigr\}.
+\end{align*}
+
+\paragraph{Proof of the good-event lemma (analogue of Lemma~\ref{lem:good-graph}).}
+We show $\Pr\!\bigl(G_0^{(\mathrm{norm})}\cap G_1^{(\mathrm{norm})}\cap G_2^{(\mathrm{norm})}\bigr)\ge 1-\delta$.
+
+\begin{proof}
+
+\emph{Bounding $\Pr((G_0^{(\mathrm{norm})})^c)$.}
+The estimator $\widehat{\bm\mu}(t)=V_t^{-1}\sum_{s=1}^t e_{\pi_s}r_{s,\pi_s}$ is a ridge-type solution with PSD penalty $\rho K_G$. Since $K_G\succeq 0$, the matrix $V_t=\sum_{s=1}^t e_{\pi_s}e_{\pi_s}^\top +\rho K_G$ is positive definite once at least one arm per connected component has been sampled. Writing the estimation error for arm $i$ as
+\[
+\widehat\mu_i(t)-\mu_i
+= \bigl\langle e_i,\,V_t^{-1}\sum_{s=1}^t e_{\pi_s}(r_{s,\pi_s}-\mu_{\pi_s})\bigr\rangle
+-\bigl\langle e_i,\,\rho V_t^{-1}K_G\bm\mu\bigr\rangle,
+\]
+the first (noise) term is a martingale in the filtration, and the second (bias) term is controlled deterministically. For the noise term, we apply the self-normalized martingale inequality (the analogue of Lemma~A.2 of \citealt{thaker2022maximizing}): for any fixed $t$ and $i$,
+\[
+\Pr\!\left(
+\bigl|\bigl\langle e_i,\,V_t^{-1}\sum_{s=1}^t e_{\pi_s}(r_{s,\pi_s}-\mu_{\pi_s})\bigr\rangle\bigr|
+>
+\sqrt{[V_t^{-1}]_{ii}}\cdot 2\sigma\sqrt{14\log\!\left(\frac{2w_i(\boldsymbol\pi_t)}{\delta}\right)}
+\right)
+\le \frac{\delta}{2w_i(\boldsymbol\pi_t)}.
+\]
+This inequality depends only on the PSD structure of $V_t$ and the sub-Gaussian property of the noise, not on whether the penalty is $L_G$ or $K_G$. For the bias term, the Cauchy--Schwarz inequality gives
+\[
+\bigl|\langle e_i,\rho V_t^{-1}K_G\bm\mu\rangle\bigr|
+\le
+\rho\sqrt{[V_t^{-1}]_{ii}}\,\sqrt{\langle K_G\bm\mu,V_t^{-1}K_G\bm\mu\rangle}
+\le
+\rho\sqrt{[V_t^{-1}]_{ii}}\,\|\bm\mu\|_{K_G},
+\]
+where the last step uses $V_t^{-1}\preceq (\rho K_G)^{-1}$ on the range of $K_G$ (i.e., $\langle K_G\bm\mu,V_t^{-1}K_G\bm\mu\rangle\le \langle\bm\mu,K_G\bm\mu\rangle$). Combining both terms,
+\[
+|\widehat\mu_i(t)-\mu_i|
+\le \gamma_i^{(\mathrm{norm})}(t)
+\]
+holds except with probability $\delta/(2w_i(\boldsymbol\pi_t))$. Choosing $w_i(\boldsymbol\pi_t)=a_0 n (t_{\mathrm{eff},i}^{(\mathrm{norm})}(t))^2$ for an appropriate constant $a_0>0$ and applying a union bound over arms and times exactly as in the proof for $G_0$ in Appendix~\ref{app:proofs-graph} yields $\Pr((G_0^{(\mathrm{norm})})^c)\le\delta/3$.
+
+\emph{Bounding $\Pr((G_1^{(\mathrm{norm})})^c)$.}
+This step is identical to the $G_1$ proof in Appendix~\ref{app:proofs-graph}. Fix $t$, $m$, and $i$. Conditional on the history,
+\[
+\theta_i^m(t)-\widehat\mu_i(t)
+\sim
+\mathcal N\!\left(0,\frac{C(t)}{t_{\mathrm{eff},i}^{(\mathrm{norm})}(t)}\right).
+\]
+By Gaussian concentration,
+\[
+\Pr\!\left[
+|\theta_i^m(t)-\widehat\mu_i(t)|>
+\sqrt{\frac{2C(t)L_2(t)}{t_{\mathrm{eff},i}^{(\mathrm{norm})}(t)}}
+\right]
+\le 2e^{-L_2(t)}
+= \frac{\delta}{6K^2t^2M(\delta,q,t)}.
+\]
+A union bound over arms, samples, and times gives $\Pr((G_1^{(\mathrm{norm})})^c)\le\delta/3$.
+
+\emph{Bounding $\Pr((G_2^{(\mathrm{norm})})^c\mid G_0^{(\mathrm{norm})})$.}
+Fix $t$ and two arms $i,j$. Conditional on the empirical means,
+\[
+\theta_i^m(t)-\theta_j^m(t)
+\sim
+\mathcal N\!\left(
+\widehat\mu_i(t)-\widehat\mu_j(t),\;
+C(t)\Bigl(\frac{1}{t_{\mathrm{eff},i}^{(\mathrm{norm})}(t)}+\frac{1}{t_{\mathrm{eff},j}^{(\mathrm{norm})}(t)}\Bigr)
+\right).
+\]
+On $G_0^{(\mathrm{norm})}$, $\widehat\mu_i(t)-\widehat\mu_j(t)\ge\mu_i-\mu_j-\gamma_i^{(\mathrm{norm})}(t)-\gamma_j^{(\mathrm{norm})}(t)$. The same Gaussian survival-function argument as in the $G_2$ step of Appendix~\ref{app:proofs-graph} shows that each Thompson draw satisfies the pairwise comparison with probability at least $q$. Independence over the $M(\delta,q,t)$ draws, followed by a union bound over pairs and times, gives $\Pr((G_2^{(\mathrm{norm})})^c\mid G_0^{(\mathrm{norm})})\le\delta/3$.
+
+Combining all three bounds,
+$\Pr(G_0^{(\mathrm{norm})}\cap G_1^{(\mathrm{norm})}\cap G_2^{(\mathrm{norm})})\ge 1-\delta$.
+\end{proof}
+
+\paragraph{Correctness (analogue of Theorem~\ref{thm:correct-graph}).}
+
+\begin{proof}
+The argument is identical to the proof of Theorem~\ref{thm:correct-graph}. Assume the algorithm stops at time $t$ and returns $\widehat i_t$. If $\widehat i_t\neq a^\star$, then $G_2^{(\mathrm{norm})}$ provides a sample index $m$ with $\theta_{a^\star}^m(t)-\theta_{\widehat i_t}^m(t)\ge \mu_{a^\star}-\mu_{\widehat i_t}>0$, so $\widetilde i_t^m\neq \widehat i_t$, contradicting the stopping rule. Hence the returned arm is $a^\star$ on the good event, which holds with probability at least $1-\delta$.
+\end{proof}
+
+\paragraph{Elimination threshold (analogue of Lemma~\ref{lem:terminate-graph}).}
+
+\begin{proof}
+Fix a suboptimal arm $i\neq a^\star$ and suppose $i$ is still pulled at time $t$ despite $t_{\mathrm{eff},i}^{(\mathrm{norm})}(t)\ge 186\,C(t)L_2(t)/\Delta_{i,c}^2$. Both cases ($\widehat i_t=i$ and $\widetilde i_t=i$) proceed exactly as in the proof of Lemma~\ref{lem:terminate-graph}, using $t_{\mathrm{eff},i}^{(\mathrm{norm})}(t)$ in place of $t_{\mathrm{eff},i}(t)$. On $G_1^{(\mathrm{norm})}$, the Thompson deviations satisfy $|\theta_i^m(t)-\widehat\mu_i(t)|<\Delta_{i,c}/7$, and $G_2^{(\mathrm{norm})}$ provides the requisite separation. Both cases lead to contradictions with the definition of $\widehat i_t$, so arm $i$ cannot be pulled once its kernel-effective count exceeds the threshold.
+\end{proof}
+
+\paragraph{Sample complexity (analogue of Theorem~\ref{thm:main-graph}).}
+
+\begin{proof}
+By the elimination lemma, it suffices for each suboptimal arm $i$ that
+\[
+t_{\mathrm{eff},i}^{(\mathrm{norm})}(t)
+\ge
+\frac{196\,C(t)L_2(t)}{\Delta_{i,c}^2}.
+\]
+Since $t_{\mathrm{eff},i}^{(\mathrm{norm})}(t)=[(V_t)^{-1}]_{ii}^{-1}$ with $V_t=\sum_{s=1}^t e_{\pi_s}e_{\pi_s}^\top+\rho K_G$, the lower bound from Theorem~\ref{thm:teff-lower} carries over with $K_G$ in place of $L_G$:
+\[
+t_{\mathrm{eff},i}^{(\mathrm{norm})}(t)
+\ge
+t_i(t)+\frac12\left\lfloor\min\!\left\{\rho\,\mathcal J^{(\mathrm{norm})}(i,G),\;\sum_{j\in C(i)}t_j(t)\right\}\right\rfloor,
+\]
+where $\mathcal J^{(\mathrm{norm})}(i,G)$ is the influence factor computed using the kernel $K_G$ (equivalently, using the resistance distances induced by $K_G$). The proof of Theorem~\ref{thm:teff-lower} uses only the PSD property of the regularizer and the resulting matrix-inversion structure, both of which hold for any PSD kernel.
+
+Partitioning the suboptimal arms into competitive and non-competitive sets proceeds identically:
+\begin{itemize}
+\item \emph{Competitive arms} ($i\in\mathcal H^{(\mathrm{norm})}\setminus\{a^\star\}$): those for which the kernel influence factor does not suffice to satisfy the threshold, requiring direct pulls at a cost of $\sum_{i\in\mathcal H^{(\mathrm{norm})}\setminus\{a^\star\}}C(t)L_2(t)/\Delta_{i,c}^2$.
+\item \emph{Non-competitive arms} ($i\in\mathcal N^{(\mathrm{norm})}$): eliminated quickly because their kernel-effective counts are boosted through the graph, at a cost of $\max_{i\in\mathcal N^{(\mathrm{norm})}} C(t)L_2(t)/\Delta_{i,c}^2$.
+\end{itemize}
+
+Combining both contributions yields the self-referential equation
+\[
+T
+\le
+c\,C(T)L_2(T)
+\left(
+\sum_{i\in\mathcal H^{(\mathrm{norm})}\setminus\{a^\star\}}\frac{1}{\Delta_{i,c}^2}
++
+\max_{i\in\mathcal N^{(\mathrm{norm})}}\frac{1}{\Delta_{i,c}^2}
+\right)
+= c\,C(T)L_2(T)\cdot H_{\mathrm{graph}}^{(\mathrm{norm})},
+\]
+where $H_{\mathrm{graph}}^{(\mathrm{norm})}$ denotes the graph hardness computed with kernel-effective counts. Solving the self-referential logarithm as in the proof of Theorem~\ref{thm:main-graph} gives
+\[
+T
+=
+O\!\left(
+H_{\mathrm{graph}}^{(\mathrm{norm})}
+\left(\log\frac1\delta+\log(KH_{\mathrm{graph}}^{(\mathrm{norm})})\right)
+\frac{\log(1/\delta)}{\log(1/q)}
++
+H_{\mathrm{graph}}^{(\mathrm{norm})}
+\frac{\log^2(KH_{\mathrm{graph}}^{(\mathrm{norm})})}{\log(1/q)}
+\right).
+\]
+Setting $q=\delta$ yields $O\!\left(H_{\mathrm{graph}}^{(\mathrm{norm})}\log(1/\delta)+H_{\mathrm{graph}}^{(\mathrm{norm})}\log^2(KH_{\mathrm{graph}}^{(\mathrm{norm})})\right)$.
+\end{proof}
+\section{Proofs for the Under-Specified Smoothness Model}
+\label{app:proofs-misspecified}
+%=============================================================================
+
+Recall that in this section the algorithm is run with a nominal smoothness
+parameter $\varepsilon$, whereas the true reward vector satisfies
+\[
+\|\bm\mu\|_G \le \varepsilon_{\mathrm{true}},
+\qquad
+\varepsilon_{\mathrm{true}} \ge \varepsilon.
+\]
+Thus the misspecification is that the smoothness budget used in the confidence
+radius is too small. Define
+\[
+\Gamma_{\mathrm{mis}} := \varepsilon_{\mathrm{true}}-\varepsilon \ge 0.
+\]
+The algorithm itself is unchanged; only the confidence analysis must be carried
+out with $\varepsilon_{\mathrm{true}}$ in place of $\varepsilon$.
+
+\paragraph{Proof of Lemma~\ref{lem:good-mis}.}
+The proof follows the same structure as the proof of the corresponding good
+event in the well-specified model. The only difference is that the estimator
+bias term now involves the \emph{true} smoothness level
+$\varepsilon_{\mathrm{true}}$.
+
+For each arm $i$ and time $t$, define
+\[
+b_i^{\mathrm{mis}}(t)
+:=
+\sqrt{\frac{1}{t_{\mathrm{eff},i}(t)}}
+\left(
+2\sigma\sqrt{14\log\!\left(\frac{2w_i(\boldsymbol\pi_T)}{\delta}\right)}
++
+\rho\,\varepsilon_{\mathrm{true}}
+\right).
+\]
+Let $G_0^{\mathrm{mis}}$ denote the event that
+\[
+|\widehat\mu_i(t)-\mu_i|
+\le
+b_i^{\mathrm{mis}}(t)
+\qquad
+\text{for all } i \in [K],\ t\ge 1.
+\]
+Since the proof of the estimator concentration inequality depends only on the
+upper bound on $\|\bm\mu\|_G$, the same argument used in the well-specified
+case yields
+\[
+\Pr(G_0^{\mathrm{mis}}) \ge 1-\frac{\delta}{3},
+\]
+provided the constants are chosen exactly as in the original proof, except with
+$\varepsilon_{\mathrm{true}}$ replacing $\varepsilon$ in the bias term. In
+particular, the only place where smoothness enters is through the deterministic
+bound
+\[
+|\langle e_i,\rho V_t^{-1}L_G\bm\mu\rangle|
+\le
+\rho \sqrt{[V_t^{-1}]_{ii}}\;\|\bm\mu\|_G
+\le
+\rho \sqrt{[V_t^{-1}]_{ii}}\;\varepsilon_{\mathrm{true}},
+\]
+which gives the additional additive term
+$\rho\varepsilon_{\mathrm{true}}/\sqrt{t_{\mathrm{eff},i}(t)}$ in the radius.
+This is exactly the same calculation as in the standard Laplacian-regularized
+concentration argument. 
+
+Next, let $G_1$ be the same Thompson-sample concentration event as in the
+well-specified proof. Its proof is unchanged, since it depends only on the
+Gaussian sampling step conditioned on the empirical estimator and not on the
+graph smoothness level. Therefore
+\[
+\Pr(G_1) \ge 1-\frac{\delta}{3}
+\]
+for the same choice of constants as before.
+
+It remains to control the event $G_2^{\mathrm{mis}}$, namely that at each round
+there exists at least one Thompson sample whose pairwise comparisons preserve
+the true arm ordering with probability at least $q$. Fix a time $t$, two arms
+$i,i'$, and condition on the event $G_0^{\mathrm{mis}}$. By definition of the
+event $G_0^{\mathrm{mis}}$, we have
+\[
+\widehat\mu_i(t) \ge \mu_i - b_i^{\mathrm{mis}}(t),
+\qquad
+\widehat\mu_{i'}(t) \le \mu_{i'} + b_{i'}^{\mathrm{mis}}(t).
+\]
+Hence
+\[
+\widehat\mu_i(t)-\widehat\mu_{i'}(t)
+\ge
+\mu_i-\mu_{i'}-b_i^{\mathrm{mis}}(t)-b_{i'}^{\mathrm{mis}}(t).
+\]
+Now, conditioned on the filtration up to time $t$, the Thompson difference
+\[
+\theta_i^k(t)-\theta_{i'}^k(t)
+\]
+is Gaussian with mean
+\[
+\widehat\mu_i(t)-\widehat\mu_{i'}(t)
+\]
+and variance
+\[
+C_{\mathrm{mis}}(t)
+\left(
+\frac{1}{t_{\mathrm{eff},i}(t)}+\frac{1}{t_{\mathrm{eff},i'}(t)}
+\right).
+\]
+Therefore,
+\begin{align*}
+&\Pr\!\left[
+\theta_i^k(t)-\theta_{i'}^k(t)\ge \mu_i-\mu_{i'}
+\;\middle|\; G_0^{\mathrm{mis}}
+\right]
+\\
+&\qquad =
+\Phi\!\left(
+\mu_i-\mu_{i'},
+\widehat\mu_i(t)-\widehat\mu_{i'}(t),
+C_{\mathrm{mis}}(t)\left(
+\frac{1}{t_{\mathrm{eff},i}(t)}+\frac{1}{t_{\mathrm{eff},i'}(t)}
+\right)
+\right)
+\\
+&\qquad \ge
+\Phi\!\left(
+b_i^{\mathrm{mis}}(t)+b_{i'}^{\mathrm{mis}}(t),
+0,
+C_{\mathrm{mis}}(t)\left(
+\frac{1}{t_{\mathrm{eff},i}(t)}+\frac{1}{t_{\mathrm{eff},i'}(t)}
+\right)
+\right).
+\end{align*}
+Thus, if $C_{\mathrm{mis}}(t)$ is chosen large enough so that
+\[
+\Phi\!\left(
+\frac{
+b_i^{\mathrm{mis}}(t)+b_{i'}^{\mathrm{mis}}(t)
+}{
+\sqrt{
+C_{\mathrm{mis}}(t)\left(
+\frac{1}{t_{\mathrm{eff},i}(t)}+\frac{1}{t_{\mathrm{eff},i'}(t)}
+\right)
+}
+},
+0,1
+\right)\ge q
+\]
+for every pair $(i,i')$, then each Thompson draw has probability at least $q$
+of certifying the desired comparison. Taking
+\[
+M(\delta,q,t)
+\]
+independent Thompson draws at round $t$, the probability that all such draws
+fail is at most $(1-q)^{M(\delta,q,t)}$, and by the same choice of
+$M(\delta,q,t)$ and the same union bound as in the well-specified analysis, we
+obtain
+\[
+\Pr(G_2^{\mathrm{mis}} \mid G_0^{\mathrm{mis}}) \ge 1-\frac{\delta}{3}.
+\]
+Combining the bounds for $G_0^{\mathrm{mis}}$, $G_1$, and
+$G_2^{\mathrm{mis}}$, and applying a union bound, yields
+\[
+\Pr\!\bigl(G_0^{\mathrm{mis}}\cap G_1\cap G_2^{\mathrm{mis}}\bigr)\ge 1-\delta.
+\]
+This proves the lemma. \hfill$\square$
+
+\paragraph{Correctness under the misspecified event.}
+The correctness argument is the same as in the well-specified case once we work
+on the good event
+\[
+G_0^{\mathrm{mis}}\cap G_1\cap G_2^{\mathrm{mis}}.
+\]
+Indeed, under $G_2^{\mathrm{mis}}$, at every round there exists a Thompson draw
+that correctly separates the empirical best arm from any truly suboptimal arm.
+Hence a suboptimal arm cannot remain consistent with all Thompson samples once
+the elimination rule is triggered. Therefore the algorithm cannot terminate and
+output a suboptimal arm. Since termination occurs only when all remaining arms
+are consistent with the Thompson comparisons, the returned arm must be optimal.
+\hfill$\square$
+
+\paragraph{Sample complexity under under-specification.}
+We now show how the stopping-time bound changes. The proof is identical in
+structure to the well-specified case, but every occurrence of the nominal
+confidence scale is replaced by the misspecification-adjusted one.
+
+Fix a suboptimal arm $i$. Under the event
+$G_0^{\mathrm{mis}}\cap G_1\cap G_2^{\mathrm{mis}}$, arm $i$ is eliminated as
+soon as its confidence width is small enough relative to the gap
+$\Delta_{i,c}$. More precisely, there exists an absolute constant $c>0$ such
+that it suffices to have
+\[
+\sqrt{\frac{C_{\mathrm{mis}}(t)L(t)}{t_{\mathrm{eff},i}(t)}}
+\le
+\frac{\Delta_{i,c}}{c},
+\]
+or equivalently,
+\[
+t_{\mathrm{eff},i}(t)
+\ge
+c\,\frac{C_{\mathrm{mis}}(t)L(t)}{\Delta_{i,c}^2}.
+\]
+This is exactly the same elimination condition as before, except that the
+variance scale $C(t)$ is replaced by $C_{\mathrm{mis}}(t)$.
+
+At this point, the proof proceeds exactly as in the main sample complexity
+argument. The key observation is that the lower bound on the effective sample
+size,
+\[
+t_{\mathrm{eff},i}(t),
+\]
+depends only on the graph geometry and on the sampling policy, and therefore is
+unchanged by misspecification of the smoothness budget. In particular, the
+proof of the lower bound on $t_{\mathrm{eff},i}(t)$ carries over verbatim,
+since it never uses the value of $\varepsilon$. This is the same phenomenon
+highlighted in the GRUB-style effective sample analysis, where the lower bound
+on $t_{\mathrm{eff},i}$ depends on graph structure and pull counts rather than
+the smoothness radius.
+
+Accordingly, the competitive/non-competitive decomposition also remains
+structurally identical. The only change is that the threshold defining whether
+an arm is competitive must now be formed using the larger confidence scale
+\[
+2\sqrt{2\rho\mathcal J(i,G)}
+\left(
+2\sigma\sqrt{\log(\cdot)}+\rho\varepsilon_{\mathrm{true}}
+\right)
+\]
+instead of the nominal quantity based on $\varepsilon$. Since
+$\varepsilon_{\mathrm{true}}\ge \varepsilon$, the competitive set can only
+increase, and the non-competitive set can only decrease.
+
+Therefore, after replacing the original hardness parameter by the enlarged one
+\[
+H_{\mathrm{mis}}
+\asymp
+\sum_{i\in \mathcal H_{\mathrm{mis}}\setminus\{i^\star\}}
+\frac{1}{\Delta_{i,c}^2}
++
+\max_{i\in \mathcal N_{\mathrm{mis}}}
+\frac{1}{\Delta_{i,c}^2},
+\]
+the remainder of the stopping-time proof is unchanged and yields the stated
+bound in Theorem~\ref{thm:main-mis}. \hfill$\square$

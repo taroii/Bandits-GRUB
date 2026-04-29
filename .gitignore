@@ -119,9 +119,3 @@ experiments/_prerefactor/
 # re-generated markdown reports inside experiments/outputs/.
 experiments/outputs/__pycache__/
 experiments/outputs/*.tmp
-
-# LaTeX
-*.tex
-
-# Notes
-*.md
