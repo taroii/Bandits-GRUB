@@ -90,6 +90,56 @@ def empty_graph(n=50, gap=0.3, seed=0):
     return mu, A, D
 
 
+def union_of_cliques_with_challenger(K, m=4, gap_chal=0.3, gap_decoy=1.5,
+                                     mu_best=1.0, seed=0):
+    """K-arm instance designed for ``thm:main-graph`` K-scaling.
+
+    Layout:
+        index 0 : best arm        (mean = mu_best)
+        index 1 : hub             (gap = gap_decoy)
+        index 2 : challenger      (gap = gap_chal)
+        indices 3..K-1 : decoys, partitioned into cliques of size ~m,
+                         each clique has one node bridged to the hub.
+
+    Edges:
+        best — hub
+        hub  — challenger
+        hub  — clique-bridge node (one per clique)
+        clique : complete graph on its m nodes
+
+    With m=4, gap_chal=0.3, gap_decoy=1.5, rho=1 the hardness numbers are
+
+        H_graph     ≈ 1/gap_chal^2 + 1/gap_decoy^2     (constant in K)
+        H_classical = 1/gap_chal^2 + (K-2)/gap_decoy^2 (linear in K)
+
+    so the *visible* signature is: TS-Explore plateaus while Basic TS grows
+    linearly in K. ``seed`` is accepted but unused (deterministic graph).
+    """
+    if K < 4:
+        raise ValueError(f"K={K} too small; need K >= 4")
+    n_decoy = K - 3
+    n_cliques = max(1, n_decoy // m)
+    sizes = [m] * n_cliques
+    sizes[-1] += n_decoy - sum(sizes)
+
+    A = np.zeros((K, K))
+    A[0, 1] = A[1, 0] = 1.0
+    A[1, 2] = A[2, 1] = 1.0
+    idx = 3
+    for sz in sizes:
+        for i in range(idx, idx + sz):
+            for j in range(i + 1, idx + sz):
+                A[i, j] = A[j, i] = 1.0
+        A[1, idx] = A[idx, 1] = 1.0
+        idx += sz
+
+    D = np.diag(A.sum(axis=1))
+    mu = np.full(K, mu_best - gap_decoy)
+    mu[0] = mu_best
+    mu[2] = mu_best - gap_chal
+    return mu, A, D
+
+
 def sbm_phase_transition(seed=0):
     """Instance for Experiment 3.
 

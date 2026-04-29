@@ -55,7 +55,7 @@ class AlgoBase:
 
     def __init__(self, D, A, mu, rho_lap, add_graph=True,
                  epsilon_nominal=None, kernel='combinatorial',
-                 rho_diag=1e-4):
+                 rho_diag=1e-4, delta=1e-4):
 
         self.reset = with_reset
         self.means = np.asarray(mu, dtype=float).flatten()
@@ -63,7 +63,7 @@ class AlgoBase:
         self.A = A
         self.rho_lap = float(rho_lap) if add_graph else 0.0
         self.rho_diag = float(rho_diag)
-        self.delta = 0.0001
+        self.delta = float(delta)
         self.kernel = kernel
         self.L = build_kernel(D, A, kernel=kernel)
         self.dim = self.L.shape[0]
@@ -83,6 +83,10 @@ class AlgoBase:
         self.beta_tracker = 0.0
         self.inverse_tracker = np.zeros((self.dim, self.dim))
         self.picking_order = []
+
+        # Precompute (0.5 * rho * L * mu); constant for the whole run, used in
+        # eliminate_arms.  Avoids rebuilding L @ mu every step.
+        self._half_rho_L_mu = 0.5 * self.rho_lap * np.dot(self.L, self.means)
 
         self.initialize_conf_width()
 
@@ -132,22 +136,19 @@ class AlgoBase:
         t_count = np.trace(self.counter)
         log_arg = max(2.0 * self.dim * t_count / self.delta, 2.0)
         conc_radius = 2.0 * np.sqrt(14.0 * np.log2(log_arg))
-        bias_scalar = 0.5 * self.rho_lap * self.eps
-        self.beta_tracker = conc_radius + bias_scalar
+        self.beta_tracker = conc_radius + 0.5 * self.rho_lap * self.eps
         mu_hat = np.asarray(self.mean_estimate).flatten()
-        lower = np.full(self.dim, -np.inf)
-        for i in self.remaining_nodes:
-            e_i = np.zeros(self.dim)
-            e_i[i] = 1.0
-            per_arm_bias = 0.5 * self.rho_lap * np.inner(
-                np.dot(self.inverse_tracker, e_i),
-                np.dot(self.L, self.means))
-            lower[i] = mu_hat[i] - conc_radius * self.conf_width[i] + per_arm_bias
-        max_value = np.max(lower[self.remaining_nodes])
-        self.remaining_nodes = [
-            i for i in self.remaining_nodes
-            if mu_hat[i] + conc_radius * self.conf_width[i] >= max_value
-        ]
+
+        # Per-arm bias = 0.5 * rho * <V^-1 e_i, L mu>
+        #              = (V^-1 @ (0.5 * rho * L * mu))[i]
+        # _half_rho_L_mu is precomputed in __init__ (depends only on L, means, rho).
+        bias_vec = np.dot(self.inverse_tracker, self._half_rho_L_mu)
+        upper = mu_hat + conc_radius * self.conf_width
+        lower = mu_hat - conc_radius * self.conf_width + bias_vec
+
+        rem = np.fromiter(self.remaining_nodes, dtype=int, count=len(self.remaining_nodes))
+        max_value = float(np.max(lower[rem]))
+        self.remaining_nodes = [i for i in self.remaining_nodes if upper[i] >= max_value]
 
     def play_round(self, num):
         for _ in range(num):

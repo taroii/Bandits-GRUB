@@ -18,7 +18,7 @@ single live experiment described below.
 
 | Theorem | Label | Script prefix | Status |
 |---|---|---|---|
-| Graph-smooth | `thm:main-graph` | `main_*.py` | **CURRENT FOCUS — design from scratch** |
+| Graph-smooth | `thm:main-graph` | `main_*.py` | **CURRENT FOCUS** |
 | Asymptotic tuning | `thm:main-mis` + `cor:eps-limit` | `mis_*.py` | Partial — `mis_1.py` produces a U-shape; flagged for resolution |
 | Graph feedback | `thm:correct-fb` / `thm:main-fb` | `fb_*.py` | Promising — `fb_1.py` is clean on H_GF tracking; needs UCB-N / UCB-MaxN baselines (Caron et al. 2012) before reviewer-acceptable |
 | PSD kernel | `thm:kernel-ts` | `kernel_*.py` | Pending — old exp4 was a no-signal n=20 BA; redo properly |
@@ -31,7 +31,7 @@ that theorem. Outputs share the prefix:
 
 ---
 
-## 1. `thm:main-graph` — graph-smooth sample complexity
+## 1. `thm:main-graph` — graph-smooth sample complexity (Figure 1)
 
 ### What the theorem says
 
@@ -45,76 +45,92 @@ where
 $H_{\mathrm{graph}} \asymp \sum_{i\in\mathcal H\setminus\{a^\star\}}\Delta_{i,c}^{-2}
 + \max_{i\in\mathcal N}\Delta_{i,c}^{-2}$.
 
-### What a reviewer wants
+### Reframe (2026-04-29): Figure 1 is TS-Explore vs GRUB, not vs Basic TS
 
-A figure where TS-Explore's stopping time scales like $H_{\mathrm{graph}}$
-on instances where $H_{\mathrm{graph}} \ll \sum_i\Delta_i^{-2}$, and a head
-to head against the algorithm this paper claims to replace
-(`GRUB`, Thaker et al. 2022).
+The original plan was a K-sweep with bounded $H_{\mathrm{graph}}$ vs
+linear-in-$K$ $H_{\mathrm{classical}}$, predicting TS-Explore plateaus
+while Basic TS grows. Pre-flight + K=20 sanity falsified the second half
+of that prediction:
 
-### What we already know is hard
+- Designed a union-of-cliques instance with $H_{\mathrm{graph}} = 11.6$
+constant in $K$, $H_{\mathrm{classical}} \in [19, 188]$ over
+$K \in \{20,\dots,400\}$ (`experiments/main_preflight.py`).
+- At K=20, 5 seeds: TS-Explore $t_{\mathrm{med}} = 17243$, Basic TS
+$t_{\mathrm{med}} = 17243$ — **literally identical** (`main_sanity.py`).
+GRUB and UCB-no-graph timed out at 200K max_steps.
 
-At $\rho=1$ on small SBMs and on path graphs, **TS-Explore is empirically
-indistinguishable from Basic TS** even when the analytical ratio
-$H_{\mathrm{graph}}/H_{\mathrm{classical}}$ is 8×. The TS-Explore stopping
-rule (all $M$ samples agree) is bottlenecked by the smallest-gap arm's
-sampling variance $C/t_{\mathrm{eff},i}$, and the graph contributes only
-$O(\rho\,\mathcal J)$ to that arm's $t_{\mathrm{eff}}$ at $\rho=1$. The
-$H_{\mathrm{graph}}$ savings live in the cheaply-eliminated non-competitive
-arms, which weren't going to dominate $T$ anyway.
+Why the collapse:
 
-This is the central problem to solve. Two interpretations:
+1. TS-Explore's pull rule is $\mathrm{argmin}_{i\in\{\hat i,\tilde i\}}N_i$.
+With $\Delta_{\mathrm{decoy}}=1.5$ and $\sigma=1$, decoys almost never
+become $\tilde i$, so both algorithms only pull arm 0 and the challenger.
+Graph regularization is irrelevant to those decisions.
+2. The challenger's graph bonus is $\rho J/2 = 1$; it needs ~8500 direct
+pulls; +1 from the graph is noise.
+3. Lemma 2's $186\,C\,L/\Delta^2$ threshold needs $J \gtrsim 45000$ for
+non-competitive elimination at $\rho=1$ — unreachable on any reasonable
+graph. The `competitive_set` predicate $\rho J \le 1/\Delta^2$ uses a
+unit constant; the actual stopping rule uses ~$10^3$ times larger. So
+$H_{\mathrm{graph}}$ is optimistic book-keeping at $\rho=1$, not what
+TS-Explore empirically achieves.
 
-1. **Algorithmic** — the TS-Explore agreement rule cannot expose
-$H_{\mathrm{graph}}$ on its own. We need either (a) a different stopping
-rule (e.g., Lemma 2's $t_{\mathrm{eff},i} \ge 186\,C(t)L(t)/\Delta_{i,c}^2$
-elimination check applied directly), or (b) a different pull rule that
-actively elects to skip non-competitive arms.
+This is general: any instance read at $\rho=1$ will have non-competitive
+arms TS-Explore wasn't going to pull anyway, so the graph "saving" is
+zero in practice. The empirical payoff of graph regularization shows up
+only when $\rho$ is tuned (`thm:main-mis`, §2 below).
 
-2. **Instance-design** — the right experiment chooses an instance where the
-non-competitive arms *do* dominate $H_{\mathrm{classical}}$, e.g., by
-scaling $K\to\infty$ with bounded $H_{\mathrm{graph}}$. The bound
-$T = O(H_{\mathrm{graph}}\,\mathrm{polylog})$ then implies $T$ saturates
-while Basic TS grows with $K$.
+### What Figure 1 actually shows
 
-Both of these are testable. Plan below addresses option 2 first because it
-keeps the algorithm unchanged; option 1 is a fallback if the K-scaling
-experiment doesn't separate the curves.
+The honest empirical reading of `thm:main-graph`: TS-Explore's
+**TS-Explore-style agreement stopping rule** dominates GRUB's UCB-LCB
+elimination on the same graph instance at the same $\rho$. The graph
+machinery is preserved; what moves the needle is the stopping rule. At
+fixed $\rho=1$:
+
+- TS-Explore at K=20 converges in ~17K steps.
+- GRUB (`MaxVarianceArmAlgo` with `eliminate_arms` from `algobase.py`)
+times out at 200K steps; LCB-radius constant is ~$30$ vs TS's ~$2.6$, so
+GRUB needs ~$10^2$ times the effective sample count to eliminate.
+
+This is what the paper's introduction already promises: the
+"width-factor inefficiency" of CLUCB-style algorithms in the
+combinatorial pure-exploration sense (Wang et al. 2022 cited at
+`template_revised.tex:328`), carried over to graph-structured problems.
 
 ### Plan
 
-1. **Pick a graph family with bounded $H_{\mathrm{graph}}$ as $K$ grows.**
-A union of cliques with one isolated best arm is the cleanest: every
-suboptimal arm is non-competitive once $\rho\,\mathcal J(i,G)$ exceeds
-$\Delta^{-2}$, so $H_{\mathrm{graph}} = O(\Delta^{-2})$ regardless of $K$.
-
-2. **K-scaling experiment.** Vary $K \in \{20, 50, 100, 200, 400\}$, fix
-$\delta=10^{-3}$, $\Delta = 0.3$ for all suboptimals. Plot stopping time vs
-$K$ for TS-Explore (graph), Basic TS, and (if reachable) GRUB. The
-prediction: TS-Explore plateaus, Basic grows linearly in $K$.
-
-3. **Acceptance.** A reviewer will accept this iff
-- the TS curve is sub-linear in $K$ over at least a 5× range, and
-- TS is at least $3\times$ faster than Basic TS at the largest $K$.
-
-4. **If step 3 fails on the cleanest instance, we go to option 1**: replace
-or augment the TS-Explore stopping/pull rule so that non-competitive arms
-are elected for elimination when their lower confidence bound certifies
-non-competitiveness. The `eliminate_arms` machinery in `algobase.py`
-already does this for the UCB baselines; the question is whether
-incorporating it into TS-Explore preserves the proof.
+1. **Verify GRUB convergence budget at K=20.** Single seed, no max_steps
+cap. If GRUB converges within ~$10^6$ steps, K-sweep is feasible. If
+~$10^7$, narrow K range.
+2. **Write `experiments/main_1.py`.** K-sweep on
+`union_of_cliques_with_challenger`. Algorithms: TS-Explore (graph,
+$\rho=1$), Basic TS (no graph), GRUB. Optionally NoGraphAlgo (UCB).
+$\delta=10^{-3}$, $q=0.1$.
+3. **Seeds.** 20 minimum for visible IQR. K range determined by step 1.
+4. **Two-panel figure.** (A) Median stopping time vs K, log y-axis,
+shaded IQR. (B) Elimination/agreement curves on a single seed at one K
+(e.g., K=100), to convey *how* the algorithms differ — TS-Explore
+collapses to convergence, GRUB drips arms out.
+5. **Acceptance.** TS-Explore $\ge 10\times$ faster than GRUB at every K
+in the sweep, with confidence intervals separated. Basic TS may or may
+not be on the figure — its presence honestly admits "graph isn't the
+win at $\rho=1$"; its absence keeps Figure 1 focused on the GRUB
+replacement claim. Decide once we see the curves.
 
 ### Done criterion
 
-- A figure (or figures) clearly showing TS-Explore stopping time
-governed by $H_{\mathrm{graph}}$ rather than $\sum_i\Delta_i^{-2}$,
-- on a single named instance,
-- with at least 20 seeds and visible IQR,
-- with a side-by-side curve for Basic TS that is materially larger,
-- and ideally a curve for GRUB that is comparable or worse.
+- A figure with median + IQR for TS-Explore vs GRUB on
+`union_of_cliques_with_challenger`, K-sweep, 20+ seeds, $\rho=1$.
+- A second panel with elimination/agreement-history at a single K.
+- TS-Explore at least $10\times$ faster than GRUB on every K, with no
+overlapping IQR.
+- A short paper-side note: "graph regularization at $\rho=1$ does not
+materially change TS-Explore's empirical stopping time on this family
+of instances; the graph payoff appears under $\rho$-tuning, see §2".
 
-Until that exists, do not start work on `thm:main-mis`, `thm:main-fb`, or
-`thm:kernel-ts`.
+Once this lands, move to `thm:main-mis`. The original "K-sweep with
+bounded $H_{\mathrm{graph}}$" plan and the algorithmic-modification
+fallback are both dropped.
 
 ---
 
