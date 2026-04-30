@@ -358,3 +358,91 @@ class GraphFeedbackTS:
                 best_a = a
         self._pull(best_a)
         return None
+
+
+# ---------------------------------------------------------------------------
+# UCB with side observations (Caron et al. 2012, pure-exploration variant)
+# ---------------------------------------------------------------------------
+
+class UCB_N:
+    """
+    UCB with side observations for best-arm identification (graph-feedback
+    setting).  Adapts the regret-minimizing UCB-N of Caron et al. (2012) to
+    the fixed-confidence pure-exploration regime by adding a UCB--LCB
+    elimination rule and stopping when only one arm remains.
+
+    Pulling arm $a$ reveals an i.i.d.\ reward for every arm in $N^+(a)$.  The
+    estimator is the empirical mean over feedback observations, and the
+    confidence radius is $\\sqrt{2\\sigma^2 L_1(t)/N_i^{\\mathrm{fb}}}$ with
+    $L_1(t)=\\log(12 K^2 t^2/\\delta)$ matching the variance term used by
+    TS-Explore-GF.
+
+    Selection rule: among the remaining arms, pull the one with the largest
+    confidence width $\\beta_i$ (equivalently smallest $N_i^{\\mathrm{fb}}$).
+    This is the standard pure-exploration adaptation of UCB; the regret-
+    minimizing $\\arg\\max_i \\mathrm{UCB}_i$ rule locks onto arm~0 once its
+    posterior tightens and so cannot eliminate sparsely-observed arms.
+    """
+
+    def __init__(self, D, A, mu, delta, q=None, sigma=1.0):
+        # ``q`` is accepted for factory compatibility with TS-style algorithms
+        # but is not used by UCB-N.
+        del q
+        self.means = np.asarray(mu, dtype=float).flatten()
+        self.Adj = np.asarray(A, dtype=float)
+        self.K = len(self.means)
+        self.delta = delta
+        self.sigma = sigma
+        self.converged = False
+        self.t = 0
+
+        self.closed = (self.Adj + np.eye(self.K)) > 0
+        self.N_fb = np.zeros(self.K)
+        self.R_fb = np.zeros(self.K)
+        self.pull_counts = np.zeros(self.K)
+        self.remaining_nodes = list(range(self.K))
+
+        for a in _greedy_dominating_set(self.Adj):
+            self._pull(a)
+
+    def _pull(self, a):
+        a = int(a)
+        nbrs = np.where(self.closed[a])[0]
+        for j in nbrs:
+            r = self.means[j] + self.sigma * np.random.randn()
+            self.N_fb[j] += 1
+            self.R_fb[j] += r
+        self.pull_counts[a] += 1
+        self.t += 1
+
+    def _conf_radius(self):
+        t_safe = max(float(self.t), 1.0)
+        L1 = np.log(max(12.0 * self.K ** 2 * t_safe ** 2 / self.delta, 2.0))
+        return self.sigma * np.sqrt(2.0 * L1 / np.maximum(self.N_fb, 1.0))
+
+    def play_round(self, n_rounds=1):
+        if len(self.remaining_nodes) <= 1:
+            self.converged = True
+            return self.remaining_nodes[0] if self.remaining_nodes else -1
+
+        N_safe = np.maximum(self.N_fb, 1.0)
+        mu_hat = self.R_fb / N_safe
+        beta = self._conf_radius()
+        upper = mu_hat + beta
+        lower = mu_hat - beta
+
+        rem = np.array(self.remaining_nodes, dtype=int)
+        max_lower = float(np.max(lower[rem]))
+        self.remaining_nodes = [
+            i for i in self.remaining_nodes if upper[i] >= max_lower
+        ]
+
+        if len(self.remaining_nodes) <= 1:
+            self.converged = True
+            return self.remaining_nodes[0] if self.remaining_nodes else -1
+
+        # Pure-exploration pull rule: argmax confidence width over remaining.
+        rem = np.array(self.remaining_nodes, dtype=int)
+        a_star = int(rem[int(np.argmax(beta[rem]))])
+        self._pull(a_star)
+        return None

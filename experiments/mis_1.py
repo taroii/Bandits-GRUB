@@ -1,12 +1,16 @@
-"""mis_1 — smoothness asymptotics and phase transitions.
+"""mis_1 — smoothness asymptotics and phase transitions (runner).
 
 Targets ``thm:main-mis`` and ``cor:eps-limit``. Sweeps nominal smoothness
-epsilon downward while tuning rho = rho^*(epsilon); expects stopping time
-to approach max_i 1/Delta_{i,c}^2 log(1/delta), with discrete drops at
-each epsilon_i^*.
+epsilon downward while tuning rho = rho^*(epsilon); records analytical
+hardness ``H_eps``, competitive-set size, and per-seed stopping times for
+TS-Explore (rho^* tuned), TS-Explore (rho=1), and Basic TS.
 
-The script runs a ``probe_rho_star()`` sanity check before the main sweep
-and writes the probe output to ``experiments/outputs/mis_1_sanity.txt``.
+Saves all raw results to ``experiments/outputs/mis_1_results.npz``.
+Plotting lives in ``mis_1_plot.py`` so figures can be iterated on
+without rerunning the experiment.
+
+The script also runs a ``probe_rho_star()`` sanity check before the main
+sweep and writes the probe output to ``experiments/outputs/mis_1_sanity.txt``.
 """
 from __future__ import annotations
 
@@ -16,11 +20,10 @@ import sys
 import time
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from experiments.utils import instances, hardness, runners, plotting  # noqa: E402
+from experiments.utils import instances, hardness, runners  # noqa: E402
 import graph_algo  # noqa: E402
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outputs')
@@ -204,7 +207,8 @@ def main():
             stop_times['TS_tuned'][ei, si] = r['stopping_time']
             correct['TS_tuned'][ei, si] = r['correct']
 
-    np.savez(os.path.join(OUT, 'mis_1_results.npz'),
+    out_npz = os.path.join(OUT, 'mis_1_results.npz')
+    np.savez(out_npz,
              eps=np.array(eps_sweep),
              seeds=np.array(seeds),
              H_eps=np.array(H_eps_vals),
@@ -212,66 +216,14 @@ def main():
              eps_critical=np.array([eps_critical[i] for i in sorted(eps_critical)]),
              **{f'{n}_stop': stop_times[n] for n in algo_names},
              **{f'{n}_correct': correct[n].astype(int) for n in algo_names})
+    print(f"\nSaved {out_npz}")
+    print("Run experiments/mis_1_plot.py to render the figure.")
 
-    # --- Plot 3-panel figure -------------------------------------------------
-    fig, axes = plt.subplots(3, 1, figsize=(9, 11), sharex=True)
-    log_eps = np.log10(eps_sweep)
-
-    # Panel A: stopping time
-    panel_a_styles = {
-        'TS_tuned': {'color': '#d62728', 'marker': 's', 'ls': '-'},
-        'TS_rho1':  {'color': '#ff9896', 'marker': 'o', 'ls': '--'},
-        'Basic':    {'color': '#2ca02c', 'marker': '^', 'ls': ':'},
-    }
-    for name, label in [('TS_tuned', 'TS (rho* tuned)'),
-                        ('TS_rho1', 'TS (rho=1, fixed)'),
-                        ('Basic', 'Basic TS (no graph)')]:
-        plotting.plot_with_ci(axes[0], log_eps, stop_times[name], label=label,
-                              **panel_a_styles[name])
-    # vertical lines at each eps_i^*
-    for i, v in eps_critical.items():
-        if np.isfinite(v) and v > 0:
-            axes[0].axvline(np.log10(v), color='k', alpha=0.3, ls=':',
-                            linewidth=1)
-    # horizontal asymptote
+    # Acceptance summary (numeric only; figure rendering happens in plot script).
     a_star = int(np.argmax(mu))
     gap2_nonstar = [(mu[a_star] - mu[i]) ** 2
                     for i in range(K) if i != a_star]
     asym = (1.0 / min(gap2_nonstar)) * np.log(1 / delta)
-    axes[0].axhline(asym, color='black', ls='--', alpha=0.5,
-                    label=f'max 1/Δ² · log(1/δ) ≈ {asym:.0f}')
-    axes[0].set_ylabel('stopping time')
-    axes[0].set_yscale('log')
-    axes[0].set_title('Panel A: stopping time vs log10(ε)')
-    axes[0].legend(fontsize=8)
-    axes[0].grid(alpha=0.3, which='both')
-
-    # Panel B: H_eps (analytical)
-    axes[1].step(log_eps, H_eps_vals, where='mid', color='tab:blue')
-    sum_limit = sum(1.0 / g for g in gap2_nonstar)
-    max_limit = 1.0 / min(gap2_nonstar)
-    axes[1].axhline(sum_limit, color='gray', ls='--', alpha=0.7,
-                    label=f'sum 1/Δ² = {sum_limit:.1f}')
-    axes[1].axhline(max_limit, color='black', ls='--', alpha=0.7,
-                    label=f'max 1/Δ² = {max_limit:.1f}')
-    axes[1].set_ylabel('H_ε')
-    axes[1].set_title('Panel B: analytical H_ε')
-    axes[1].legend()
-    axes[1].grid(alpha=0.3)
-
-    # Panel C: |competitive set|
-    axes[2].step(log_eps, comp_size, where='mid', color='tab:green')
-    axes[2].set_xlabel('log10(ε)')
-    axes[2].set_ylabel('|competitive set|')
-    axes[2].set_title('Panel C: competitive-set size')
-    axes[2].grid(alpha=0.3)
-
-    fig.tight_layout()
-    out_png = os.path.join(OUT, 'mis_1.png')
-    fig.savefig(out_png, dpi=150, bbox_inches='tight')
-    print(f"Saved {out_png}")
-
-    # Acceptance
     med_tuned = np.median(stop_times['TS_tuned'], axis=1)
     monotone = all(med_tuned[i] <= med_tuned[i - 1] * 1.2
                    for i in range(1, len(med_tuned)))
