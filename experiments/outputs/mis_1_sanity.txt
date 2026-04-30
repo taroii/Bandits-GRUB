@@ -1,4 +1,4 @@
-# exp3 probe_rho_star output
+# mis_1 probe_rho_star output
 
 eps=1.000e+00  rho*=4.316e+01  rho_diag=1.0e-04  cond(V0)=3.02e+06  teff[min/med/max]=6.00e-04/6.00e-04/7.00e-04  rho*eps/[sigma0 sqrtL1] = 1.0000
 eps=3.162e-01  rho*=1.365e+02  rho_diag=1.4e-04  cond(V0)=7.00e+06  teff[min/med/max]=8.19e-04/8.19e-04/9.55e-04  rho*eps/[sigma0 sqrtL1] = 1.0000
