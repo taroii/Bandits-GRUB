@@ -70,7 +70,7 @@ def main():
                         help="uniform suboptimality gap; optimal arm has "
                              "mu=1.0 and every other arm has mu=1-gap")
     parser.add_argument('--rhos', type=float, nargs='+',
-                        default=[1.0, 3.0, 10.0, 30.0, 100.0])
+                        default=[1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 1000.0])
     parser.add_argument('--max-steps', type=int, default=1_000_000)
     parser.add_argument('--fresh', action='store_true',
                         help="ignore any existing checkpoint and start over")
