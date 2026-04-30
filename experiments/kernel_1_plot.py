@@ -75,9 +75,9 @@ def main():
     ax.set_ylabel('stopping time (log scale)')
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_title(f'Kernel comparison on BA hub-challenger '
+    ax.set_title(f'Kernel comparison on BA hub-optimal '
                  f'(n={int(z["n"])}, m={int(z["m"])}, '
-                 f'$\\Delta_{{\\mathrm{{chal}}}}={float(z["gap_chal"])}$)')
+                 f'$\\Delta={float(z["gap"])}$)')
     ax.legend(fontsize=8)
     ax.grid(alpha=0.3, which='both')
 

@@ -1,21 +1,22 @@
 """kernel_1 — combinatorial vs normalized Laplacian rho-sweep (runner).
 
-Targets ``thm:kernel-ts``. On a Barabasi-Albert instance with the
-heterogeneous gap structure of ``ba_hub_challenger`` (best arm at a
-low-degree leaf, challenger at the high-degree hub), sweeps the
-regularization weight ``rho`` and tracks the empirical stopping time of
-TS-Explore under two graph kernels: combinatorial L_G and normalized K_G.
+Targets ``thm:kernel-ts``. On a Barabasi-Albert instance with uniform
+suboptimality gap and the optimal arm pinned to the highest-degree hub
+(``instances.ba_hub_optimal``), sweeps the regularization weight ``rho``
+and tracks the empirical stopping time of TS-Explore under two graph
+kernels: combinatorial L_G and normalized K_G.
 
 Hypothesis: at rho=1 both kernels are dominated by direct counts and so
 empirically equivalent, but as rho grows V_t becomes graph-dominated and
-the bias term ``rho * <V^-1 e_i, kernel * mu>`` separates the two.
-Because ``<mu, K_G mu> < <mu, L_G mu>`` on hub-heavy graphs, K_G's bias
-inflation is smaller and its U-bottom should sit below L_G's. See
-Section "General PSD Graph Kernels" for the analysis.
+L_G's degree-weighted smoothing biases the optimal arm's mu_hat down
+toward its (mostly suboptimal) neighborhood, shrinking the apparent gap.
+K_G's normalization keeps the hub balanced, so the optimal arm's signal
+is preserved and the agreement-stopping rule fires faster.  This is the
+empirical mechanism behind Section "General PSD Graph Kernels".
 
-Each seed draws a fresh BA realization (with the optimal arm pinned to a
-leaf and the challenger to the hub).  Basic TS depends only on ``mu``
-and is run once with the same seeds, broadcast across ``rhos``.
+Each seed draws a fresh BA realization (with the optimal arm pinned to
+the top-degree node).  Basic TS depends only on ``mu`` and is run once
+with the same seeds, broadcast across ``rhos``.
 
 Saves all raw results to ``experiments/outputs/kernel_1_results.npz``,
 checkpointed after each (rho, kernel) cell.  Plotting lives in
@@ -65,8 +66,9 @@ def main():
                         help="BA graph size")
     parser.add_argument('--m', type=int, default=2,
                         help="BA preferential-attachment parameter")
-    parser.add_argument('--gap-chal', type=float, default=0.3)
-    parser.add_argument('--gap-decoy', type=float, default=0.6)
+    parser.add_argument('--gap', type=float, default=0.3,
+                        help="uniform suboptimality gap; optimal arm has "
+                             "mu=1.0 and every other arm has mu=1-gap")
     parser.add_argument('--rhos', type=float, nargs='+',
                         default=[1.0, 3.0, 10.0, 30.0, 100.0])
     parser.add_argument('--max-steps', type=int, default=1_000_000)
@@ -83,8 +85,9 @@ def main():
 
     delta = 1e-3
     n, m = args.n, args.m
-    gap_chal, gap_decoy = args.gap_chal, args.gap_decoy
+    gap = args.gap
     out_npz = os.path.join(OUT, 'kernel_1_results.npz')
+    INSTANCE_TAG = 'ba_hub_optimal'
 
     # ----------------------------------------------------------------
     # State
@@ -103,8 +106,8 @@ def main():
         kwargs = dict(
             rhos=np.array(rhos),
             seeds=np.array(seeds),
-            n=n, m=m, delta=delta, q=args.q,
-            gap_chal=gap_chal, gap_decoy=gap_decoy,
+            n=n, m=m, delta=delta, q=args.q, gap=gap,
+            instance=np.array(INSTANCE_TAG),
             eps_L=eps_L, eps_K=eps_K, deg_max=deg_max,
             done=done.astype(int), basic_done=int(basic_done),
         )
@@ -120,7 +123,9 @@ def main():
             z = np.load(out_npz, allow_pickle=False)
             prev_rhos = list(z['rhos'].tolist())
             prev_seeds = list(z['seeds'].tolist())
-            if prev_rhos == rhos and prev_seeds == seeds:
+            prev_instance = str(z['instance']) if 'instance' in z.files else '<unknown>'
+            if (prev_rhos == rhos and prev_seeds == seeds
+                    and prev_instance == INSTANCE_TAG):
                 done = z['done'].astype(bool)
                 basic_done = bool(z['basic_done'])
                 eps_L = z['eps_L']
@@ -134,7 +139,9 @@ def main():
                 print(f"[resume] loaded {n_done}/{total} cells, "
                       f"basic_done={basic_done}", flush=True)
             else:
-                print(f"[resume] checkpoint shape mismatch; ignoring "
+                print(f"[resume] checkpoint mismatch "
+                      f"(prev_instance={prev_instance!r}, want "
+                      f"{INSTANCE_TAG!r}); ignoring "
                       f"(use --fresh to silence)", flush=True)
         except Exception as e:
             print(f"[resume] failed to load {out_npz}: {e}", flush=True)
@@ -147,8 +154,7 @@ def main():
           flush=True)
     mu_const = None
     for si, k in enumerate(seeds):
-        mu, A, D = instances.ba_hub_challenger(
-            n=n, m=m, gap_chal=gap_chal, gap_decoy=gap_decoy, seed=k)
+        mu, A, D = instances.ba_hub_optimal(n=n, m=m, gap=gap, seed=k)
         if mu_const is None:
             mu_const = mu  # Basic TS only needs mu (constant in design)
         L = D - A
@@ -199,8 +205,7 @@ def main():
                 continue
             t0 = time.time()
             for si, k in enumerate(seeds):
-                mu, A, D = instances.ba_hub_challenger(
-                    n=n, m=m, gap_chal=gap_chal, gap_decoy=gap_decoy, seed=k)
+                mu, A, D = instances.ba_hub_optimal(n=n, m=m, gap=gap, seed=k)
                 fac = build_factory(name, D, A, mu, delta, args.q,
                                     rho=rho, rho_diag=rho_diag)
                 out = runners.run_algorithm(
