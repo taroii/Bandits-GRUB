@@ -74,6 +74,46 @@ def barabasi_albert(n=100, m=2, gap=0.3, seed=0):
     return mu, A, D
 
 
+def ba_hub_optimal(n=100, m=2, gap=0.3, seed=0):
+    """Barabasi-Albert graph with the optimal arm pinned to the top-degree
+    hub.  Used by ``thm:kernel-ts``: the optimal arm sits at the high-degree
+    node so its information must propagate through many edges, exactly the
+    geometry where the combinatorial Laplacian L_G and the normalized
+    Laplacian K_G diverge.
+    """
+    G = nx.barabasi_albert_graph(n, m, seed=seed)
+    A, D = _mats_from_graph(G)
+    hub = int(np.argmax(np.diag(D)))
+    mu = np.full(n, 1.0 - gap)
+    mu[hub] = 1.0
+    return mu, A, D
+
+
+def ba_hub_challenger(n=100, m=2, gap_chal=0.3, gap_decoy=0.6, seed=0):
+    """Barabasi-Albert graph with a heterogeneous-gap design:
+      * optimal arm   (mean 1.0)        placed at a lowest-degree leaf,
+      * challenger    (mean 1 - gap_chal, small gap, hard to eliminate)
+                                         placed at the highest-degree hub,
+      * decoys        (mean 1 - gap_decoy) on every other node.
+    The bottleneck for elimination is the high-degree hub challenger,
+    which is exactly the geometry where the combinatorial Laplacian L_G
+    distorts the influence factor and the normalized Laplacian K_G
+    rebalances it (cf. Section "General PSD Graph Kernels").
+    """
+    G = nx.barabasi_albert_graph(n, m, seed=seed)
+    A, D = _mats_from_graph(G)
+    deg = np.diag(D)
+    hub = int(np.argmax(deg))
+    # Lowest-degree node, breaking ties with the smallest index that isn't
+    # the hub.
+    order = np.argsort(deg, kind='stable')
+    leaf = int(order[0]) if int(order[0]) != hub else int(order[1])
+    mu = np.full(n, 1.0 - gap_decoy)
+    mu[hub] = 1.0 - gap_chal
+    mu[leaf] = 1.0
+    return mu, A, D
+
+
 def complete_graph(n=50, gap=0.3, seed=0):
     G = nx.complete_graph(n)
     A, D = _mats_from_graph(G)
