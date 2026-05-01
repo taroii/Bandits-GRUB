@@ -180,6 +180,74 @@ def union_of_cliques_with_challenger(K, m=4, gap_chal=0.3, gap_decoy=1.5,
     return mu, A, D
 
 
+def clustered_chain(K, C=4, mu_best=1.0, gap_step=0.3, seed=0):
+    """Chain-of-cliques instance where graph regularization pools cluster
+    observations.  Companion to ``union_of_cliques_with_challenger``: same
+    K-axis, but designed so the bottleneck arms are *clustered*, so the
+    Laplacian regularizer can pool their observations.
+
+    Layout (C clusters):
+        Cluster 0          : best arm singleton at index 0,    mu = mu_best
+        Cluster c (1..C-1) : m_c equal-mean nodes in a clique,
+                             mu = mu_best - c*gap_step
+
+    Edges:
+        Within each cluster c >= 1: complete (clique on m_c nodes).
+        Bridges: cluster c-1 connects to cluster c via a single edge,
+                 for c = 1..C-1.
+
+    The K-1 non-best nodes are partitioned across clusters 1..C-1 as
+    evenly as possible (the last cluster absorbs the remainder).
+
+    All nodes within a cluster share the same mean, so the graph is
+    smooth: epsilon^2 = sum over the C-1 bridge edges = (C-1)*gap_step^2.
+    Cluster 1 contains the closest competitors (gap = gap_step) and is
+    the bottleneck for elimination.
+
+    Under no graph regularization, each challenger must be eliminated
+    individually so H_classical grows linearly in K (via the size of
+    cluster 1).  With the Laplacian regularizer, observations pool within
+    each clique so the cluster's effective sample size scales with the
+    cluster size.  ``seed`` is accepted but unused (deterministic graph).
+    """
+    if K < 1 + (C - 1):
+        raise ValueError(f"K={K} too small for C={C} clusters "
+                         f"(need K >= {1 + (C - 1)})")
+    n_decoy = K - 1
+    base = n_decoy // (C - 1)
+    rem = n_decoy - base * (C - 1)
+    sizes = [base] * (C - 1)
+    sizes[-1] += rem
+    if min(sizes) < 1:
+        raise ValueError(f"K={K}, C={C} yields cluster sizes={sizes}")
+
+    A = np.zeros((K, K))
+    cluster_first = [1]
+    for sz in sizes[:-1]:
+        cluster_first.append(cluster_first[-1] + sz)
+    for ci, sz in enumerate(sizes):
+        start = cluster_first[ci]
+        for i in range(start, start + sz):
+            for j in range(i + 1, start + sz):
+                A[i, j] = A[j, i] = 1.0
+    A[0, cluster_first[0]] = 1.0
+    A[cluster_first[0], 0] = 1.0
+    for ci in range(len(sizes) - 1):
+        u = cluster_first[ci]
+        v = cluster_first[ci + 1]
+        A[u, v] = 1.0
+        A[v, u] = 1.0
+
+    D = np.diag(A.sum(axis=1))
+    mu = np.zeros(K)
+    mu[0] = mu_best
+    for ci, sz in enumerate(sizes):
+        c = ci + 1
+        start = cluster_first[ci]
+        mu[start:start + sz] = mu_best - c * gap_step
+    return mu, A, D
+
+
 def sbm_phase_transition(seed=0):
     """Instance for Experiment 3.
 
