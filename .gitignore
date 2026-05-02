@@ -119,3 +119,7 @@ experiments/_prerefactor/
 # re-generated markdown reports inside experiments/outputs/.
 experiments/outputs/__pycache__/
 experiments/outputs/*.tmp
+
+# MovieLens (auto-downloaded by experiments/utils/movielens.py)
+/data/ml-100k/
+/data/ml-100k.zip
