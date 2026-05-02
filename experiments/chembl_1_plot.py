@@ -82,7 +82,8 @@ def main():
     ax.hist(mu, bins=30, color='#888888', alpha=0.75, edgecolor='white')
     ax.axvline(mu[best_arm], color='red', linestyle='--', linewidth=2.0,
                label=f'best arm $\\mu = {mu[best_arm]:.3f}$')
-    ax.set_xlabel('Normalized pIC50')
+    is_norm = (mu.max() <= 1.0 + 1e-6) and (mu.min() >= -1e-6)
+    ax.set_xlabel('pIC50 (normalized)' if is_norm else 'pIC50')
     ax.set_ylabel('# molecules')
     ax.set_title(f'B. Reward distribution across the {K} arms')
     ax.legend(loc='upper left', fontsize=9)
