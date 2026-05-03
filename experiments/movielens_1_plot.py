@@ -23,6 +23,7 @@ ALGOS = [
     ('TS-Explore', '#d62728', 's', '-'),
     ('GRUB',       '#1f77b4', 'o', '-.'),
     ('Basic TS',   '#2ca02c', '^', '--'),
+    ('KL-LUCB',    '#9467bd', 'D', ':'),
 ]
 
 
@@ -43,7 +44,10 @@ def main():
 
     fig, ax = plt.subplots(figsize=(8, 5))
     for name, color, marker, ls in ALGOS:
-        stop = z[f'{name}_stop']
+        key = f'{name}_stop'
+        if key not in z.files:
+            continue
+        stop = z[key]
         if np.all(np.isnan(stop)):
             continue
         med = np.nanmedian(stop, axis=1)

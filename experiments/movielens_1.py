@@ -3,7 +3,10 @@
 Targets ``thm:main-graph`` on a real-world graph: the K=20 most-rated
 MovieLens-100K movies as arms, with item-item adjusted-cosine similarity
 sparsified to a top-k mutual-neighbor graph.  ``mu_i`` is the empirical
-mean rating; rewards are sampled as N(mu_i, sigma=1).
+mean rating; by default rewards are sampled with replacement from each
+movie's observed user ratings (the data's natural categorical/integer
+1-5 distribution; matches Zong et al. 2016, Wu et al. 2019).  Set
+``--reward-model gaussian`` to fall back to N(mu_i, sigma=1).
 
 We sweep the regularization weight rho for the graph-aware algorithms
 (TS-Explore and GRUB) and broadcast Basic TS across rho as a no-graph
@@ -35,20 +38,26 @@ os.makedirs(OUT, exist_ok=True)
 
 
 GRAPH_ALGOS = ['TS-Explore', 'GRUB']
-ALL_ALGOS = GRAPH_ALGOS + ['Basic TS']
+NONGRAPH_ALGOS = ['Basic TS', 'KL-LUCB']
+ALL_ALGOS = GRAPH_ALGOS + NONGRAPH_ALGOS
 INSTANCE_TAG = 'movielens_top_k'
 
 
-def build_factory(name, D, A, mu, delta, q, rho):
+def build_factory(name, D, A, mu, delta, q, rho, reward_fn=None):
     if name == 'TS-Explore':
         return lambda: graph_algo.ThompsonSampling(
-            D=D, A=A, mu=mu, rho_lap=rho, delta=delta, q=q)
+            D=D, A=A, mu=mu, rho_lap=rho, delta=delta, q=q,
+            reward_fn=reward_fn)
     if name == 'GRUB':
         return lambda: graph_algo.MaxVarianceArmAlgo(
-            D=D, A=A, mu=mu, rho_lap=rho, delta=delta)
+            D=D, A=A, mu=mu, rho_lap=rho, delta=delta,
+            reward_fn=reward_fn)
     if name == 'Basic TS':
         return lambda: graph_algo.BasicThompsonSampling(
-            mu=mu, delta=delta, q=q)
+            mu=mu, delta=delta, q=q, reward_fn=reward_fn)
+    if name == 'KL-LUCB':
+        return lambda: graph_algo.KL_LUCB(
+            mu=mu, delta=delta, reward_fn=reward_fn)
     raise ValueError(name)
 
 
@@ -76,6 +85,13 @@ def main():
                         help="subset of algorithms to run")
     parser.add_argument('--fresh', action='store_true',
                         help="ignore any existing checkpoint and start over")
+    parser.add_argument('--reward-model', type=str, default='empirical',
+                        choices=['empirical', 'gaussian'],
+                        help="'empirical': sample rewards uniformly with "
+                             "replacement from each movie's observed user "
+                             "ratings (default; matches Zong 2016 / Wu 2019). "
+                             "'gaussian': r ~ N(mu_i, sigma=1), the original "
+                             "synthetic model.")
     args = parser.parse_args()
 
     if args.quick:
@@ -115,8 +131,23 @@ def main():
           f"gap_max={Delta_pos.max():.3f}", flush=True)
     print(f"  epsilon={eps:.3f}  H_classical={H_cls:.1f}", flush=True)
 
+    # Reward model.
+    if args.reward_model == 'empirical':
+        reward_fn = movielens.make_empirical_reward_fn(meta['ratings_per_arm'])
+        sigma_med = float(np.median(meta['rating_stds']))
+        sigma_min = float(meta['rating_stds'].min())
+        sigma_max = float(meta['rating_stds'].max())
+        print(f"  reward = empirical (sampled with replacement from "
+              f"observed ratings); per-arm std median={sigma_med:.3f}, "
+              f"range=[{sigma_min:.3f}, {sigma_max:.3f}]", flush=True)
+    else:
+        reward_fn = None
+        print(f"  reward = gaussian (mu_i + N(0, 1))", flush=True)
+
     algos_to_run = [a for a in ALL_ALGOS if a in args.algos]
     graph_algos_to_run = [a for a in GRAPH_ALGOS if a in algos_to_run]
+    nongraph_algos_to_run = [a for a in NONGRAPH_ALGOS if a in algos_to_run]
+    # Backwards-compat: keep basic_in for the messages below.
     basic_in = 'Basic TS' in algos_to_run
 
     # ----------------------------------------------------------------
@@ -126,6 +157,9 @@ def main():
     correct = {a: np.zeros((len(rhos), len(seeds)), dtype=bool) for a in ALL_ALGOS}
     H_graph_per_rho = np.full(len(rhos), np.nan)
     done = np.zeros((len(rhos), len(GRAPH_ALGOS)), dtype=bool)
+    # Per-non-graph-algo "done" flag (broadcast across rho).
+    nongraph_done = {a: False for a in NONGRAPH_ALGOS}
+    # Backwards-compat alias for resume of legacy checkpoints.
     basic_done = False
 
     def save_checkpoint():
@@ -141,10 +175,14 @@ def main():
             H_graph=H_graph_per_rho,
             mu=mu,
             instance=np.array(INSTANCE_TAG),
+            reward_model=np.array(args.reward_model),
             delta=delta,
             q=args.q,
             done=done.astype(int),
-            basic_done=int(basic_done),
+            basic_done=int(nongraph_done.get('Basic TS', False)),
+            nongraph_done=np.array(
+                [int(nongraph_done.get(a, False)) for a in NONGRAPH_ALGOS]
+            ),
         )
         for a in ALL_ALGOS:
             kwargs[f'{a}_stop'] = stop_times[a]
@@ -162,25 +200,41 @@ def main():
                              if 'instance' in z.files else '<unknown>')
             prev_K = int(z['K']) if 'K' in z.files else -1
             prev_topk = int(z['top_k_neighbors']) if 'top_k_neighbors' in z.files else -1
+            prev_reward = (str(z['reward_model'])
+                           if 'reward_model' in z.files else 'gaussian')
             if (prev_rhos == rhos and prev_seeds == seeds
                     and prev_instance == INSTANCE_TAG
                     and prev_K == int(K)
-                    and prev_topk == int(args.top_k_neighbors)):
+                    and prev_topk == int(args.top_k_neighbors)
+                    and prev_reward == args.reward_model):
                 done = z['done'].astype(bool)
-                basic_done = bool(z['basic_done'])
+                if 'nongraph_done' in z.files:
+                    arr = z['nongraph_done'].astype(int)
+                    for ai, a in enumerate(NONGRAPH_ALGOS):
+                        nongraph_done[a] = bool(arr[ai] if ai < len(arr) else 0)
+                else:
+                    # Legacy checkpoint (only Basic TS tracked).
+                    nongraph_done['Basic TS'] = bool(z['basic_done'])
+                basic_done = nongraph_done.get('Basic TS', False)
                 if 'H_graph' in z.files:
                     H_graph_per_rho = z['H_graph']
                 for a in ALL_ALGOS:
-                    stop_times[a] = z[f'{a}_stop']
-                    correct[a] = z[f'{a}_correct'].astype(bool)
+                    if f'{a}_stop' in z.files:
+                        stop_times[a] = z[f'{a}_stop']
+                        correct[a] = z[f'{a}_correct'].astype(bool)
                 n_done = int(done.sum())
                 total = len(rhos) * len(GRAPH_ALGOS)
+                ng_done_msg = ', '.join(
+                    f"{a}={'Y' if nongraph_done[a] else 'N'}"
+                    for a in NONGRAPH_ALGOS
+                )
                 print(f"[resume] loaded {n_done}/{total} graph-cells, "
-                      f"basic_done={basic_done}", flush=True)
+                      f"non-graph: {ng_done_msg}", flush=True)
             else:
                 print(f"[resume] checkpoint mismatch "
                       f"(prev_K={prev_K}, prev_topk={prev_topk}, "
-                      f"prev_instance={prev_instance!r}); ignoring "
+                      f"prev_instance={prev_instance!r}, "
+                      f"prev_reward={prev_reward!r}); ignoring "
                       f"(use --fresh to silence)", flush=True)
         except Exception as e:
             print(f"[resume] failed to load {out_npz}: {e}", flush=True)
@@ -192,10 +246,16 @@ def main():
     save_checkpoint()
 
     # ----------------------------------------------------------------
-    # Basic TS (broadcast).
+    # Non-graph baselines (broadcast across rho).
     # ----------------------------------------------------------------
-    if basic_in and not basic_done:
-        fac = build_factory('Basic TS', None, None, mu, delta, args.q, rho=0.0)
+    for name in nongraph_algos_to_run:
+        if nongraph_done[name]:
+            ts = stop_times[name][0, :]
+            print(f"\n{name:11s} [resumed] t_med={np.nanmedian(ts):8.0f}",
+                  flush=True)
+            continue
+        fac = build_factory(name, None, None, mu, delta, args.q,
+                            rho=0.0, reward_fn=reward_fn)
         t0 = time.time()
         runs = runners.run_many(fac, seeds, n_jobs=args.n_jobs,
                                 max_steps=args.max_steps,
@@ -203,16 +263,15 @@ def main():
         ts = np.array([r['stopping_time'] for r in runs], dtype=float)
         cor = np.array([r['correct'] for r in runs], dtype=bool)
         for ri in range(len(rhos)):
-            stop_times['Basic TS'][ri, :] = ts
-            correct['Basic TS'][ri, :] = cor
-        basic_done = True
+            stop_times[name][ri, :] = ts
+            correct[name][ri, :] = cor
+        nongraph_done[name] = True
+        if name == 'Basic TS':
+            basic_done = True
         save_checkpoint()
-        print(f"\nBasic TS (broadcast)  t_med={np.median(ts):8.0f}  "
+        print(f"\n{name:11s} (broadcast)  t_med={np.median(ts):8.0f}  "
               f"IQR=[{np.percentile(ts,25):.0f}, {np.percentile(ts,75):.0f}]  "
               f"correct={cor.mean():.0%}  ({time.time()-t0:.0f}s)", flush=True)
-    elif basic_in:
-        ts = stop_times['Basic TS'][0, :]
-        print(f"\nBasic TS [resumed]    t_med={np.median(ts):8.0f}", flush=True)
 
     # ----------------------------------------------------------------
     # rho-sweep for graph algorithms.
@@ -229,7 +288,8 @@ def main():
                 print(f"  {name:11s} [resumed] t_med={np.median(ts):8.0f}",
                       flush=True)
                 continue
-            fac = build_factory(name, D, A, mu, delta, args.q, rho=rho)
+            fac = build_factory(name, D, A, mu, delta, args.q, rho=rho,
+                                reward_fn=reward_fn)
             t0 = time.time()
             runs = runners.run_many(fac, seeds, n_jobs=args.n_jobs,
                                     max_steps=args.max_steps,
@@ -256,14 +316,14 @@ def main():
 
     # Acceptance summary.
     if 'TS-Explore' in algos_to_run:
-        med_ts = np.median(stop_times['TS-Explore'], axis=1)
+        med_ts = np.nanmedian(stop_times['TS-Explore'], axis=1)
         print("\n# Acceptance")
         for ri, rho in enumerate(rhos):
             line = f"  rho={rho:6.1f}  TS-Explore={med_ts[ri]:>8.0f}"
-            if basic_in:
-                med_b = np.median(stop_times['Basic TS'], axis=1)[ri]
-                ratio = med_b / max(med_ts[ri], 1.0)
-                line += f"  Basic={med_b:>8.0f}  Basic/TS={ratio:.2f}x"
+            for ng in nongraph_algos_to_run:
+                med_n = np.nanmedian(stop_times[ng], axis=1)[ri]
+                ratio = med_n / max(med_ts[ri], 1.0)
+                line += f"  {ng}={med_n:>8.0f}  {ng}/TS={ratio:.2f}x"
             print(line)
         if basic_in:
             best_ts = float(np.nanmin(med_ts))

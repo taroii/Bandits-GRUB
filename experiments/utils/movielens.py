@@ -175,11 +175,53 @@ def build_instance(K=100, top_k_neighbors=5, min_common=5, min_ratings=None,
             titles_sel = [titles[i] for i in selected]
         except Exception:
             titles_sel = [f"movie_{i}" for i in selected]
+        # Per-arm observed rating arrays (1-D float arrays of variable length)
+        # for empirical-rating reward sampling.
+        ratings_per_arm = []
+        for ai in range(K):
+            col = R_sub[:, ai]
+            mask = M_sub[:, ai]
+            ratings_per_arm.append(np.ascontiguousarray(col[mask], dtype=float))
+        # Per-arm rating standard deviation, useful for reporting.
+        rating_stds = np.array(
+            [r.std(ddof=0) if len(r) > 1 else 0.0 for r in ratings_per_arm]
+        )
         meta = dict(
             selected_item_ids=selected,
             titles=titles_sel,
             rating_counts=counts,
             similarity=sim_pos,
+            ratings_per_arm=ratings_per_arm,
+            rating_stds=rating_stds,
         )
         return mu, A, D, meta
     return mu, A, D
+
+
+def make_empirical_reward_fn(ratings_per_arm, rng=None):
+    """Return a callable ``f(arm) -> reward`` that samples uniformly with
+    replacement from the observed user ratings of ``arm``.
+
+    Replaces the synthetic Gaussian reward model in
+    ``support_func.gaussian_reward`` for the MovieLens experiments, so
+    the reward stream uses the dataset's actual rating distribution
+    (per-movie heteroscedastic noise, integer 1--5 categorical values)
+    rather than ``N(mu_i, sigma=1)``.
+
+    ``rng`` is an optional ``numpy.random.Generator``; if None, the
+    function uses ``np.random.choice`` (legacy global RNG seeded by the
+    runner via ``np.random.seed``).
+    """
+    arm_arrays = [np.asarray(r, dtype=float) for r in ratings_per_arm]
+    if any(len(r) == 0 for r in arm_arrays):
+        raise ValueError("at least one arm has zero observed ratings; cannot "
+                         "sample empirically")
+    if rng is None:
+        def _draw(arm):
+            r = arm_arrays[int(arm)]
+            return float(r[np.random.randint(len(r))])
+    else:
+        def _draw(arm):
+            r = arm_arrays[int(arm)]
+            return float(rng.choice(r))
+    return _draw

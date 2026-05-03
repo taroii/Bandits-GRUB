@@ -118,11 +118,12 @@ class OneStepMinSumAlgo(algobase.AlgoBase):
 class BasicThompsonSampling:
     """No-graph Thompson sampling baseline (empirical means, direct counts)."""
 
-    def __init__(self, mu, delta, q):
+    def __init__(self, mu, delta, q, reward_fn=None):
         self.means = np.asarray(mu, dtype=float).flatten()
         self.K = len(self.means)
         self.delta = delta
         self.q = q
+        self.reward_fn = reward_fn
         self.converged = False
         self.t = 0
 
@@ -132,10 +133,15 @@ class BasicThompsonSampling:
         self.pull_counts = np.zeros(self.K)
 
         for arm in range(self.K):
-            reward = support_func.gaussian_reward(self.means[arm])
+            reward = self._draw_reward(arm)
             self.counts[arm] += 1
             self.total_reward[arm] += reward
             self.t += 1
+
+    def _draw_reward(self, arm):
+        if self.reward_fn is None:
+            return support_func.gaussian_reward(self.means[arm])
+        return float(self.reward_fn(arm))
 
     def compute_floor_factor(self, t):
         log_term = np.log(12 * self.K**2 * max(t, 1)**2 / self.delta)
@@ -168,11 +174,99 @@ class BasicThompsonSampling:
         i_tilde = int(i_tilde_m[m_star])
         arm = i_tilde if self.counts[i_tilde] < self.counts[i_hat] else i_hat
 
-        reward = support_func.gaussian_reward(self.means[arm])
+        reward = self._draw_reward(arm)
         self.counts[arm] += 1
         self.total_reward[arm] += reward
         self.t += 1
         self.pull_counts[arm] += 1
+        return None
+
+
+class KL_LUCB:
+    """LUCB-style non-graph BAI baseline (Kalyanakrishnan-Auer-Ortner-Stoltz 2012,
+    Kaufmann-Kalyanakrishnan 2013).
+
+    Sub-Gaussian / Gaussian-noise variant: uses Hoeffding-style confidence
+    radii instead of KL bounds, but keeps the LUCB sampling rule (pull
+    whichever of the empirical-best and the runner-up has been pulled less).
+
+    Stops when the empirical-best arm's lower confidence bound exceeds
+    the next-best arm's upper confidence bound.
+
+    Parameters
+    ----------
+    mu        True means; only used to (i) generate Gaussian rewards when
+              ``reward_fn`` is None, and (ii) decide ``correct`` after
+              termination.
+    delta     Confidence parameter (probability of incorrect identification).
+    sigma     Sub-Gaussian noise parameter (default 1.0).
+    reward_fn Optional callable(arm) -> reward; overrides Gaussian.
+    q         Accepted for API parity with the TS classes; unused here.
+    """
+
+    def __init__(self, mu, delta, sigma=1.0, reward_fn=None, q=None):
+        self.means = np.asarray(mu, dtype=float).flatten()
+        self.K = len(self.means)
+        self.delta = float(delta)
+        self.sigma = float(sigma)
+        self.reward_fn = reward_fn
+        self.converged = False
+        self.t = 0
+
+        self.counts = np.zeros(self.K)
+        self.total_reward = np.zeros(self.K)
+        self.remaining_nodes = list(range(self.K))
+        self.pull_counts = np.zeros(self.K)
+
+        # Initial round-robin pull to seed every arm with one observation.
+        for arm in range(self.K):
+            reward = self._draw_reward(arm)
+            self.counts[arm] += 1
+            self.total_reward[arm] += reward
+            self.pull_counts[arm] += 1
+            self.t += 1
+
+    def _draw_reward(self, arm):
+        if self.reward_fn is None:
+            return support_func.gaussian_reward(self.means[arm])
+        return float(self.reward_fn(arm))
+
+    def _confidence_width(self):
+        """Anytime Hoeffding radius c_i(t) used by both UCB and LCB.
+
+        c_i(t) = sigma * sqrt(2 * log(K * t^2 / delta) / N_i(t))
+        """
+        t_safe = max(float(self.t), 1.0)
+        log_term = max(np.log(self.K * (t_safe ** 2) / self.delta), 1.0)
+        return self.sigma * np.sqrt(
+            2.0 * log_term / np.maximum(self.counts, 1.0)
+        )
+
+    def play_round(self, n_rounds=1):
+        if self.converged:
+            return self.remaining_nodes[0]
+        mu_hat = self.total_reward / np.maximum(self.counts, 1.0)
+        c = self._confidence_width()
+        h_star = int(np.argmax(mu_hat))
+        # Runner-up: arm with highest UCB among the non-best.
+        ucb = mu_hat + c
+        ucb_other = ucb.copy()
+        ucb_other[h_star] = -np.inf
+        l_star = int(np.argmax(ucb_other))
+
+        # Stopping rule: LCB(h*) >= UCB(l*).
+        if mu_hat[h_star] - c[h_star] >= mu_hat[l_star] + c[l_star]:
+            self.converged = True
+            self.remaining_nodes = [h_star]
+            return h_star
+
+        # LUCB sampling rule: pull whichever of h* and l* has been pulled less.
+        arm = h_star if self.counts[h_star] <= self.counts[l_star] else l_star
+        reward = self._draw_reward(arm)
+        self.counts[arm] += 1
+        self.total_reward[arm] += reward
+        self.pull_counts[arm] += 1
+        self.t += 1
         return None
 
 
@@ -192,10 +286,11 @@ class ThompsonSampling(algobase.AlgoBase):
     """
 
     def __init__(self, D, A, mu, rho_lap, delta, q, epsilon_nominal=None,
-                 kernel='combinatorial', rho_diag=1e-4):
+                 kernel='combinatorial', rho_diag=1e-4, reward_fn=None):
         super().__init__(D, A, mu, rho_lap=rho_lap,
                          epsilon_nominal=epsilon_nominal,
-                         kernel=kernel, rho_diag=rho_diag)
+                         kernel=kernel, rho_diag=rho_diag,
+                         reward_fn=reward_fn)
         self.delta = delta
         self.q = q
         self.K = self.dim

@@ -3,3 +3,6 @@ matplotlib
 toml
 networkx
 scipy
+rdkit
+pandas
+requests
