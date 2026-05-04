@@ -55,7 +55,7 @@ class AlgoBase:
 
     def __init__(self, D, A, mu, rho_lap, add_graph=True,
                  epsilon_nominal=None, kernel='combinatorial',
-                 rho_diag=1e-4, delta=1e-4):
+                 rho_diag=1e-4, delta=1e-4, reward_fn=None):
 
         self.reset = with_reset
         self.means = np.asarray(mu, dtype=float).flatten()
@@ -65,6 +65,9 @@ class AlgoBase:
         self.rho_diag = float(rho_diag)
         self.delta = float(delta)
         self.kernel = kernel
+        # Optional environment-specific reward sampler:
+        # callable(arm_idx) -> scalar reward.  Defaults to N(mu_arm, sigma=1).
+        self.reward_fn = reward_fn
         self.L = build_kernel(D, A, kernel=kernel)
         self.dim = self.L.shape[0]
         self.epsilon_nominal = epsilon_nominal
@@ -118,6 +121,14 @@ class AlgoBase:
     def update_conf_width(self):
         self.conf_width = np.sqrt(np.maximum(np.diag(self.inverse_tracker), 0.0))
 
+    def _draw_reward(self, arm):
+        """Sample one reward for ``arm``.  Override via ``reward_fn`` to use
+        a non-Gaussian environment (e.g., empirical user ratings).
+        """
+        if self.reward_fn is None:
+            return support_func.gaussian_reward(self.means[arm])
+        return float(self.reward_fn(arm))
+
     def play_arm(self, index):
         self.picking_order.append(index)
         counter_vec = np.zeros(self.dim)
@@ -126,7 +137,7 @@ class AlgoBase:
             counter_vec, self.inverse_tracker)
         self.update_conf_width()
         self.counter[index, index] += 1
-        reward = support_func.gaussian_reward(self.means[index])
+        reward = self._draw_reward(index)
         self.total_reward[index] += reward
 
     def estimate_mean(self):

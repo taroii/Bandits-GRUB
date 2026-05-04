@@ -248,6 +248,21 @@ def clustered_chain(K, C=4, mu_best=1.0, gap_step=0.3, seed=0):
     return mu, A, D
 
 
+def movielens_top_k(K=100, top_k_neighbors=5, min_common=5,
+                    min_ratings=None, cache_dir=None, seed=0):
+    """Real-world instance: top-K most-rated MovieLens-100K movies as
+    arms, with adjusted-cosine item-item similarity sparsified to a
+    top-k neighbor graph.  See ``experiments.utils.movielens.build_instance``
+    for details.  ``seed`` is accepted (matches API) but unused; the
+    instance is deterministic.
+    """
+    from experiments.utils import movielens
+    return movielens.build_instance(
+        K=K, top_k_neighbors=top_k_neighbors, min_common=min_common,
+        min_ratings=min_ratings, cache_dir=cache_dir, return_meta=False,
+    )
+
+
 def sbm_phase_transition(seed=0):
     """Instance for Experiment 3.
 
