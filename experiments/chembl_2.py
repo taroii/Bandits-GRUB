@@ -92,12 +92,41 @@ class BasicTSFactory:
         return graph_algo.BasicThompsonSampling(**self.kw)
 
 
+class _KLLUCBPaperSchedule(graph_algo.KL_LUCB):
+    """KL-LUCB with the paper's L_1(t) = log(12 K^2 t^2 / delta)
+    confidence schedule.
+
+    The shared graph_algo.KL_LUCB uses the original
+    Kaufmann-Kalyanakrishnan schedule log(K t^2 / delta), which is
+    correct for that algorithm's published analysis but is tighter
+    than the schedule used by BasicThompsonSampling and
+    ThompsonSampling in this paper.  For the chembl_2 experiment we
+    want all four algorithms to use the same confidence schedule so
+    the comparison reflects only stopping-rule and graph-structure
+    differences, not differences in confidence-bound analysis.
+
+    This subclass is local to the chembl_2 experiment so other
+    experiments (e.g. movielens) that import graph_algo.KL_LUCB are
+    unaffected.
+    """
+
+    def _confidence_width(self):
+        t_safe = max(float(self.t), 1.0)
+        log_term = max(
+            np.log(12.0 * (self.K ** 2) * (t_safe ** 2) / self.delta),
+            1.0,
+        )
+        return self.sigma * np.sqrt(
+            2.0 * log_term / np.maximum(self.counts, 1.0)
+        )
+
+
 class KLLUCBFactory:
     def __init__(self, mu, delta):
         self.kw = dict(mu=mu, delta=delta)
 
     def __call__(self):
-        return graph_algo.KL_LUCB(**self.kw)
+        return _KLLUCBPaperSchedule(**self.kw)
 
 
 def make_factory(name, D, A, mu, delta, q, rho):
