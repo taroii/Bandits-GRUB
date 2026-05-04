@@ -203,6 +203,15 @@ def main():
                         help="1 target, 2 rhos, 3 seeds, all algos")
     parser.add_argument('--fresh', action='store_true',
                         help="ignore any existing checkpoint and start over")
+    parser.add_argument('--rerun-algos', type=str, nargs='+', default=[],
+                        choices=ALL_ALGOS,
+                        help="invalidate cached results for these "
+                             "algorithms after loading the checkpoint, "
+                             "so they get re-run while everything else "
+                             "resumes from cache.  Useful when you've "
+                             "changed the implementation of one algorithm "
+                             "(e.g. KL-LUCB confidence schedule) and want "
+                             "to re-run only it without redoing the rest.")
     parser.add_argument('--out', type=str,
                         default=os.path.join(OUT, 'chembl_2_results.npz'))
     args = parser.parse_args()
@@ -326,6 +335,19 @@ def main():
                 total = n_targets * n_rhos * len(ALL_ALGOS)
                 print(f"\n[resume] loaded {n_cells}/{total} cells",
                       flush=True)
+                if args.rerun_algos:
+                    for t in targets:
+                        for a in args.rerun_algos:
+                            done[(t, a)] = np.zeros(n_rhos, dtype=bool)
+                            stop_times[(t, a)] = np.full(
+                                (n_rhos, n_seeds), np.nan)
+                            correct[(t, a)] = np.zeros(
+                                (n_rhos, n_seeds), dtype=bool)
+                            if a in RHO_FREE:
+                                rho_free_done[(t, a)] = False
+                    print(f"[resume] invalidated cached results for "
+                          f"{args.rerun_algos} (will be recomputed)",
+                          flush=True)
             else:
                 print(f"\n[resume] checkpoint mismatch "
                       f"(prev_inst={prev_inst!r}); ignoring "
