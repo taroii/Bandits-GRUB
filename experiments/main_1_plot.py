@@ -1,11 +1,11 @@
-"""main_1_plot — render Figure 1 from main_1_results.npz.
+"""main_1_plot -- agreement-vs-elimination figure (appendix).
 
 Reads ``experiments/outputs/main_1_results.npz`` (produced by
 ``main_1.py``) and writes ``experiments/outputs/main_1.png``.
 
 Two panels:
-  * A — median stopping time vs K, log y-axis, shaded 25/75 IQR.
-  * B — single-seed candidate-set / agreement curve at one K.
+  (a) median stopping time vs K, with 25-75 IQR shading.
+  (b) single-seed candidate-set count vs time at one K.
 """
 from __future__ import annotations
 
@@ -16,14 +16,18 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from experiments.utils import plotting  # noqa: E402
+
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outputs')
 
 ALGOS = ['TS-Explore', 'Basic TS', 'GRUB']
-STYLES = {
-    'TS-Explore': {'color': '#d62728', 'marker': 's', 'ls': '-'},
-    'Basic TS':   {'color': '#2ca02c', 'marker': '^', 'ls': '--'},
-    'GRUB':       {'color': '#1f77b4', 'marker': 'o', 'ls': '-.'},
-}
+
+
+def _panel_label(ax, letter):
+    ax.text(0.02, 0.96, letter, transform=ax.transAxes,
+            fontsize=10, fontweight='bold', va='top', ha='left')
 
 
 def main():
@@ -38,53 +42,46 @@ def main():
         print(f"Error: {args.results} not found. "
               f"Run experiments/main_1.py first.", file=sys.stderr)
         sys.exit(1)
+
+    plotting.apply_paper_style()
     z = np.load(args.results, allow_pickle=False)
     Ks = z['Ks']
-    K_b = int(z['panel_b_K'])
-    seed_b = int(z['panel_b_seed'])
 
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5))
+    fig, axes = plt.subplots(1, 2, figsize=(6.4, 2.7),
+                             constrained_layout=True)
 
-    # Panel A: stopping time vs K
+    # Panel (a): stopping time vs K
     ax = axes[0]
     for name in ALGOS:
-        st = STYLES[name]
-        stop = z[f'{name}_stop']
-        med = np.median(stop, axis=1)
-        lo = np.percentile(stop, 25, axis=1)
-        hi = np.percentile(stop, 75, axis=1)
-        ax.plot(Ks, med, color=st['color'], marker=st['marker'],
-                linestyle=st['ls'], label=name, linewidth=2.0, markersize=8)
-        ax.fill_between(Ks, lo, hi, color=st['color'], alpha=0.18)
-    ax.set_xlabel('Number of arms K')
-    ax.set_ylabel('Stopping time (log scale)')
+        st = plotting.style_for(name)
+        plotting.plot_with_iqr(ax, Ks, z[f'{name}_stop'], label=name, **st)
+    ax.set_xlabel(r'arms $K$')
+    ax.set_ylabel('stopping time')
     ax.set_yscale('log')
-    ax.set_title('A. Sample complexity vs K (median, 25-75 IQR)')
-    ax.grid(True, which='both', alpha=0.3)
-    ax.legend(loc='best')
+    ax.set_xticks(Ks)
+    plotting.grid_only_major(ax)
+    _panel_label(ax, '(a)')
 
-    # Panel B: single-seed candidate-set/agreement curves
+    # Panel (b): single-seed candidate-set vs time
     ax = axes[1]
     for name in ALGOS:
-        st = STYLES[name]
+        st = plotting.style_for(name)
         ts = z[f'{name}_curve_t']
         ns = z[f'{name}_curve_n']
+        if ts.size == 0:
+            continue
         ax.step(ts, ns, where='post', color=st['color'],
-                linestyle=st['ls'], label=name, linewidth=2.0)
-    ax.set_xlabel('Time step t')
-    ax.set_ylabel('Number of remaining candidate arms')
+                linestyle='-', label=name, linewidth=1.5)
+    ax.set_xlabel(r'time step $t$')
+    ax.set_ylabel('remaining candidate arms')
     ax.set_xscale('log')
-    ax.set_title(f'B. Single-seed candidate set vs time '
-                 f'(K={K_b}, seed={seed_b})')
-    ax.grid(True, which='both', alpha=0.3)
-    ax.legend(loc='best')
+    plotting.grid_only_major(ax)
+    _panel_label(ax, '(b)')
 
-    fig.suptitle("Figure 1: TS-Explore agreement-stopping vs GRUB UCB elimination "
-                 "on graph-structured pure exploration",
-                 fontsize=12, y=1.02)
-    fig.tight_layout()
-    fig.savefig(args.out, dpi=150, bbox_inches='tight')
-    print(f"Saved {args.out}")
+    plotting.legend_above_figure(fig, axes, y=1.0)
+
+    for p in plotting.save_figure(fig, args.out):
+        print(f"Saved {p}")
 
 
 if __name__ == "__main__":

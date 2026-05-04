@@ -98,7 +98,7 @@ config.local.toml
 #*.png
 *.jpg
 *.jpeg
-*.pdf
+#*.pdf
 *.svg
 output/
 results/
@@ -123,3 +123,4 @@ experiments/outputs/*.tmp
 # MovieLens (auto-downloaded by experiments/utils/movielens.py)
 /data/ml-100k/
 /data/ml-100k.zip
+data/

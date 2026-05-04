@@ -1,12 +1,12 @@
-"""mis_1_plot — render Figure 2 from mis_1_results.npz.
+"""mis_1_plot -- smoothness asymptotics figure (appendix).
 
 Reads ``experiments/outputs/mis_1_results.npz`` (produced by ``mis_1.py``)
 and writes ``experiments/outputs/mis_1.png``.
 
-Three panels stacked:
-  * Top    — median stopping time vs log10(epsilon), with 25--75 IQR shading.
-  * Middle — analytical H_epsilon (step plot).
-  * Bottom — competitive-set size |H_epsilon|.
+Three stacked panels sharing a log10(epsilon) x-axis:
+  (a) median stopping time, with 25-75 IQR shading.
+  (b) analytical H_eps step function.
+  (c) competitive-set size |H_eps|.
 """
 from __future__ import annotations
 
@@ -23,12 +23,16 @@ from experiments.utils import instances, plotting  # noqa: E402
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outputs')
 
-# Keep these in sync with ``mis_1.py``.
 ALGOS = [
-    ('TS_tuned', 'TS (rho* tuned)',     '#d62728', 's', '-'),
-    ('TS_rho1',  'TS (rho=1, fixed)',   '#ff9896', 'o', '--'),
-    ('Basic',    'Basic TS (no graph)', '#2ca02c', '^', ':'),
+    ('TS_tuned', r'TS ($\rho^{*}$ tuned)'),
+    ('TS_rho1',  r'TS ($\rho{=}1$)'),
+    ('Basic',    r'Basic TS'),
 ]
+
+
+def _panel_label(ax, letter):
+    ax.text(0.015, 0.96, letter, transform=ax.transAxes,
+            fontsize=10, fontweight='bold', va='top', ha='left')
 
 
 def main():
@@ -37,12 +41,8 @@ def main():
                         default=os.path.join(OUT, 'mis_1_results.npz'))
     parser.add_argument('--out', type=str,
                         default=os.path.join(OUT, 'mis_1.png'))
-    parser.add_argument('--instance-seed', type=int, default=0,
-                        help="Seed used for the SBM instance in mis_1.py "
-                             "(default 0). Must match the runner.")
-    parser.add_argument('--delta', type=float, default=1e-3,
-                        help="Confidence parameter used in the runner "
-                             "(default 1e-3). Must match the runner.")
+    parser.add_argument('--instance-seed', type=int, default=0)
+    parser.add_argument('--delta', type=float, default=1e-3)
     args = parser.parse_args()
 
     if not os.path.exists(args.results):
@@ -50,60 +50,70 @@ def main():
               f"Run experiments/mis_1.py first.", file=sys.stderr)
         sys.exit(1)
 
+    plotting.apply_paper_style()
     z = np.load(args.results, allow_pickle=False)
     eps = z['eps']
     log_eps = np.log10(eps)
 
-    # The instance is fully determined by its seed; rebuild it here so we can
-    # draw the analytical limits without serializing mu/D into the npz.
     mu, A, D = instances.sbm_phase_transition(seed=args.instance_seed)
     K = len(mu)
     a_star = int(np.argmax(mu))
-    gap2_nonstar = [(mu[a_star] - mu[i]) ** 2 for i in range(K) if i != a_star]
+    gap2_nonstar = [(mu[a_star] - mu[i]) ** 2
+                    for i in range(K) if i != a_star]
     asym = (1.0 / min(gap2_nonstar)) * np.log(1.0 / args.delta)
     sum_limit = sum(1.0 / g for g in gap2_nonstar)
     max_limit = 1.0 / min(gap2_nonstar)
 
-    fig, axes = plt.subplots(3, 1, figsize=(9, 11), sharex=True)
+    fig, axes = plt.subplots(3, 1, figsize=(5.2, 6.2), sharex=True,
+                             gridspec_kw={'height_ratios': [2.0, 1.2, 1.0]},
+                             constrained_layout=True)
 
-    # Panel A: stopping time
-    for name, label, color, marker, ls in ALGOS:
-        plotting.plot_with_ci(axes[0], log_eps, z[f'{name}_stop'],
-                              label=label, color=color, marker=marker, ls=ls)
+    # Panel (a): stopping time
+    ax = axes[0]
+    for name, label in ALGOS:
+        st = plotting.style_for(name)
+        plotting.plot_with_iqr(ax, log_eps, z[f'{name}_stop'],
+                               label=label, **st)
     eps_critical = z['eps_critical']
     for v in eps_critical:
         if np.isfinite(v) and v > 0:
-            axes[0].axvline(np.log10(v), color='k', alpha=0.3, ls=':',
-                            linewidth=1)
-    axes[0].axhline(asym, color='black', ls='--', alpha=0.5,
-                    label=f'max 1/Delta^2 * log(1/delta) = {asym:.0f}')
-    axes[0].set_ylabel('stopping time')
-    axes[0].set_yscale('log')
-    axes[0].set_title('Panel A: stopping time vs log10(eps)')
-    axes[0].legend(fontsize=8)
-    axes[0].grid(alpha=0.3, which='both')
+            ax.axvline(np.log10(v), color='gray', alpha=0.25,
+                       linestyle=':', linewidth=0.8, zorder=0)
+    ax.axhline(asym, color='black', linestyle='--', alpha=0.6,
+               linewidth=1.0,
+               label=r'$\max_i\Delta_i^{-2}\log(1/\delta)$')
+    ax.set_ylabel('stopping time')
+    ax.set_yscale('log')
+    plotting.grid_only_major(ax)
+    plotting.legend_above(ax, ncol=4)
+    _panel_label(ax, '(a)')
 
-    # Panel B: H_eps
-    axes[1].step(log_eps, z['H_eps'], where='mid', color='tab:blue')
-    axes[1].axhline(sum_limit, color='gray', ls='--', alpha=0.7,
-                    label=f'sum 1/Delta^2 = {sum_limit:.1f}')
-    axes[1].axhline(max_limit, color='black', ls='--', alpha=0.7,
-                    label=f'max 1/Delta^2 = {max_limit:.1f}')
-    axes[1].set_ylabel('H_eps')
-    axes[1].set_title('Panel B: analytical H_eps')
-    axes[1].legend()
-    axes[1].grid(alpha=0.3)
+    # Panel (b): analytical H_eps
+    ax = axes[1]
+    ax.step(log_eps, z['H_eps'], where='mid', color='#0072B2',
+            linewidth=1.6, label=r'$H_{\varepsilon}$')
+    ax.axhline(sum_limit, color='gray', linestyle='--', alpha=0.7,
+               linewidth=1.0,
+               label=fr'$\sum\Delta^{{-2}}={sum_limit:.0f}$')
+    ax.axhline(max_limit, color='black', linestyle='--', alpha=0.7,
+               linewidth=1.0,
+               label=fr'$\max\Delta^{{-2}}={max_limit:.0f}$')
+    ax.set_ylabel(r'$H_{\varepsilon}$')
+    plotting.grid_only_major(ax)
+    plotting.legend_above(ax, ncol=3)
+    _panel_label(ax, '(b)')
 
-    # Panel C: |competitive set|
-    axes[2].step(log_eps, z['comp_size'], where='mid', color='tab:green')
-    axes[2].set_xlabel('log10(eps)')
-    axes[2].set_ylabel('|competitive set|')
-    axes[2].set_title('Panel C: competitive-set size')
-    axes[2].grid(alpha=0.3)
+    # Panel (c): |competitive set|
+    ax = axes[2]
+    ax.step(log_eps, z['comp_size'], where='mid', color='#009E73',
+            linewidth=1.6)
+    ax.set_xlabel(r'$\log_{10}\varepsilon$')
+    ax.set_ylabel(r'$|\mathcal{H}_{\varepsilon}|$')
+    plotting.grid_only_major(ax)
+    _panel_label(ax, '(c)')
 
-    fig.tight_layout()
-    fig.savefig(args.out, dpi=150, bbox_inches='tight')
-    print(f"Saved {args.out}")
+    for p in plotting.save_figure(fig, args.out):
+        print(f"Saved {p}")
 
 
 if __name__ == "__main__":

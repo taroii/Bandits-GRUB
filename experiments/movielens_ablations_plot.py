@@ -1,12 +1,9 @@
-"""movielens_ablations_plot -- render the ablation table/figure.
+"""movielens_ablations_plot -- ablation grouped-bar figure (appendix).
 
 Reads ``experiments/outputs/movielens_ablations_results.npz`` (produced
 by ``movielens_ablations.py``) and writes
-``experiments/outputs/movielens_ablations.png``.
-
-Renders a grouped bar plot: x-axis = config label, y-axis = stopping
-time (log), one bar per algorithm.  Also prints a Markdown-style table
-to stdout for easy copy-paste into the paper appendix.
+``experiments/outputs/movielens_ablations.png``. Also prints a
+Markdown-style table to stdout for paper appendix use.
 """
 from __future__ import annotations
 
@@ -17,14 +14,11 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outputs')
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-COLORS = {
-    'TS-Explore': '#d62728',
-    'GRUB':       '#1f77b4',
-    'Basic TS':   '#2ca02c',
-    'KL-LUCB':    '#9467bd',
-}
+from experiments.utils import plotting  # noqa: E402
+
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outputs')
 
 
 def main():
@@ -40,43 +34,44 @@ def main():
     if not os.path.exists(args.results):
         print(f"Error: {args.results} not found.", file=sys.stderr)
         sys.exit(1)
+
+    plotting.apply_paper_style()
     z = np.load(args.results, allow_pickle=False)
     labels = list(z['labels'].tolist())
     algos = list(z['algo_names'].tolist())
-    rho = float(z['rho'])
 
-    # Bar plot.
     n_cfg = len(labels)
     n_algo = len(algos)
     x = np.arange(n_cfg)
-    width = 0.8 / max(n_algo, 1)
+    width = 0.78 / max(n_algo, 1)
 
-    fig, ax = plt.subplots(figsize=(max(8, 1.4 * n_cfg), 5))
+    fig, ax = plt.subplots(figsize=(max(4.8, 0.95 * n_cfg), 2.9),
+                           constrained_layout=True)
     for ai, a in enumerate(algos):
         stop = z[f'{a}_stop']
         med = np.nanmedian(stop, axis=1)
         lo = np.nanpercentile(stop, 25, axis=1)
         hi = np.nanpercentile(stop, 75, axis=1)
         err = np.array([med - lo, hi - med])
+        st = plotting.style_for(a)
         ax.bar(x + (ai - (n_algo - 1) / 2) * width, med, width,
-               yerr=err, label=a, color=COLORS.get(a, None),
-               capsize=3, alpha=0.85)
+               yerr=err, label=a, color=st['color'],
+               capsize=2.5, alpha=0.9, linewidth=0,
+               error_kw=dict(linewidth=0.8, ecolor='black'))
 
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, rotation=20, ha='right')
+    ax.set_xticklabels(labels, rotation=15, ha='right')
     ax.set_yscale('log')
-    ax.set_ylabel('Stopping time (log scale)')
-    ax.set_title(f'MovieLens ablation: stopping time across configs '
-                 f'($\\rho={rho:g}$, '
-                 f'reward = {str(z["reward_model"])})')
-    ax.grid(True, axis='y', which='both', alpha=0.3)
-    ax.legend(loc='best')
-    fig.tight_layout()
-    fig.savefig(args.out, dpi=150, bbox_inches='tight')
-    print(f"Saved {args.out}")
+    ax.set_ylabel('stopping time')
+    plotting.grid_only_major(ax)
+    ax.grid(axis='x', visible=False)
+    plotting.legend_above(ax, ncol=n_algo)
+
+    for p in plotting.save_figure(fig, args.out):
+        print(f"Saved {p}")
     print()
 
-    # Markdown table.
+    # Markdown table for the appendix.
     print("| config | " + " | ".join(algos) + " |")
     print("|" + "---|" * (n_algo + 1))
     for ci, label in enumerate(labels):

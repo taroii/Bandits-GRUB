@@ -1,12 +1,9 @@
-"""main_2_plot -- render Figure for the graph-helpful K-sweep.
+"""main_2_plot -- single-panel render of the clustered_chain K-sweep.
 
-Reads ``experiments/outputs/main_2_results.npz`` (produced by
-``main_2.py``) and writes ``experiments/outputs/main_2.png``.
-
-Single panel: median stopping time vs K on a log y-axis, with 25-75
-IQR shading per algorithm.  The visual signal is whether Basic TS
-diverges upward away from TS-Explore as K grows --- the empirical
-benefit of the Laplacian-regularized estimator.
+Reads ``experiments/outputs/main_2_results.npz`` and writes
+``experiments/outputs/main_2.png``. The combined paper Figure 1 is
+produced by ``fig1_plot.py``; this script is kept for standalone /
+appendix use and follows the same paper style guide.
 """
 from __future__ import annotations
 
@@ -17,14 +14,13 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from experiments.utils import plotting  # noqa: E402
+
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outputs')
 
-ALGOS = ['TS-Explore', 'Basic TS', 'GRUB']
-STYLES = {
-    'TS-Explore': {'color': '#d62728', 'marker': 's', 'ls': '-'},
-    'Basic TS':   {'color': '#2ca02c', 'marker': '^', 'ls': '--'},
-    'GRUB':       {'color': '#1f77b4', 'marker': 'o', 'ls': '-.'},
-}
+ALGOS = ['TS-Explore', 'Basic TS']
 
 
 def main():
@@ -39,34 +35,24 @@ def main():
         print(f"Error: {args.results} not found. "
               f"Run experiments/main_2.py first.", file=sys.stderr)
         sys.exit(1)
+
+    plotting.apply_paper_style()
     z = np.load(args.results, allow_pickle=False)
     Ks = z['Ks']
 
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(3.4, 2.6), constrained_layout=True)
     for name in ALGOS:
-        st = STYLES[name]
-        stop = z[f'{name}_stop']
-        med = np.median(stop, axis=1)
-        lo = np.percentile(stop, 25, axis=1)
-        hi = np.percentile(stop, 75, axis=1)
-        ax.plot(Ks, med, color=st['color'], marker=st['marker'],
-                linestyle=st['ls'], label=name, linewidth=2.0, markersize=8)
-        ax.fill_between(Ks, lo, hi, color=st['color'], alpha=0.18)
-    ax.set_xlabel('Number of arms K')
-    ax.set_ylabel('Stopping time (log scale)')
+        st = plotting.style_for(name)
+        plotting.plot_with_iqr(ax, Ks, z[f'{name}_stop'], label=name, **st)
+    ax.set_xlabel(r'arms $K$')
+    ax.set_ylabel('stopping time')
     ax.set_yscale('log')
-    C = int(z['C']) if 'C' in z.files else None
-    gap_step = float(z['gap_step']) if 'gap_step' in z.files else None
-    title = 'Graph-helpful sample complexity on clustered_chain'
-    if C is not None and gap_step is not None:
-        title += f' (C={C}, $\\Delta_{{\\mathrm{{step}}}}={gap_step}$)'
-    ax.set_title(title)
-    ax.grid(True, which='both', alpha=0.3)
-    ax.legend(loc='best')
+    ax.set_xticks(Ks)
+    plotting.grid_only_major(ax)
+    plotting.legend_above(ax)
 
-    fig.tight_layout()
-    fig.savefig(args.out, dpi=150, bbox_inches='tight')
-    print(f"Saved {args.out}")
+    for p in plotting.save_figure(fig, args.out):
+        print(f"Saved {p}")
 
 
 if __name__ == "__main__":

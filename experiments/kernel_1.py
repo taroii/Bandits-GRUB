@@ -6,14 +6,6 @@ suboptimality gap and the optimal arm pinned to the highest-degree hub
 and tracks the empirical stopping time of TS-Explore under two graph
 kernels: combinatorial L_G and normalized K_G.
 
-Hypothesis: at rho=1 both kernels are dominated by direct counts and so
-empirically equivalent, but as rho grows V_t becomes graph-dominated and
-L_G's degree-weighted smoothing biases the optimal arm's mu_hat down
-toward its (mostly suboptimal) neighborhood, shrinking the apparent gap.
-K_G's normalization keeps the hub balanced, so the optimal arm's signal
-is preserved and the agreement-stopping rule fires faster.  This is the
-empirical mechanism behind Section "General PSD Graph Kernels".
-
 Each seed draws a fresh BA realization (with the optimal arm pinned to
 the top-degree node).  Basic TS depends only on ``mu`` and is run once
 with the same seeds, broadcast across ``rhos``.

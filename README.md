@@ -1,8 +1,4 @@
 <!-- ABOUT THE PROJECT -->
-## New Contributions: 
-- ```sample_main.py``` now includes Thompson Sampling algorithm. It generates No. Remaining Arms vs Time Steps graph (figure 2 from paper)
-- ```sample_main2.py``` generates Stopping time vs Number of arms on standard graph set up. 
-
 ## Setup
 
 ```
@@ -95,53 +91,35 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-### Running Base Experiment
-The base file is `sample_main.py` can be executed by running:
+## Reproducing the paper experiments
+
+The paper-experiment pipeline lives under `experiments/`. Each experiment has two scripts: a **runner** that executes the sweep and writes a `.npz` result file to `experiments/outputs/`, and a **plot** script that reads the `.npz` and renders the figure.
+
+**Runners** (long-running; resume from a checkpoint if rerun):
+- `experiments/main_2.py` — clustered-chain K-sweep (graph-smooth, synthetic; Thm. 3.4)
+- `experiments/movielens_1.py` — MovieLens-100K rho-sweep (graph-smooth, real)
+- `experiments/fb_1.py` — Erdos-Renyi density sweep (graph feedback; Thm. 3.10)
+- `experiments/mis_1.py` — SBM smoothness asymptotics (Cor. 3.7)
+- `experiments/kernel_1.py` — Barabasi-Albert kernel comparison (Thm. 3.11)
+- `experiments/movielens_ablations.py` — graph-construction robustness
+- `experiments/main_1.py` — agreement-vs-elimination tightness (appendix)
+
+Each runner takes `--quick` for a smoke-test sweep and `--fresh` to ignore an existing checkpoint.
+
+**Plot scripts** (fast; read `.npz` and write figures to `experiments/outputs/`):
+- `experiments/fig1_plot.py` — combined paper Figure 1 (synthetic + MovieLens)
+- `experiments/fb_1_plot.py` — paper Figure 2 (graph feedback)
+- `experiments/mis_1_plot.py`, `kernel_1_plot.py`, `movielens_ablations_plot.py`, `main_1_plot.py` — appendix figures
+- `experiments/main_2_plot.py`, `movielens_1_plot.py` — single-panel variants of the Fig. 1 components
+
+Every plot script writes the figure as both a `.pdf` (vector, used by the LaTeX paper) and a `.png` (raster preview) under the same base name; the shared paper style lives in `experiments/utils/plotting.py`.
+
+### Compiling the paper
+
+With all `.pdf` figures present in `experiments/outputs/`:
 ```sh
-python3 sample_main.py
+pdflatex main.tex && bibtex main && pdflatex main.tex && pdflatex main.tex
 ```
-
-For experiments with custom configurations:
-```sh
-python3 eps_best.py
-```
- 
-### Default Configuration
-* Total nodes = 101
-* Total clusters = 10
-* Nodes per cluster = 10
-* 1 isolated optimal node
-* Every cluster is a complete graph
-* Best arm mean factor = 1.30 (optimal arm is 30% better than second best)
-
-### Configuration Options
-
-#### Graph Types
-Apart from modifying node/cluster values in `config.toml`, the following graph structures are supported:
-* **Tree graph**: Hierarchical structure within clusters
-* **Star graph**: Central node connected to all others
-* **Wheel graph**: Ring with central hub
-* **Complete graph** (default): All nodes connected
-* **Erdos-Renyi graph**: Random edges with probability p
-* **Stochastic Block Model (SBM)**: Dense clusters, sparse inter-cluster (parameters p, q)
-* **Barabasi-Albert graph**: Scale-free network (m=2)
-* **Line graph**: Sequential node connections
-
-#### Configuration Parameters (`config.toml`)
-- `node_per_cluster`: Number of nodes in each cluster
-- `clusters`: Total number of clusters
-- `p`: Intra-cluster connection probability
-- `q`: Inter-cluster connection probability (for SBM)
-- `graph`: Graph type selection
-- `best_mean_factor`: Multiplicative factor for optimal arm's mean
-
-## Experimental Workflow
-
-1. **Graph Setup**: Configure and generate graph structure based on parameters
-2. **Mean Assignment**: Assign reward means to nodes based on cluster membership
-3. **Algorithm Execution**: Run competing algorithms in parallel
-4. **Performance Tracking**: Monitor arm elimination over time
-5. **Visualization**: Plot number of remaining arms vs. time steps for comparison
 
 <!-- LICENSE -->
 ## License
