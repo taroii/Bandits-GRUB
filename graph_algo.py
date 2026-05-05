@@ -541,3 +541,195 @@ class UCB_N:
         a_star = int(rem[int(np.argmax(beta[rem]))])
         self._pull(a_star)
         return None
+
+
+# ---------------------------------------------------------------------------
+# Ablation algorithms: 2x2 design isolating stopping rule from pull rule
+# ---------------------------------------------------------------------------
+# The four corners of the design are:
+#
+#   stop \ pull | cover-candidate-pair         | argmax-width
+#   ------------+------------------------------+----------------------
+#   TS          | GraphFeedbackTS  (default)   | GraphFeedbackTSWidth
+#   UCB         | UCBNCover                    | UCB_N         (default)
+#
+# Used in experiments/fb_ablation.py to isolate the contribution of the
+# TS stopping criterion from the max-cover pull rule (cf. NeurIPS reviewer
+# concern NR2 in REVIEW_TODO.md).
+
+class GraphFeedbackTSWidth:
+    r"""Ablation: TS-Explore-GF stopping rule with argmax-confidence-width pull.
+
+    Identical to ``GraphFeedbackTS`` except at each disagreement step the
+    algorithm pulls the action with maximum Hoeffding confidence width over
+    all $K$ arms (UCB-N's pull rule, ported into the TS framework), with
+    ties broken by smaller $N^{\mathrm{fb}}$.  Used to isolate the
+    contribution of the TS stopping criterion from the cover-the-disagreement-pair
+    pull rule.
+    """
+
+    def __init__(self, D, A, mu, delta, q, sigma=1.0):
+        self.means = np.asarray(mu, dtype=float).flatten()
+        self.Adj = np.asarray(A, dtype=float)
+        self.K = len(self.means)
+        self.delta = delta
+        self.q = q
+        self.sigma = sigma
+        self.converged = False
+        self.t = 0
+
+        self.closed = (self.Adj + np.eye(self.K)) > 0
+        self.N_fb = np.zeros(self.K)
+        self.R_fb = np.zeros(self.K)
+        self.pull_counts = np.zeros(self.K)
+        self.remaining_nodes = list(range(self.K))
+
+        for a in _greedy_dominating_set(self.Adj):
+            self._pull(a)
+
+    def _pull(self, a):
+        a = int(a)
+        nbrs = np.where(self.closed[a])[0]
+        for j in nbrs:
+            r = self.means[j] + self.sigma * np.random.randn()
+            self.N_fb[j] += 1
+            self.R_fb[j] += r
+        self.pull_counts[a] += 1
+        self.t += 1
+
+    def _conf_radius(self):
+        t_safe = max(float(self.t), 1.0)
+        L1 = np.log(max(12.0 * self.K ** 2 * t_safe ** 2 / self.delta, 2.0))
+        return self.sigma * np.sqrt(2.0 * L1 / np.maximum(self.N_fb, 1.0))
+
+    def compute_floor_factor(self, t):
+        t_safe = max(float(t), 1.0)
+        log_term = np.log(12 * self.K ** 2 * t_safe ** 2 / self.delta)
+        return np.floor(max(log_term, 1.0) / self.q)
+
+    def compute_variance_factor(self, t):
+        t_safe = max(float(t), 1.0)
+        phi_q = norm.isf(self.q)
+        return (self.sigma ** 2) * np.log(
+            12 * self.K ** 2 * t_safe ** 2 / self.delta
+        ) / (phi_q ** 2)
+
+    def play_round(self, n_rounds=1):
+        t = self.t
+        N_safe = np.maximum(self.N_fb, 1)
+        mu_hat = self.R_fb / N_safe
+        i_hat = int(np.argmax(mu_hat))
+
+        C_t = self.compute_variance_factor(t)
+        variances = C_t / N_safe
+
+        floor = max(int(self.compute_floor_factor(t)), 1)
+        sigma = np.sqrt(np.maximum(variances, 0.0))
+        thetas = mu_hat + sigma * np.random.randn(floor, self.K)
+        i_tilde_m = np.argmax(thetas, axis=1)
+
+        if np.all(i_tilde_m == i_hat):
+            self.converged = True
+            self.remaining_nodes = [i_hat]
+            return i_hat
+
+        # Pull rule: argmax confidence width over all arms, ties broken by
+        # smaller N_fb (to avoid sticky cycles when widths are exactly equal
+        # at startup).
+        beta = self._conf_radius()
+        order = np.lexsort((self.N_fb, -beta))
+        a_star = int(order[0])
+        self._pull(a_star)
+        return None
+
+
+class UCBNCover:
+    r"""Ablation: UCB-N elimination with max-cover-on-LUCB-pair pull rule.
+
+    Identical to ``UCB_N`` except the pull at each step is the action that
+    covers the LUCB pair $\{h^\star, l^\star\}$ with the largest
+    $|N^+(a)\cap\{h^\star,l^\star\}|$, where $h^\star$ is the
+    empirical-best remaining arm and $l^\star$ is the UCB-runner-up among
+    the remaining arms.  Ties are broken by smaller $N^{\mathrm{fb}}$.
+    Used to isolate the contribution of the UCB-LCB elimination stopping
+    rule from the argmax-confidence-width pull rule.
+    """
+
+    def __init__(self, D, A, mu, delta, q=None, sigma=1.0):
+        del q
+        self.means = np.asarray(mu, dtype=float).flatten()
+        self.Adj = np.asarray(A, dtype=float)
+        self.K = len(self.means)
+        self.delta = delta
+        self.sigma = sigma
+        self.converged = False
+        self.t = 0
+
+        self.closed = (self.Adj + np.eye(self.K)) > 0
+        self.N_fb = np.zeros(self.K)
+        self.R_fb = np.zeros(self.K)
+        self.pull_counts = np.zeros(self.K)
+        self.remaining_nodes = list(range(self.K))
+
+        for a in _greedy_dominating_set(self.Adj):
+            self._pull(a)
+
+    def _pull(self, a):
+        a = int(a)
+        nbrs = np.where(self.closed[a])[0]
+        for j in nbrs:
+            r = self.means[j] + self.sigma * np.random.randn()
+            self.N_fb[j] += 1
+            self.R_fb[j] += r
+        self.pull_counts[a] += 1
+        self.t += 1
+
+    def _conf_radius(self):
+        t_safe = max(float(self.t), 1.0)
+        L1 = np.log(max(12.0 * self.K ** 2 * t_safe ** 2 / self.delta, 2.0))
+        return self.sigma * np.sqrt(2.0 * L1 / np.maximum(self.N_fb, 1.0))
+
+    def play_round(self, n_rounds=1):
+        if len(self.remaining_nodes) <= 1:
+            self.converged = True
+            return self.remaining_nodes[0] if self.remaining_nodes else -1
+
+        N_safe = np.maximum(self.N_fb, 1.0)
+        mu_hat = self.R_fb / N_safe
+        beta = self._conf_radius()
+        upper = mu_hat + beta
+        lower = mu_hat - beta
+
+        rem = np.array(self.remaining_nodes, dtype=int)
+        max_lower = float(np.max(lower[rem]))
+        self.remaining_nodes = [
+            i for i in self.remaining_nodes if upper[i] >= max_lower
+        ]
+
+        if len(self.remaining_nodes) <= 1:
+            self.converged = True
+            return self.remaining_nodes[0] if self.remaining_nodes else -1
+
+        rem = np.array(self.remaining_nodes, dtype=int)
+        # h* = empirical best in remaining.
+        h_star = int(rem[int(np.argmax(mu_hat[rem]))])
+        # l* = UCB-runner-up among remaining.
+        ucb_rem = upper.copy()
+        mask = np.ones(self.K, dtype=bool)
+        mask[rem] = False
+        ucb_rem[mask] = -np.inf
+        ucb_rem[h_star] = -np.inf
+        l_star = int(np.argmax(ucb_rem))
+        candidates = {h_star, l_star}
+
+        # Pull action a covering the most candidates, ties by smaller N_fb.
+        best_a, best_key = -1, None
+        cand_list = list(candidates)
+        for a in range(self.K):
+            cover = int(self.closed[a, cand_list].sum())
+            key = (-cover, self.N_fb[a])
+            if best_key is None or key < best_key:
+                best_key = key
+                best_a = a
+        self._pull(best_a)
+        return None
