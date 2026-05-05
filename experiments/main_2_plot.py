@@ -20,7 +20,7 @@ from experiments.utils import plotting  # noqa: E402
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outputs')
 
-ALGOS = ['TS-Explore', 'Basic TS']
+ALGOS = ['TS-Explore', 'Basic TS', 'KL-LUCB', 'GRUB']
 
 
 def main():
@@ -42,8 +42,11 @@ def main():
 
     fig, ax = plt.subplots(figsize=(3.4, 2.6), constrained_layout=True)
     for name in ALGOS:
+        key = f'{name}_stop'
+        if key not in z.files:
+            continue
         st = plotting.style_for(name)
-        plotting.plot_with_iqr(ax, Ks, z[f'{name}_stop'], label=name, **st)
+        plotting.plot_with_iqr(ax, Ks, z[key], label=name, **st)
     ax.set_xlabel(r'arms $K$')
     ax.set_ylabel('stopping time')
     ax.set_yscale('log')

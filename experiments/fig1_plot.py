@@ -1,9 +1,9 @@
 """fig1_plot -- combined paper Figure 1 (graph-smooth experiments).
 
-Two-panel figure:
-  Left  panel: clustered_chain K-sweep (synthetic) -- TS-Explore vs Basic TS.
-  Right panel: MovieLens-100K rho-sweep (real)    -- TS-Explore vs Basic TS,
-               GRUB, KL-LUCB.
+Two-panel figure, both panels showing TS-Explore vs Basic TS, KL-LUCB,
+and GRUB:
+  Left  panel: clustered_chain K-sweep (synthetic).
+  Right panel: MovieLens-100K rho-sweep (real).
 
 Reads ``experiments/outputs/main_2_results.npz`` and
 ``experiments/outputs/movielens_1_results.npz``; writes
@@ -26,11 +26,14 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outputs')
 
 
 def panel_left(ax, z):
-    """Synthetic clustered_chain K-sweep. GRUB dropped per audit."""
+    """Synthetic clustered_chain K-sweep."""
     Ks = z['Ks']
-    for name in ['TS-Explore', 'Basic TS']:
+    for name in ['TS-Explore', 'Basic TS', 'KL-LUCB', 'GRUB']:
+        key = f'{name}_stop'
+        if key not in z.files:
+            continue
         st = plotting.style_for(name)
-        plotting.plot_with_iqr(ax, Ks, z[f'{name}_stop'], label=name, **st)
+        plotting.plot_with_iqr(ax, Ks, z[key], label=name, **st)
     ax.set_xlabel(r'arms $K$')
     ax.set_ylabel('stopping time')
     ax.set_yscale('log')
