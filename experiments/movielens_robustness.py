@@ -71,7 +71,14 @@ def main():
                              "matching Figure 1 right empirical optimum)")
     parser.add_argument('--seeds', type=int, default=5)
     parser.add_argument('--q', type=float, default=0.1)
-    parser.add_argument('--max-steps', type=int, default=2_000_000)
+    parser.add_argument('--max-steps', type=int, default=1_200_000,
+                        help="per-cell pull cap (default 1.2M). Bounds each "
+                             "Basic TS cell to ~3-4 min of compute on this "
+                             "instance to limit crash exposure on machines "
+                             "with the deep-C-state reboot bug; some seeds "
+                             "will report 'didn't converge', which only "
+                             "strengthens the headline TS-Explore vs Basic "
+                             "TS comparison.")
     parser.add_argument('--reward-model', type=str, default='empirical',
                         choices=['empirical', 'gaussian'])
     parser.add_argument('--fresh', action='store_true')
@@ -110,9 +117,23 @@ def main():
         for a in ALGOS:
             kwargs[f'{a}_stop'] = stop_times[a]
             kwargs[f'{a}_correct'] = correct[a].astype(int)
+        # Atomic write with retry: on Windows, OneDrive / antivirus / an
+        # open Explorer preview can briefly hold the destination file and
+        # cause `os.replace` to raise PermissionError [WinError 5]. Retry
+        # with linear backoff (~18s total) so transient locks don't kill
+        # an hour of compute.
         tmp = out_npz + '.tmp.npz'
-        np.savez(tmp, **kwargs)
-        os.replace(tmp, out_npz)
+        last_err = None
+        for attempt in range(8):
+            try:
+                np.savez(tmp, **kwargs)
+                os.replace(tmp, out_npz)
+                return
+            except PermissionError as e:
+                last_err = e
+                time.sleep(0.5 + 0.5 * attempt)
+        print(f"  [warn] checkpoint save failed after 8 retries: "
+              f"{last_err}", flush=True)
 
     if os.path.exists(out_npz) and not args.fresh:
         try:
