@@ -286,3 +286,31 @@ def sbm_phase_transition(seed=0):
     D[0, 0] = 1.0
     D[1, 1] += 1.0
     return np.asarray(mu, dtype=float), np.asarray(A, dtype=float), np.asarray(D, dtype=float)
+
+
+def sbm_phase_transition_connected(seed=0):
+    """Connected variant of ``sbm_phase_transition``.
+
+    Adds a single bridge edge between consecutive cluster pairs so that
+    the realised graph is one connected component.  Used by ``mis_2.py``
+    to remove the connectivity caveat that affects the asymptotic-limit
+    reference line in Figure~\\ref{fig:mis}: with all clusters connected
+    the limit  $\\max_i \\Delta_i^{-2}\\log(1/\\delta)$  is the correct
+    asymptotic floor (rather than the per-component sum that applies to
+    a disconnected SBM).
+    """
+    mu, A, D = sbm_phase_transition(seed=seed)
+    n_clusters = 5
+    per = 6
+    # First node of cluster c (0-indexed) lives at array index 1 + c*per.
+    cluster_first = [1 + c * per for c in range(n_clusters)]
+    # Add four bridges connecting cluster 0->1, 1->2, 2->3, 3->4.
+    for c in range(n_clusters - 1):
+        u = cluster_first[c]
+        v = cluster_first[c + 1]
+        if A[u, v] == 0:
+            A[u, v] = 1.0
+            A[v, u] = 1.0
+            D[u, u] += 1.0
+            D[v, v] += 1.0
+    return np.asarray(mu, dtype=float), np.asarray(A, dtype=float), np.asarray(D, dtype=float)
