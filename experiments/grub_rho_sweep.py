@@ -224,7 +224,8 @@ def main():
     print(f"\nSaved {out_npz}")
     print()
     print("# 3x3 medians (GRUB stopping time)")
-    header = f"{'rho \\\\ K':>10}  " + "  ".join(
+    rho_K_label = 'rho \\ K'
+    header = f"{rho_K_label:>10}  " + "  ".join(
         f"{K:>12d}" for K in Ks)
     print(header)
     print('-' * len(header))
