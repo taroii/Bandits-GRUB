@@ -31,10 +31,11 @@ _GRAY           = '#555555'
 # the same across figures.
 ALGO_STYLE = {
     'TS-Explore':    {'color': _VERMILLION,     'marker': 's'},
-    'TS-Explore-GF': {'color': _BLUISH_GREEN,   'marker': 'P'},
+    'TS-Explore-GF': {'color': _ORANGE,         'marker': 's'},
     'Basic TS':      {'color': _GRAY,           'marker': 'o'},
     'GRUB':          {'color': _SKY_BLUE,       'marker': '^'},
-    'UCB-N':         {'color': _ORANGE,         'marker': 'D'},
+    'UCB-N':         {'color': _BLUE,           'marker': 'D'},
+    'UCB+cover':     {'color': _BLUE,           'marker': 's'},
     'KL-LUCB':       {'color': _REDDISH_PURPLE, 'marker': 'v'},
     # mis_1 variants of TS-Explore.
     'TS_tuned':      {'color': _VERMILLION,     'marker': 's'},
@@ -43,6 +44,9 @@ ALGO_STYLE = {
     # kernel_1 variants.
     'TS-L_G':        {'color': _VERMILLION,     'marker': 's'},
     'TS-K_G':        {'color': _BLUISH_GREEN,   'marker': 'P'},
+    # graph-feedback ablation: color = stopping rule, marker = pull rule.
+    'TS+cover':      {'color': _ORANGE,         'marker': 's'},
+    'TS+width':      {'color': _ORANGE,         'marker': 'D'},
 }
 
 
@@ -79,13 +83,15 @@ def style_for(name):
 
 
 def plot_with_iqr(ax, x, runs, label, color=None, marker='o',
-                  linewidth=None, markersize=None, zorder=None):
-    """Plot median with 25-75 IQR shading. Always solid line."""
+                  linewidth=None, markersize=None, zorder=None,
+                  linestyle='-'):
+    """Plot median with 25-75 IQR shading."""
     runs = np.asarray(runs, dtype=float)
     med = np.nanmedian(runs, axis=1)
     lo = np.nanpercentile(runs, 25, axis=1)
     hi = np.nanpercentile(runs, 75, axis=1)
-    plot_kwargs = dict(color=color, marker=marker, linestyle='-', label=label)
+    plot_kwargs = dict(color=color, marker=marker, linestyle=linestyle,
+                       label=label)
     if linewidth is not None:
         plot_kwargs['linewidth'] = linewidth
     if markersize is not None:

@@ -1,14 +1,16 @@
 """fb_1_plot -- render the graph-feedback density-sweep figure.
 
-Reads ``experiments/outputs/fb_1_results.npz`` (produced by ``fb_1.py``)
-and writes ``experiments/outputs/fb_1.png``.
+Reads ``experiments/outputs/fb_1_results.npz`` and writes
+``experiments/outputs/fb_1.{pdf,png}``.
 
-Single panel: median stopping time vs ER edge probability ``p`` on a
-log y-axis, with 25-75 IQR shading per algorithm. Theoretical hardness
-reference lines (``H_GF``, ``H_graph``, ``H_classical``) are *not*
-plotted in the paper-figure version; the empirical-to-theory gap is
-discussed in prose. Pass ``--with-theory`` for an appendix variant that
-adds those lines.
+Two panels:
+  Left:  headline comparison -- TS-Explore-GF vs. UCB+cover (the
+         de-confounded UCB-LCB baseline using the same cover-pair pull
+         rule), KL-LUCB (no-graph BAI), TS-Explore at rho=1, Basic TS.
+  Right: 2x2 stop-rule x pull-rule decomposition.
+
+The headline panel uses colors keyed to the algorithm; the ablation
+panel uses color for the stopping rule and marker for the pull rule.
 """
 from __future__ import annotations
 
@@ -25,8 +27,52 @@ from experiments.utils import plotting  # noqa: E402
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outputs')
 
-# Order matters for legend stacking. Headlines first.
-ALGOS = ['TS-Explore-GF', 'UCB-N', 'TS-Explore', 'Basic TS']
+HEADLINE_ALGOS = ['TS-Explore-GF', 'UCB+cover', 'KL-LUCB', 'TS-Explore', 'Basic TS']
+# TS+cover is TS-Explore-GF; UCB+width is UCB-N. Map aliases to the
+# canonical npz keys present in fb_1_results.npz.
+ABLATION_ALGOS = ['TS+cover', 'TS+width', 'UCB+cover', 'UCB+width']
+ABLATION_KEY = {
+    'TS+cover':  'TS-Explore-GF_stop',
+    'TS+width':  'TS+width_stop',
+    'UCB+cover': 'UCB+cover_stop',
+    'UCB+width': 'UCB-N_stop',
+}
+ABLATION_LABEL = {
+    'TS+cover':  'TS-stop, cover-pair pull',
+    'TS+width':  'TS-stop, width pull',
+    'UCB+cover': 'UCB-stop, cover-pair pull',
+    'UCB+width': 'UCB-stop, width pull',
+}
+
+
+def panel_headline(ax, z):
+    ps = z['ps']
+    for name in HEADLINE_ALGOS:
+        key = f'{name}_stop'
+        if key not in z.files:
+            continue
+        st = plotting.style_for(name)
+        plotting.plot_with_iqr(ax, ps, z[key], label=name, **st)
+    ax.set_xlabel(r'edge probability $p$')
+    ax.set_ylabel('stopping time')
+    ax.set_yscale('log')
+    plotting.grid_only_major(ax)
+
+
+def panel_ablation(ax, z):
+    ps = z['ps']
+    # Two visual axes: color = stopping rule (orange = TS, blue = UCB),
+    # marker = pull rule (square = cover-pair, diamond = width).
+    for name in ABLATION_ALGOS:
+        key = ABLATION_KEY[name]
+        if key not in z.files:
+            continue
+        st = plotting.style_for(name)
+        plotting.plot_with_iqr(ax, ps, z[key], label=ABLATION_LABEL[name], **st)
+    ax.set_xlabel(r'edge probability $p$')
+    ax.set_ylabel('stopping time')
+    ax.set_yscale('log')
+    plotting.grid_only_major(ax)
 
 
 def main():
@@ -35,9 +81,6 @@ def main():
                         default=os.path.join(OUT, 'fb_1_results.npz'))
     parser.add_argument('--out', type=str,
                         default=os.path.join(OUT, 'fb_1.png'))
-    parser.add_argument('--with-theory', action='store_true',
-                        help='also plot H_classical / H_graph / H_GF '
-                             'reference lines (appendix variant)')
     args = parser.parse_args()
 
     if not os.path.exists(args.results):
@@ -47,38 +90,17 @@ def main():
 
     plotting.apply_paper_style()
     z = np.load(args.results, allow_pickle=False)
-    ps = z['ps']
-    delta = float(z['delta'])
 
-    fig, ax = plt.subplots(figsize=(4.6, 2.8), constrained_layout=True)
+    fig, axes = plt.subplots(1, 2, figsize=(6.6, 3.2),
+                             constrained_layout=True)
+    panel_headline(axes[0], z)
+    panel_ablation(axes[1], z)
 
-    for name in ALGOS:
-        key = f'{name}_stop'
-        if key not in z.files:
-            continue
-        st = plotting.style_for(name)
-        plotting.plot_with_iqr(ax, ps, z[key], label=name, **st)
-
-    if args.with_theory:
-        log_delta = np.log(1.0 / delta)
-        H_graph_med = np.median(z['H_graph'], axis=1)
-        H_GF_med = np.median(z['H_GF'], axis=1)
-        H_classical = float(z['H_classical'])
-        ax.plot(ps, log_delta * H_GF_med, ':', color='black', alpha=0.6,
-                linewidth=1.0,
-                label=r'$H_{\mathrm{GF}}\cdot\log(1/\delta)$')
-        ax.plot(ps, log_delta * H_graph_med, '--', color='black', alpha=0.6,
-                linewidth=1.0,
-                label=r'$H_{\mathrm{graph}}\cdot\log(1/\delta)$')
-        ax.axhline(log_delta * H_classical, color='black', linestyle='-.',
-                   alpha=0.6, linewidth=1.0,
-                   label=r'$H_{\mathrm{classical}}\cdot\log(1/\delta)$')
-
-    ax.set_xlabel(r'edge probability $p$')
-    ax.set_ylabel('stopping time')
-    ax.set_yscale('log')
-    plotting.grid_only_major(ax)
-    plotting.legend_above(ax)
+    # Per-panel legends placed below to avoid overlap.
+    axes[0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.22),
+                   fontsize=7, ncol=2, frameon=False)
+    axes[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.22),
+                   fontsize=7, ncol=2, frameon=False)
 
     for p in plotting.save_figure(fig, args.out):
         print(f"Saved {p}")
