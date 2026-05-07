@@ -62,7 +62,7 @@ The headline empirical findings of the paper, which the runners + plot scripts a
 | MovieLens-100K, $K=20$, $\rho \in [1,10^3]$            | TS-Explore at $\rho=10^3$ is more than an order of magnitude faster than Basic TS and below the strongest non-graph baseline KL-LUCB.                                              |
 | Erdős–Rényi $G(20,p)$, graph feedback                  | TS-Explore-GF and UCB+cover both shrink by $\sim 10\times$ as $p$ increases; the cover-pair pull rule is the dominant empirical effect, isolated by the $2{\times}2$ ablation.    |
 | Barabási–Albert $n=50$, hub-optimal                    | Normalized Laplacian $K_G$ degrades far more gracefully than combinatorial $L_G$ at large $\rho$ and improves over $L_G$ by a factor of $1.12$ ($95\%$ bootstrap CI $[1.05, 1.19]$). |
-| Connected SBM smoothness asymptotics                   | TS-Explore at $\rho \ge \rho_{\mathrm{var}}(\varepsilon)$ drops $11.4\times$ below the un-tuned baselines at $\varepsilon = 10^{-2.5}$.                                            |
+| Connected SBM smoothness asymptotics                   | TS-Explore at $\rho \ge \rho_{\mathrm{var}}(\varepsilon)$ drops $11.3\times$ below the un-tuned baselines at $\varepsilon = 10^{-2.5}$.                                            |
 
 All entries are medians over the seeds reported in the paper (20 seeds for main-body cells, 5–10 seeds for appendix cells), with $25$–$75$ interquartile ranges shaded in the figures.
 
