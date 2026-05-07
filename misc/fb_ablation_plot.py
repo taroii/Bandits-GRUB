@@ -1,17 +1,3 @@
-"""fb_ablation_plot -- 2x2 ablation figure for graph feedback (appendix).
-
-Reads ``experiments/outputs/fb_ablation_results.npz`` (produced by
-``fb_ablation.py``) and writes ``experiments/outputs/fb_ablation.{pdf,png}``.
-
-Single panel: median stopping time vs ER edge probability ``p`` on a
-log y-axis, with 25-75 IQR shading per algorithm.  Four lines, paired by
-stopping rule (color) and pull rule (marker):
-
-    TS-stop  + cover-pair  : vermillion, square (matches Fig 2 TS-Explore-GF)
-    TS-stop  + width-pull  : vermillion, diamond
-    UCB-stop + cover-pair  : sky-blue,   square
-    UCB-stop + width-pull  : sky-blue,   diamond  (matches Fig 2 UCB-N family)
-"""
 from __future__ import annotations
 
 import argparse

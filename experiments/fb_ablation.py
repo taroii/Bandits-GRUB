@@ -1,23 +1,3 @@
-"""fb_ablation -- 2x2 stopping-rule x pull-rule ablation on graph feedback.
-
-Companion to ``fb_1.py``.  Runs the four corners of the design
-
-    stop  pull        algorithm
-    ----  ----        ---------
-    TS    cover-pair  TS-Explore-GF      (graph_algo.GraphFeedbackTS)
-    TS    width       TS+width           (graph_algo.GraphFeedbackTSWidth)
-    UCB   cover-pair  UCB+cover          (graph_algo.UCBNCover)
-    UCB   width       UCB-N              (graph_algo.UCB_N)
-
-on the same Erdos-Renyi density sweep as ``fb_1.py`` (n=20, gap=0.30, ER
-density p in {0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0}, 20 fresh graph
-realizations per p).
-
-Saves all raw results to ``experiments/outputs/fb_ablation_results.npz``.
-Plotting lives in ``fb_ablation_plot.py``.
-
-Use the same checkpoint format as ``fb_1.py`` so reruns resume cleanly.
-"""
 from __future__ import annotations
 
 import argparse
@@ -84,9 +64,7 @@ def main():
     gap = args.gap
     out_npz = os.path.join(OUT, 'fb_ablation_results.npz')
 
-    # ----------------------------------------------------------------
     # State (with checkpoint resume by (p_index, algo_index) cell).
-    # ----------------------------------------------------------------
     stop_times = {a: np.full((len(ps), len(seeds)), np.nan) for a in ALGOS}
     correct = {a: np.zeros((len(ps), len(seeds)), dtype=bool) for a in ALGOS}
     converged = {a: np.zeros((len(ps), len(seeds)), dtype=bool) for a in ALGOS}
@@ -131,11 +109,9 @@ def main():
         except Exception as e:
             print(f"[resume] failed to load {out_npz}: {e}", flush=True)
 
-    # ----------------------------------------------------------------
     # (p, algo) sweep.  Inner loop = seeds (fresh ER graph per seed,
     # matching fb_1.py).  Each algo gets its own (p, seed) cell so we
     # can checkpoint mid-sweep.
-    # ----------------------------------------------------------------
     for pi, p in enumerate(ps):
         print(f"\n=== p={p} ===", flush=True)
         for ai, name in enumerate(ALGOS):
@@ -170,35 +146,6 @@ def main():
                   f"({elapsed:.0f}s)", flush=True)
 
     print(f"\nSaved {out_npz}")
-    print("Run experiments/fb_ablation_plot.py to render the figure.")
-
-    # ----------------------------------------------------------------
-    # Acceptance summary
-    # ----------------------------------------------------------------
-    print("\n# Acceptance: median stopping time at each (p, algo) cell")
-    header = f"{'p':<6s}" + ''.join(f"{a:>14s}" for a in ALGOS)
-    print(header)
-    for pi, p in enumerate(ps):
-        row = f"{p:<6.2f}"
-        for a in ALGOS:
-            row += f"{np.nanmedian(stop_times[a][pi]):>14,.0f}"
-        print(row)
-
-    # Reading: if TS-stop is doing the work, both TS rows beat both UCB
-    # rows; if pull rule is doing the work, both cover rows beat both
-    # width rows (or vice-versa).  Print the gap.
-    print("\n# Stopping-rule contribution (median over p, ratio of UCB rows / TS rows):")
-    for pull in ['cover', 'width']:
-        ts_col = np.nanmedian(stop_times[f'TS+{pull}'])
-        ucb_col = np.nanmedian(stop_times[f'UCB+{pull}'])
-        print(f"  pull={pull:6s}  TS={ts_col:>10,.0f}  UCB={ucb_col:>10,.0f}  "
-              f"UCB/TS={ucb_col/max(ts_col,1.0):.2f}x")
-    print("\n# Pull-rule contribution (median over p, ratio of width rows / cover rows):")
-    for stop in ['TS', 'UCB']:
-        cv_col = np.nanmedian(stop_times[f'{stop}+cover'])
-        wd_col = np.nanmedian(stop_times[f'{stop}+width'])
-        print(f"  stop={stop:6s}  cover={cv_col:>10,.0f}  width={wd_col:>10,.0f}  "
-              f"width/cover={wd_col/max(cv_col,1.0):.2f}x")
     return 0
 
 

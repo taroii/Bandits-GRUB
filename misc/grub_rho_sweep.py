@@ -1,34 +1,3 @@
-"""grub_rho_sweep -- 3x3 GRUB sweep over (rho, K) on the synthetic chain.
-
-Companion experiment for Section 4.1 / Appendix experiments. The
-existing fig:graph-smooth left panel runs GRUB at fixed rho=100 and
-shows linear-in-K scaling consistent with Theorem 4.4 of
-\\cite{thaker2022maximizing}. The defense rests on the observation
-that at rho=100 the bias term rho*epsilon dominates the GRUB radius
-and pushes all K-1 challengers into H_D. To strengthen the defense,
-this script sweeps rho in {1, 10, 100} so that we also have GRUB
-data in the regime where the variance term dominates: at rho=1, the
-bias rho*epsilon is small relative to 2*sigma*sqrt(14 log(.)), and
-the parameter-regime prediction is that |H_D| should collapse to a
-constant and GRUB should exhibit cluster-aggregate (not linear-in-K)
-scaling. The K-sweep at each rho lets us read off the slope.
-
-Instance: clustered_chain (C=2) with singleton best arm at mu=1 and
-challenger clique of K-1 vertices at mu=1-Delta with Delta=0.3.
-Rewards Gaussian(mu_i, sigma=1). delta=1e-3. Per-run cap 10^7 pulls.
-Smoothness epsilon is computed from the true means at instance
-construction time (epsilon_nominal=None in MaxVarianceArmAlgo, which
-sets self.eps = sqrt(<mu, L_G mu>) = Delta on this chain), so GRUB
-is given the correct smoothness and not a misspecified one.
-
-Crash-proof:
-  * strictly sequential (no multiprocessing pools),
-  * per-cell try/except (one failed seed does not propagate),
-  * atomic checkpoint after every (rho, K, seed) cell,
-  * resume on restart.
-
-Saves results to experiments/outputs/grub_rho_sweep_results.npz.
-"""
 from __future__ import annotations
 
 import argparse
@@ -145,9 +114,7 @@ def main():
         except Exception as e:
             print(f"[resume] failed to load checkpoint: {e}", flush=True)
 
-    # ----------------------------------------------------------------
     # Pre-compute instance characteristics (cheap; do once per K).
-    # ----------------------------------------------------------------
     print(f"# clustered_chain (C={args.C}, gap_step={args.gap_step}); "
           f"GRUB only; max_steps={args.max_steps:,}", flush=True)
     print(f"{'K':>5}  {'edges':>6}  {'eps':>7}  {'H_classical':>12}",
@@ -172,9 +139,7 @@ def main():
         for ri, rho in enumerate(rhos):
             H_graph[ri, ki] = hardness.graph_hardness(mu, A, D, rho=rho)
 
-    # ----------------------------------------------------------------
     # Main sweep: (rho, K, seed) cells.
-    # ----------------------------------------------------------------
     for ri, rho in enumerate(rhos):
         for ki, K in enumerate(Ks):
             if K not in instances_per_K:
@@ -218,9 +183,7 @@ def main():
                       f"t={t_str:>10s}  conv={conv}  correct={cor} "
                       f"({time.time() - t0:.0f}s)", flush=True)
 
-    # ----------------------------------------------------------------
     # Final 3x3 summary.
-    # ----------------------------------------------------------------
     print(f"\nSaved {out_npz}")
     print()
     print("# 3x3 medians (GRUB stopping time)")

@@ -1,25 +1,3 @@
-"""fb_1 — graph-feedback density sweep on Erdos-Renyi (runner).
-
-Targets ``thm:correct-fb`` and ``thm:main-fb``. Sweeps the edge density
-``p`` of an Erdos-Renyi graph and tracks the empirical stopping time of
-four algorithms against the analytical hardness ``H_GF``.
-
-Algorithms compared (all with delta=1e-3):
-  * TS-Explore-GF   - proposed graph-feedback Thompson sampler.
-  * UCB-N           - pure-exploration variant of Caron et al. (2012).
-                      Side-observation estimator + UCB-LCB elimination
-                      with a max-confidence-width pull rule.
-  * TS-Explore      - graph-smooth Thompson sampler at rho=1.
-  * Basic TS        - empirical-mean Thompson sampler, no graph.
-
-Each density is averaged over ``--seeds`` random graphs (one fresh ER
-realization per seed) so the IQR shading captures both graph and
-algorithm randomness.  Basic TS depends only on ``mu`` (constant across
-densities) and is run once with the same seeds and broadcast.
-
-Saves all raw results to ``experiments/outputs/fb_1_results.npz``.
-Plotting lives in ``fb_1_plot.py``.
-"""
 from __future__ import annotations
 
 import argparse
@@ -83,9 +61,7 @@ def main():
     n = args.n
     gap = args.gap
 
-    # ----------------------------------------------------------------
     # State
-    # ----------------------------------------------------------------
     stop_times = {a: np.full((len(ps), len(seeds)), np.nan) for a in ALL_ALGOS}
     correct = {a: np.zeros((len(ps), len(seeds)), dtype=bool) for a in ALL_ALGOS}
     H_graph = np.full((len(ps), len(seeds)), np.nan)
@@ -95,13 +71,11 @@ def main():
     mu_const, _, _ = instances.erdos_renyi(n=n, p=0.5, gap=gap, seed=0)
     H_classical = float(hardness.classical_hardness(mu_const))
 
-    # ----------------------------------------------------------------
     # Basic TS broadcast (depends only on mu, not on graph).
-    # ----------------------------------------------------------------
     print("[fb_1] running Basic TS once (broadcast across all p)...", flush=True)
     fac_basic = build_factory('Basic TS', None, None, mu_const, delta, args.q)
     t0 = time.time()
-    basic_runs = runners.run_many(fac_basic, seeds, n_jobs=1,
+    basic_runs = runners.run_many(fac_basic, seeds,
                                   max_steps=args.max_steps,
                                   record_elimination=False, progress=False)
     for si, r in enumerate(basic_runs):
@@ -111,10 +85,8 @@ def main():
           f"{np.median([r['stopping_time'] for r in basic_runs]):.0f} "
           f"({time.time()-t0:.1f}s)", flush=True)
 
-    # ----------------------------------------------------------------
     # (p, seed) sweep for graph-dependent algorithms.
     # Each seed picks both a fresh ER graph and the algorithm RNG.
-    # ----------------------------------------------------------------
     for pi, p in enumerate(ps):
         print(f"\n=== p={p} ===", flush=True)
         for si, k in enumerate(seeds):
@@ -137,9 +109,7 @@ def main():
                   f"IQR=[{np.percentile(ts,25):.0f}, {np.percentile(ts,75):.0f}]  "
                   f"correct={correct[name][pi].mean()*100:.0f}%", flush=True)
 
-    # ----------------------------------------------------------------
     # Save results
-    # ----------------------------------------------------------------
     out_npz = os.path.join(OUT, 'fb_1_results.npz')
     np.savez(
         out_npz,
@@ -155,9 +125,7 @@ def main():
     print(f"\nSaved {out_npz}")
     print("Run experiments/fb_1_plot.py to render the figure.")
 
-    # ----------------------------------------------------------------
     # Acceptance summary
-    # ----------------------------------------------------------------
     med = {name: np.median(stop_times[name], axis=1) for name in ALL_ALGOS}
     ratio_clique = med['UCB-N'][-1] / max(med['TS-Explore-GF'][-1], 1.0)
     h_gf_shrink = np.median(H_GF[0]) / max(np.median(H_GF[-1]), 1.0)

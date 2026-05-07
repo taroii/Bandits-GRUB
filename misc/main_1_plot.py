@@ -1,12 +1,3 @@
-"""main_1_plot -- agreement-vs-elimination figure (appendix).
-
-Reads ``experiments/outputs/main_1_results.npz`` (produced by
-``main_1.py``) and writes ``experiments/outputs/main_1.png``.
-
-Two panels:
-  (a) median stopping time vs K, with 25-75 IQR shading.
-  (b) single-seed candidate-set count vs time at one K.
-"""
 from __future__ import annotations
 
 import argparse

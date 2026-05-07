@@ -1,13 +1,3 @@
-"""mis_1_plot -- smoothness asymptotics figure (appendix).
-
-Reads ``experiments/outputs/mis_1_results.npz`` (produced by ``mis_1.py``)
-and writes ``experiments/outputs/mis_1.png``.
-
-Three stacked panels sharing a log10(epsilon) x-axis:
-  (a) median stopping time, with 25-75 IQR shading.
-  (b) analytical H_eps step function.
-  (c) competitive-set size |H_eps|.
-"""
 from __future__ import annotations
 
 import argparse

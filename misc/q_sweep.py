@@ -1,16 +1,3 @@
-"""q_sweep -- validate the q-dependence of Theorem 4.1.
-
-Theorem 4.1 has a 1/log(1/q) factor in the sample complexity. Our
-headline experiments fix q=0.1 (the loosest setting). This script
-sweeps q over {0.01, 0.05, 0.1} on the synthetic clustered-chain
-instance at K=50 fixed and reports the empirical stopping time of
-TS-Explore as a function of q. The expected ordering is monotone in q
-(smaller q -> tighter agreement test -> more samples per round but
-typically smaller stopping time once amortized).
-
-Crash-proof: strictly sequential, per-cell try/except, checkpoint
-after every cell, max-steps cap.
-"""
 from __future__ import annotations
 
 import argparse

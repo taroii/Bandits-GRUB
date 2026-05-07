@@ -1,27 +1,3 @@
-"""movielens_robustness -- lightweight robustness check on the
-graph-construction choice for MovieLens-100K.
-
-Replaces the heavier ``movielens_ablations.py``, which crashes the
-shared server. This version
-
-  * runs strictly sequentially (no multiprocessing pools, no shared
-    state),
-  * checkpoints after every (config, algorithm, seed) cell so a crash
-    or interruption loses at most one cell,
-  * caps the per-run pull budget,
-  * wraps every cell in a try/except so one failed seed does not
-    take down the whole sweep.
-
-We hold the regularization weight rho fixed and verify that the
-qualitative finding from Section~\\ref{sec:exp-graph-smooth} (TS-Explore
-beats Basic TS at heavy regularization on MovieLens) is stable across
-the top-k neighbor count of the item-item similarity graph. Only
-TS-Explore and Basic TS are run, since the goal is to check robustness
-of the headline claim, not to repeat the full Figure~1 baseline set.
-
-Saves results to experiments/outputs/movielens_robustness_results.npz.
-Plot with experiments/movielens_robustness_plot.py.
-"""
 from __future__ import annotations
 
 import argparse

@@ -13,9 +13,7 @@ with_reset = False
 imperfect_graph_info = True
 
 
-# ---------------------------------------------------------------------------
 # UCB-style baselines
-# ---------------------------------------------------------------------------
 
 class MaxVarianceArmAlgo(algobase.AlgoBase):
     """Spectral-bandits arm sampling from the remaining set."""
@@ -111,9 +109,7 @@ class OneStepMinSumAlgo(algobase.AlgoBase):
         return self.opti_selection()
 
 
-# ---------------------------------------------------------------------------
 # Thompson sampling variants
-# ---------------------------------------------------------------------------
 
 class BasicThompsonSampling:
     """No-graph Thompson sampling baseline (empirical means, direct counts)."""
@@ -350,9 +346,7 @@ class ThompsonSampling(algobase.AlgoBase):
         return None
 
 
-# ---------------------------------------------------------------------------
-# Graph-feedback Thompson sampling (Algorithm 2 in §4.3)
-# ---------------------------------------------------------------------------
+# Graph-feedback Thompson sampling (Algorithm 2)
 
 def _greedy_dominating_set(Adj):
     """Greedy dominating set on the closed neighborhoods of A+I."""
@@ -455,9 +449,7 @@ class GraphFeedbackTS:
         return None
 
 
-# ---------------------------------------------------------------------------
 # UCB with side observations (Caron et al. 2012, pure-exploration variant)
-# ---------------------------------------------------------------------------
 
 class UCB_N:
     """
@@ -542,31 +534,7 @@ class UCB_N:
         self._pull(a_star)
         return None
 
-
-# ---------------------------------------------------------------------------
-# Ablation algorithms: 2x2 design isolating stopping rule from pull rule
-# ---------------------------------------------------------------------------
-# The four corners of the design are:
-#
-#   stop \ pull | cover-candidate-pair         | argmax-width
-#   ------------+------------------------------+----------------------
-#   TS          | GraphFeedbackTS  (default)   | GraphFeedbackTSWidth
-#   UCB         | UCBNCover                    | UCB_N         (default)
-#
-# Used in experiments/fb_ablation.py to isolate the contribution of the
-# TS stopping criterion from the max-cover pull rule (cf. NeurIPS reviewer
-# concern NR2 in REVIEW_TODO.md).
-
 class GraphFeedbackTSWidth:
-    r"""Ablation: TS-Explore-GF stopping rule with argmax-confidence-width pull.
-
-    Identical to ``GraphFeedbackTS`` except at each disagreement step the
-    algorithm pulls the action with maximum Hoeffding confidence width over
-    all $K$ arms (UCB-N's pull rule, ported into the TS framework), with
-    ties broken by smaller $N^{\mathrm{fb}}$.  Used to isolate the
-    contribution of the TS stopping criterion from the cover-the-disagreement-pair
-    pull rule.
-    """
 
     def __init__(self, D, A, mu, delta, q, sigma=1.0):
         self.means = np.asarray(mu, dtype=float).flatten()
@@ -644,16 +612,6 @@ class GraphFeedbackTSWidth:
 
 
 class UCBNCover:
-    r"""Ablation: UCB-N elimination with max-cover-on-LUCB-pair pull rule.
-
-    Identical to ``UCB_N`` except the pull at each step is the action that
-    covers the LUCB pair $\{h^\star, l^\star\}$ with the largest
-    $|N^+(a)\cap\{h^\star,l^\star\}|$, where $h^\star$ is the
-    empirical-best remaining arm and $l^\star$ is the UCB-runner-up among
-    the remaining arms.  Ties are broken by smaller $N^{\mathrm{fb}}$.
-    Used to isolate the contribution of the UCB-LCB elimination stopping
-    rule from the argmax-confidence-width pull rule.
-    """
 
     def __init__(self, D, A, mu, delta, q=None, sigma=1.0):
         del q

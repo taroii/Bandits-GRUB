@@ -1,15 +1,3 @@
-"""mis_2 -- smoothness asymptotics on a connected SBM.
-
-Companion to ``mis_1.py``.  Same epsilon sweep and same algorithms,
-but the SBM is augmented with sparse inter-cluster bridge edges
-(``instances.sbm_phase_transition_connected``) so that the realized
-graph has a single connected component.  This removes the connectivity
-caveat that affects ``mis_1``: on a connected graph, the asymptotic
-limit  $\\max_i \\Delta_i^{-2}\\log(1/\\delta)$  is the correct floor.
-
-Crash-proof: strictly sequential, per-cell try/except, checkpoint
-after every (eps, seed) cell, max-steps cap.
-"""
 from __future__ import annotations
 
 import argparse
@@ -145,7 +133,7 @@ def main():
         except Exception as e:
             print(f"[resume] failed to load checkpoint: {e}", flush=True)
 
-    # ---- TS_rho1 and Basic: eps-independent, run once at eps index 0 ----
+    # TS_rho1 and Basic: eps-independent, run once at eps index 0 
     for ai, name in enumerate(['TS_rho1', 'Basic']):
         ai_global = ALGOS.index(name)
         for si, seed in enumerate(seeds):
@@ -171,7 +159,7 @@ def main():
                   f"correct={int(correct[name][0, si])} "
                   f"({time.time() - t0:.1f}s)", flush=True)
 
-    # ---- TS_tuned: eps-dependent main sweep ------------------------------
+    # TS_tuned: eps-dependent main sweep
     ai_tuned = ALGOS.index('TS_tuned')
     for ei, eps in enumerate(eps_sweep):
         rho_star = hardness.rho_star(eps, K, T_est, delta)

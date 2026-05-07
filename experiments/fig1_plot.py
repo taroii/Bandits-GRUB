@@ -1,14 +1,3 @@
-"""fig1_plot -- combined paper Figure 1 (graph-smooth experiments).
-
-Two-panel figure, both panels showing TS-Explore vs Basic TS, KL-LUCB,
-and GRUB:
-  Left  panel: clustered_chain K-sweep (synthetic).
-  Right panel: MovieLens-100K rho-sweep (real).
-
-Reads ``experiments/outputs/main_2_results.npz`` and
-``experiments/outputs/movielens_1_results.npz``; writes
-``experiments/outputs/fig1.png``.
-"""
 from __future__ import annotations
 
 import argparse

@@ -1,10 +1,3 @@
-"""movielens_ablations_plot -- ablation grouped-bar figure (appendix).
-
-Reads ``experiments/outputs/movielens_ablations_results.npz`` (produced
-by ``movielens_ablations.py``) and writes
-``experiments/outputs/movielens_ablations.png``. Also prints a
-Markdown-style table to stdout for paper appendix use.
-"""
 from __future__ import annotations
 
 import argparse

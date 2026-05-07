@@ -1,26 +1,3 @@
-"""main_2 -- graph-helpful K-sweep on the clustered_chain instance.
-
-Companion to ``main_1.py``.  Where ``main_1`` validates the log^2(K
-H_graph) scaling on a single-challenger instance --- which incidentally
-makes Basic TS empirically tied with TS-Explore --- this experiment
-targets the graph-regularized estimator's contribution by running on a
-*chain of equal-mean cliques* (default C=2: best singleton bridged to
-a single challenger clique).  All challenger-clique nodes share the
-same true mean, so the Laplacian regularizer can pool their
-observations and TS-Explore distinguishes the cluster from the best
-arm using roughly cluster-aggregate samples while Basic TS pays for
-each challenger individually.
-
-Default rho = 100 is near the theorem-prescribed rho^*(eps) for
-epsilon = gap_step on this instance; rho = 1 puts the estimator in a
-data-dominated regime where the regularizer has negligible effect, so
-the canonical rho-versus-Basic comparison must be made at a non-trivial
-rho.  Same K-sweep [20, 50, 100] and same three algorithms as main_1
-(TS-Explore, Basic TS, GRUB) for direct comparability of figures.
-
-Saves all raw results to ``experiments/outputs/main_2_results.npz``.
-Plotting lives in ``main_2_plot.py``.
-"""
 from __future__ import annotations
 
 import argparse
@@ -38,8 +15,6 @@ import graph_algo  # noqa: E402
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outputs')
 os.makedirs(OUT, exist_ok=True)
 
-
-# Top-level picklable factories (multiprocessing requires this).
 class TSExploreFactory:
     def __init__(self, D, A, mu, delta, q, rho):
         self.kw = dict(D=D, A=A, mu=mu, rho_lap=rho, delta=delta, q=q)
@@ -95,7 +70,6 @@ def main():
                         default=[10, 20, 50, 100, 200],
                         help="K values to sweep (default: 10 20 50 100 200)")
     parser.add_argument('--seeds', type=int, default=20)
-    parser.add_argument('--n-jobs', type=int, default=1)
     parser.add_argument('--q', type=float, default=0.1)
     parser.add_argument('--C', type=int, default=2,
                         help="number of clusters in clustered_chain "
@@ -131,9 +105,7 @@ def main():
     delta = 1e-3
     out_npz = os.path.join(OUT, 'main_2_results.npz')
 
-    # ------------------------------------------------------------------
     # State (with checkpoint resume)
-    # ------------------------------------------------------------------
     stop_times = {a: np.full((len(Ks), len(seeds)), np.nan) for a in ALGOS}
     correct = {a: np.zeros((len(Ks), len(seeds)), dtype=bool) for a in ALGOS}
     H_classical = [None] * len(Ks)
@@ -218,9 +190,7 @@ def main():
         except Exception as e:
             print(f"[resume] failed to load {out_npz}: {e}", flush=True)
 
-    # ------------------------------------------------------------------
     # K-sweep
-    # ------------------------------------------------------------------
     for ki, K in enumerate(Ks):
         mu, A, D = instances.clustered_chain(
             K, C=args.C, gap_step=args.gap_step)
@@ -243,7 +213,7 @@ def main():
             fac = make_factory(name, D, A, mu, delta=delta, q=args.q,
                                rho=rho)
             t0 = time.time()
-            runs = runners.run_many(fac, seeds, n_jobs=args.n_jobs,
+            runs = runners.run_many(fac, seeds,
                                     max_steps=args.max_steps,
                                     record_elimination=False,
                                     progress=False)

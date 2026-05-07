@@ -1,16 +1,3 @@
-"""main_1 — Figure 1 experiment runner: TS-Explore vs GRUB.
-
-Targets ``thm:main-graph``. Runs the K-sweep on
-``union_of_cliques_with_challenger`` for TS-Explore (graph), Basic TS,
-and GRUB (Thaker et al. 2022, = ``MaxVarianceArmAlgo`` with
-``eliminate_arms`` from ``algobase.py``).  Also collects a single-seed
-elimination/agreement curve at one K for the second panel of the
-figure.
-
-Saves all raw results to ``experiments/outputs/main_1_results.npz``.
-Plotting lives in ``main_1_plot.py`` so figures can be iterated on
-without rerunning the experiment.
-"""
 from __future__ import annotations
 
 import argparse
@@ -29,7 +16,7 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outputs')
 os.makedirs(OUT, exist_ok=True)
 
 
-# Top-level picklable factories (multiprocessing requires this).
+# Top-level factories (kept as classes for clarity).
 class TSExploreFactory:
     def __init__(self, D, A, mu, delta, q):
         self.kw = dict(D=D, A=A, mu=mu, rho_lap=1.0, delta=delta, q=q)
@@ -73,7 +60,6 @@ def main():
                         default=[20, 50, 100],
                         help="K values to sweep (default: 20 50 100)")
     parser.add_argument('--seeds', type=int, default=20)
-    parser.add_argument('--n-jobs', type=int, default=1)
     parser.add_argument('--q', type=float, default=0.1)
     parser.add_argument('--max-steps', type=int, default=2_000_000)
     parser.add_argument('--panel-b-K', type=int, default=100,
@@ -96,9 +82,7 @@ def main():
     delta = 1e-3
     out_npz = os.path.join(OUT, 'main_1_results.npz')
 
-    # ------------------------------------------------------------------
     # State (with checkpoint resume)
-    # ------------------------------------------------------------------
     stop_times = {a: np.full((len(Ks), len(seeds)), np.nan) for a in ALGOS}
     correct = {a: np.zeros((len(Ks), len(seeds)), dtype=bool) for a in ALGOS}
     H_classical = [None] * len(Ks)
@@ -167,9 +151,7 @@ def main():
         except Exception as e:
             print(f"[resume] failed to load {out_npz}: {e}", flush=True)
 
-    # ------------------------------------------------------------------
     # K-sweep
-    # ------------------------------------------------------------------
     for ki, K in enumerate(Ks):
         mu, A, D = instances.union_of_cliques_with_challenger(K)
         if H_classical[ki] is None:
@@ -187,7 +169,7 @@ def main():
                 continue
             fac = make_factory(name, D, A, mu, delta=delta, q=args.q)
             t0 = time.time()
-            runs = runners.run_many(fac, seeds, n_jobs=args.n_jobs,
+            runs = runners.run_many(fac, seeds,
                                     max_steps=args.max_steps,
                                     record_elimination=False,
                                     progress=False)
@@ -202,9 +184,7 @@ def main():
                   f"IQR=[{np.percentile(ts,25):.0f}, {np.percentile(ts,75):.0f}]  "
                   f"correct={cor.mean():.0%}  ({elapsed:.0f}s)", flush=True)
 
-    # ------------------------------------------------------------------
     # Single-seed elimination/agreement curves at K = panel_b_K
-    # ------------------------------------------------------------------
     K_b = args.panel_b_K
     if panel_b_done:
         print(f"\n[panel B] [resumed] curves at K={K_b}, seed={args.panel_b_seed}",

@@ -1,19 +1,3 @@
-"""kernel_1 — combinatorial vs normalized Laplacian rho-sweep (runner).
-
-Targets ``thm:kernel-ts``. On a Barabasi-Albert instance with uniform
-suboptimality gap and the optimal arm pinned to the highest-degree hub
-(``instances.ba_hub_optimal``), sweeps the regularization weight ``rho``
-and tracks the empirical stopping time of TS-Explore under two graph
-kernels: combinatorial L_G and normalized K_G.
-
-Each seed draws a fresh BA realization (with the optimal arm pinned to
-the top-degree node).  Basic TS depends only on ``mu`` and is run once
-with the same seeds, broadcast across ``rhos``.
-
-Saves all raw results to ``experiments/outputs/kernel_1_results.npz``,
-checkpointed after each (rho, kernel) cell.  Plotting lives in
-``kernel_1_plot.py``.
-"""
 from __future__ import annotations
 
 import argparse
@@ -81,9 +65,7 @@ def main():
     out_npz = os.path.join(OUT, 'kernel_1_results.npz')
     INSTANCE_TAG = 'ba_hub_optimal'
 
-    # ----------------------------------------------------------------
     # State
-    # ----------------------------------------------------------------
     stop_times = {a: np.full((len(rhos), len(seeds)), np.nan) for a in ALL_ALGOS}
     correct = {a: np.zeros((len(rhos), len(seeds)), dtype=bool) for a in ALL_ALGOS}
     # Per-seed instance characteristics (for context / vertical lines on plot).
@@ -138,10 +120,8 @@ def main():
         except Exception as e:
             print(f"[resume] failed to load {out_npz}: {e}", flush=True)
 
-    # ----------------------------------------------------------------
     # Per-seed instance characterization (cheap; do once).
     # Also Basic TS broadcast (depends only on mu).
-    # ----------------------------------------------------------------
     print("[kernel_1] characterizing instances and running Basic TS...",
           flush=True)
     mu_const = None
@@ -168,7 +148,7 @@ def main():
         fac_basic = build_factory('Basic TS', None, None, mu_const, delta,
                                   args.q, rho=0.0, rho_diag=1e-4)
         t0 = time.time()
-        basic_runs = runners.run_many(fac_basic, seeds, n_jobs=1,
+        basic_runs = runners.run_many(fac_basic, seeds,
                                       max_steps=args.max_steps,
                                       record_elimination=False, progress=False)
         for si, r in enumerate(basic_runs):
@@ -182,9 +162,7 @@ def main():
     else:
         print("  Basic TS [resumed]", flush=True)
 
-    # ----------------------------------------------------------------
     # Sweep over (rho, kernel).  Inner loop = seeds (fresh graph per seed).
-    # ----------------------------------------------------------------
     for ri, rho in enumerate(rhos):
         # Scale rho_diag with rho to keep V_0 well-conditioned at high rho.
         rho_diag = max(1e-4, 1e-6 * rho)
@@ -215,26 +193,7 @@ def main():
                   f"correct={cor.mean()*100:.0f}%  ({elapsed:.0f}s)",
                   flush=True)
 
-    # ----------------------------------------------------------------
-    # Acceptance summary
-    # ----------------------------------------------------------------
-    med_L = np.median(stop_times['TS-L_G'], axis=1)
-    med_K = np.median(stop_times['TS-K_G'], axis=1)
     print(f"\nSaved {out_npz}")
-    print("Run experiments/kernel_1_plot.py to render the figure.")
-    print("\n# Acceptance")
-    for ri, rho in enumerate(rhos):
-        ratio = med_L[ri] / max(med_K[ri], 1.0)
-        print(f"  rho={rho:6.1f}  L_G={med_L[ri]:>8.0f}  K_G={med_K[ri]:>8.0f}  "
-              f"L_G/K_G={ratio:.2f}x")
-    best_L = float(np.nanmin(med_L))
-    best_K = float(np.nanmin(med_K))
-    rho_L_star = rhos[int(np.nanargmin(med_L))]
-    rho_K_star = rhos[int(np.nanargmin(med_K))]
-    print(f"\n  L_G U-bottom: T={best_L:.0f} at rho={rho_L_star}")
-    print(f"  K_G U-bottom: T={best_K:.0f} at rho={rho_K_star}")
-    print(f"  Best K_G / Best L_G: {best_K / max(best_L, 1.0):.2f}x  "
-          f"({'K_G wins' if best_K < best_L else 'L_G wins or tie'})")
     return 0
 
 

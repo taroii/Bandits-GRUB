@@ -1,17 +1,3 @@
-"""fb_1_plot -- render the graph-feedback density-sweep figure.
-
-Reads ``experiments/outputs/fb_1_results.npz`` and writes
-``experiments/outputs/fb_1.{pdf,png}``.
-
-Two panels:
-  Left:  headline comparison -- TS-Explore-GF vs. UCB+cover (the
-         de-confounded UCB-LCB baseline using the same cover-pair pull
-         rule), KL-LUCB (no-graph BAI), TS-Explore at rho=1, Basic TS.
-  Right: 2x2 stop-rule x pull-rule decomposition.
-
-The headline panel uses colors keyed to the algorithm; the ablation
-panel uses color for the stopping rule and marker for the pull rule.
-"""
 from __future__ import annotations
 
 import argparse
@@ -28,15 +14,10 @@ from experiments.utils import plotting  # noqa: E402
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outputs')
 
 HEADLINE_ALGOS = ['TS-Explore-GF', 'UCB+cover', 'KL-LUCB', 'TS-Explore', 'Basic TS']
-# TS+cover is TS-Explore-GF; UCB+width is UCB-N. Map aliases to the
-# canonical npz keys present in fb_1_results.npz.
+# TS+cover is TS-Explore-GF (lives in fb_1_results.npz);
+# UCB+width is UCB-N (lives in fb_1_results.npz);
+# TS+width and UCB+cover live in fb_ablation_results.npz.
 ABLATION_ALGOS = ['TS+cover', 'TS+width', 'UCB+cover', 'UCB+width']
-ABLATION_KEY = {
-    'TS+cover':  'TS-Explore-GF_stop',
-    'TS+width':  'TS+width_stop',
-    'UCB+cover': 'UCB+cover_stop',
-    'UCB+width': 'UCB-N_stop',
-}
 ABLATION_LABEL = {
     'TS+cover':  'TS-stop, cover-pair pull',
     'TS+width':  'TS-stop, width pull',
@@ -45,30 +26,54 @@ ABLATION_LABEL = {
 }
 
 
-def panel_headline(ax, z):
+def panel_headline(ax, z, z_abl):
+    """Headline panel reads UCB+cover from the ablation file but the
+    rest from the main fb_1 file."""
     ps = z['ps']
     for name in HEADLINE_ALGOS:
-        key = f'{name}_stop'
-        if key not in z.files:
-            continue
+        if name == 'UCB+cover':
+            key = 'UCB+cover_stop'
+            if z_abl is None or key not in z_abl.files:
+                continue
+            data = z_abl[key]
+        else:
+            key = f'{name}_stop'
+            if key not in z.files:
+                continue
+            data = z[key]
         st = plotting.style_for(name)
-        plotting.plot_with_iqr(ax, ps, z[key], label=name, **st)
+        plotting.plot_with_iqr(ax, ps, data, label=name, **st)
     ax.set_xlabel(r'edge probability $p$')
     ax.set_ylabel('stopping time')
     ax.set_yscale('log')
     plotting.grid_only_major(ax)
 
 
-def panel_ablation(ax, z):
+def _ablation_data(name, z, z_abl):
+    """Resolve the npz array for an ablation corner.
+
+    ``TS+cover`` is identical to ``TS-Explore-GF`` (lives in fb_1) and
+    ``UCB+width`` is identical to ``UCB-N`` (also fb_1). The other two
+    corners are only in the ablation file.
+    """
+    if name == 'TS+cover':
+        return z['TS-Explore-GF_stop']
+    if name == 'UCB+width':
+        return z['UCB-N_stop']
+    if z_abl is None:
+        return None
+    key = f'{name}_stop'
+    return z_abl[key] if key in z_abl.files else None
+
+
+def panel_ablation(ax, z, z_abl):
     ps = z['ps']
-    # Two visual axes: color = stopping rule (orange = TS, blue = UCB),
-    # marker = pull rule (square = cover-pair, diamond = width).
     for name in ABLATION_ALGOS:
-        key = ABLATION_KEY[name]
-        if key not in z.files:
+        data = _ablation_data(name, z, z_abl)
+        if data is None:
             continue
         st = plotting.style_for(name)
-        plotting.plot_with_iqr(ax, ps, z[key], label=ABLATION_LABEL[name], **st)
+        plotting.plot_with_iqr(ax, ps, data, label=ABLATION_LABEL[name], **st)
     ax.set_xlabel(r'edge probability $p$')
     ax.set_ylabel('stopping time')
     ax.set_yscale('log')
@@ -78,7 +83,11 @@ def panel_ablation(ax, z):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--results', type=str,
-                        default=os.path.join(OUT, 'fb_1_results.npz'))
+                        default=os.path.join(OUT, 'fb_1_results.npz'),
+                        help="fb_1 headline results (from fb_1.py)")
+    parser.add_argument('--ablation', type=str,
+                        default=os.path.join(OUT, 'fb_ablation_results.npz'),
+                        help="2x2 ablation results (from fb_ablation.py)")
     parser.add_argument('--out', type=str,
                         default=os.path.join(OUT, 'fb_1.png'))
     args = parser.parse_args()
@@ -87,14 +96,21 @@ def main():
         print(f"Error: {args.results} not found. "
               f"Run experiments/fb_1.py first.", file=sys.stderr)
         sys.exit(1)
+    if not os.path.exists(args.ablation):
+        print(f"Warning: {args.ablation} not found. "
+              f"Right panel will be empty for ablation-only series. "
+              f"Run experiments/fb_ablation.py to populate it.",
+              file=sys.stderr)
 
     plotting.apply_paper_style()
     z = np.load(args.results, allow_pickle=False)
+    z_abl = (np.load(args.ablation, allow_pickle=False)
+             if os.path.exists(args.ablation) else None)
 
     fig, axes = plt.subplots(1, 2, figsize=(6.6, 3.2),
                              constrained_layout=True)
-    panel_headline(axes[0], z)
-    panel_ablation(axes[1], z)
+    panel_headline(axes[0], z, z_abl)
+    panel_ablation(axes[1], z, z_abl)
 
     # Per-panel legends placed below to avoid overlap.
     axes[0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.22),

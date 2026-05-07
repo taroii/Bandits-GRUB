@@ -1,9 +1,3 @@
-"""kernel_1_plot -- normalized vs combinatorial Laplacian rho-sweep
-(appendix figure).
-
-Reads ``experiments/outputs/kernel_1_results.npz`` and writes
-``experiments/outputs/kernel_1.png``.
-"""
 from __future__ import annotations
 
 import argparse

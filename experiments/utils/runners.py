@@ -14,9 +14,11 @@ runner records:
 * ``converged_flag`` - whether the algorithm hit its stopping rule (False
   means we exited on ``max_steps``).
 
-``algo_factory`` must be picklable when ``run_many`` is invoked with
-``n_jobs > 1`` (multiprocessing).  The factory should NOT seed numpy
-itself - the runner handles seeding before it is called.
+``algo_factory`` is invoked once per seed in ``run_many``. The factory
+should NOT seed numpy itself --- the runner handles seeding before it
+is called. Execution is strictly sequential; multiprocessing was
+removed because parallel pools were causing the shared compute server
+to crash under load.
 """
 from __future__ import annotations
 
@@ -112,37 +114,28 @@ def run_algorithm(algo_factory: Callable,
     }
 
 
-def _worker(args):
-    factory, seed, max_steps, record_elim = args
-    return run_algorithm(factory, seed, max_steps=max_steps,
-                         record_elimination=record_elim)
-
-
 def run_many(algo_factory: Callable,
              seeds: List[int],
-             n_jobs: int = 1,
              max_steps: int = 1_000_000,
              record_elimination: bool = True,
-             progress: bool = False) -> List[Dict]:
-    if n_jobs == 1:
-        out = []
-        for i, s in enumerate(seeds):
-            out.append(run_algorithm(algo_factory, s,
-                                     max_steps=max_steps,
-                                     record_elimination=record_elimination))
-            if progress:
-                print(f"  seed {s} done ({i+1}/{len(seeds)})", flush=True)
-        return out
-    from multiprocessing import Pool
-    args = [(algo_factory, s, max_steps, record_elimination) for s in seeds]
-    with Pool(n_jobs) as pool:
+             progress: bool = False,
+             **_legacy_kwargs) -> List[Dict]:
+    """Sequentially run ``algo_factory`` for each seed.
+
+    Earlier versions accepted an ``n_jobs`` argument that dispatched
+    to ``multiprocessing.Pool``; that path was removed because parallel
+    pools were causing the shared compute server to crash under load.
+    Any ``n_jobs`` keyword passed by legacy callers is silently
+    ignored via ``**_legacy_kwargs``.
+    """
+    out = []
+    for i, s in enumerate(seeds):
+        out.append(run_algorithm(algo_factory, s,
+                                 max_steps=max_steps,
+                                 record_elimination=record_elimination))
         if progress:
-            out = []
-            for i, r in enumerate(pool.imap(_worker, args)):
-                print(f"  seed {seeds[i]} done ({i+1}/{len(seeds)})", flush=True)
-                out.append(r)
-            return out
-        return pool.map(_worker, args)
+            print(f"  seed {s} done ({i+1}/{len(seeds)})", flush=True)
+    return out
 
 
 def summarize(results: List[Dict]) -> Dict:

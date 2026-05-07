@@ -1,25 +1,3 @@
-"""fb_structured -- graph-feedback validation on canonical graph families.
-
-Companion to ``fb_1.py``: that script sweeps Erdos-Renyi density;
-this one fixes n=20 and uniform suboptimality gap Delta=0.3 and
-varies the graph family (clique, star, k-regular, Barabasi-Albert).
-The point is to validate the combinatorial bounds on H_GF in
-Corollary 5.2 against the empirical stopping times of the
-graph-feedback algorithms.
-
-Algorithms (all with delta=1e-3):
-  * TS-Explore-GF   - proposed graph-feedback Thompson sampler.
-  * UCB+cover       - UCB-LCB elimination using the same cover-pair
-                      pull rule.
-  * KL-LUCB         - non-graph fixed-confidence reference.
-
-Saves results to experiments/outputs/fb_structured_results.npz with
-H_GF (analytical), bar-chi (clique-cover), 2-packing rho, and
-min-degree per instance for direct comparison to Corollary 5.2.
-
-Crash-proof: strictly sequential (no multiprocessing), per-cell
-try/except, checkpoint after every cell, max-steps cap.
-"""
 from __future__ import annotations
 
 import argparse

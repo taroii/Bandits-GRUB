@@ -1,24 +1,3 @@
-"""movielens_1 -- real-graph hero experiment (rho-sweep).
-
-Targets ``thm:main-graph`` on a real-world graph: the K=20 most-rated
-MovieLens-100K movies as arms, with item-item adjusted-cosine similarity
-sparsified to a top-k mutual-neighbor graph.  ``mu_i`` is the empirical
-mean rating; by default rewards are sampled with replacement from each
-movie's observed user ratings (the data's natural categorical/integer
-1-5 distribution; matches Zong et al. 2016, Wu et al. 2019).  Set
-``--reward-model gaussian`` to fall back to N(mu_i, sigma=1).
-
-We sweep the regularization weight rho for the graph-aware algorithms
-(TS-Explore and GRUB) and broadcast Basic TS across rho as a no-graph
-reference.  Hypothesis: TS-Explore exhibits a U-shape over rho, with
-its minimum stopping time below Basic TS at the rho prescribed by the
-analysis (rho^*(eps) ~ sigma_0 sqrt(L_1) / eps, here ~10-30).
-
-Saves all raw results to ``experiments/outputs/movielens_1_results.npz``.
-Plotting lives in ``movielens_1_plot.py``.
-
-Data: ml-100k.zip is auto-downloaded on first run to <repo>/data/ml-100k/.
-"""
 from __future__ import annotations
 
 import argparse
@@ -72,7 +51,6 @@ def main():
     parser.add_argument('--rhos', type=float, nargs='+',
                         default=[1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 1000.0])
     parser.add_argument('--seeds', type=int, default=20)
-    parser.add_argument('--n-jobs', type=int, default=1)
     parser.add_argument('--q', type=float, default=0.1)
     parser.add_argument('--max-steps', type=int, default=10_000_000,
                         help="hard cap on steps per run; the smallest gap "
@@ -106,9 +84,7 @@ def main():
     out_npz = os.path.join(OUT, 'movielens_1_results.npz')
     K = args.K
 
-    # ----------------------------------------------------------------
     # Build instance once (deterministic) and report.
-    # ----------------------------------------------------------------
     print(f"[movielens_1] loading K={K} top-rated movies...", flush=True)
     mu, A, D, meta = movielens.build_instance(
         K=K, top_k_neighbors=args.top_k_neighbors,
@@ -150,9 +126,7 @@ def main():
     # Backwards-compat: keep basic_in for the messages below.
     basic_in = 'Basic TS' in algos_to_run
 
-    # ----------------------------------------------------------------
     # State (with checkpoint resume)
-    # ----------------------------------------------------------------
     stop_times = {a: np.full((len(rhos), len(seeds)), np.nan) for a in ALL_ALGOS}
     correct = {a: np.zeros((len(rhos), len(seeds)), dtype=bool) for a in ALL_ALGOS}
     H_graph_per_rho = np.full(len(rhos), np.nan)
@@ -245,9 +219,7 @@ def main():
             H_graph_per_rho[ri] = hardness.graph_hardness(mu, A, D, rho=rho)
     save_checkpoint()
 
-    # ----------------------------------------------------------------
     # Non-graph baselines (broadcast across rho).
-    # ----------------------------------------------------------------
     for name in nongraph_algos_to_run:
         if nongraph_done[name]:
             ts = stop_times[name][0, :]
@@ -257,7 +229,7 @@ def main():
         fac = build_factory(name, None, None, mu, delta, args.q,
                             rho=0.0, reward_fn=reward_fn)
         t0 = time.time()
-        runs = runners.run_many(fac, seeds, n_jobs=args.n_jobs,
+        runs = runners.run_many(fac, seeds,
                                 max_steps=args.max_steps,
                                 record_elimination=False, progress=False)
         ts = np.array([r['stopping_time'] for r in runs], dtype=float)
@@ -273,9 +245,7 @@ def main():
               f"IQR=[{np.percentile(ts,25):.0f}, {np.percentile(ts,75):.0f}]  "
               f"correct={cor.mean():.0%}  ({time.time()-t0:.0f}s)", flush=True)
 
-    # ----------------------------------------------------------------
     # rho-sweep for graph algorithms.
-    # ----------------------------------------------------------------
     for ri, rho in enumerate(rhos):
         H_gr = H_graph_per_rho[ri]
         print(f"\n=== rho={rho}  H_graph={H_gr:.1f}  "
@@ -291,7 +261,7 @@ def main():
             fac = build_factory(name, D, A, mu, delta, args.q, rho=rho,
                                 reward_fn=reward_fn)
             t0 = time.time()
-            runs = runners.run_many(fac, seeds, n_jobs=args.n_jobs,
+            runs = runners.run_many(fac, seeds,
                                     max_steps=args.max_steps,
                                     record_elimination=False, progress=False)
             ts = np.array([r['stopping_time'] for r in runs], dtype=float)

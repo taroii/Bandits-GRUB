@@ -1,17 +1,3 @@
-"""mis_1 — smoothness asymptotics and phase transitions (runner).
-
-Targets ``thm:main-mis`` and ``cor:eps-limit``. Sweeps nominal smoothness
-epsilon downward while tuning rho = rho^*(epsilon); records analytical
-hardness ``H_eps``, competitive-set size, and per-seed stopping times for
-TS-Explore (rho^* tuned), TS-Explore (rho=1), and Basic TS.
-
-Saves all raw results to ``experiments/outputs/mis_1_results.npz``.
-Plotting lives in ``mis_1_plot.py`` so figures can be iterated on
-without rerunning the experiment.
-
-The script also runs a ``probe_rho_star()`` sanity check before the main
-sweep and writes the probe output to ``experiments/outputs/mis_1_sanity.txt``.
-"""
 from __future__ import annotations
 
 import argparse
@@ -34,7 +20,7 @@ def build_L(D, A, kernel='combinatorial'):
     return graph_algo.algobase.build_kernel(D, A, kernel)
 
 
-# Picklable factories (multiprocessing requires top-level callables).
+# Top-level factories (kept as classes for clarity).
 class TSTunedFactory:
     def __init__(self, D, A, mu, rho_lap, delta, q, epsilon_nominal, rho_diag):
         self.kw = dict(D=D, A=A, mu=mu, rho_lap=rho_lap, delta=delta, q=q,
@@ -99,7 +85,6 @@ def probe_rho_star(mu, A, D, epsilons, delta, sigma=1.0,
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--seeds', type=int, default=10)
-    parser.add_argument('--n-jobs', type=int, default=1)
     parser.add_argument('--quick', action='store_true')
     parser.add_argument('--c0', type=float, default=4.0)
     parser.add_argument('--q', type=float, default=0.1)
@@ -144,7 +129,7 @@ def main():
         print("[mis_1] WARNING: sanity check raised flags - "
               "continuing but results may be unreliable.", flush=True)
 
-    # --- eps_i^* predictions -------------------------------------------------
+    # eps_i^* predictions 
     T_est = hardness.classical_hardness(mu) * np.log(1 / delta)
     eps_critical = hardness.critical_epsilons(mu, A, D, T_est, delta,
                                               c0=args.c0)
@@ -153,7 +138,7 @@ def main():
         if np.isfinite(v):
             print(f"  arm {i:3d}: eps_i^* = {v:.3e}", flush=True)
 
-    # --- Sweep ---------------------------------------------------------------
+    # Sweep 
     # TS_rho1 and Basic are independent of eps (epsilon_nominal is not used by
     # the TS sampling rule, it only enters the elimination bias term in
     # eliminate_arms which TS doesn't call). Compute once per seed and broadcast.
@@ -168,12 +153,12 @@ def main():
     fac_rho1 = TSRho1Factory(D, A, mu, delta=delta, q=args.q)
     fac_basic = BasicFactory(mu, delta=delta, q=args.q)
     t0 = time.time()
-    runs_rho1 = runners.run_many(fac_rho1, seeds, n_jobs=args.n_jobs,
+    runs_rho1 = runners.run_many(fac_rho1, seeds,
                                  max_steps=args.max_steps)
     print(f"  TS_rho1 baseline: t_med={np.median([r['stopping_time'] for r in runs_rho1]):.0f} "
           f"({time.time()-t0:.1f}s)", flush=True)
     t0 = time.time()
-    runs_basic = runners.run_many(fac_basic, seeds, n_jobs=args.n_jobs,
+    runs_basic = runners.run_many(fac_basic, seeds,
                                   max_steps=args.max_steps)
     print(f"  Basic   baseline: t_med={np.median([r['stopping_time'] for r in runs_basic]):.0f} "
           f"({time.time()-t0:.1f}s)", flush=True)
@@ -199,7 +184,7 @@ def main():
                                    q=args.q, epsilon_nominal=eps,
                                    rho_diag=rho_diag_val)
         t0 = time.time()
-        runs = runners.run_many(fac_tuned, seeds, n_jobs=args.n_jobs,
+        runs = runners.run_many(fac_tuned, seeds,
                                 max_steps=args.max_steps)
         print(f"    TS_tuned: t_med={np.median([r['stopping_time'] for r in runs]):.0f} "
               f"({time.time()-t0:.1f}s)", flush=True)

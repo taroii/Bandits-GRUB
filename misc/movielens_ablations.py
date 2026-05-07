@@ -1,24 +1,3 @@
-"""movielens_ablations -- robustness sweep across graph constructions.
-
-Companion to ``movielens_1.py``.  Holds the regularization weight rho
-fixed and verifies the qualitative finding (TS-Explore reaches the
-agreement criterion in fewer pulls than Basic TS at heavy
-regularization) is stable across:
-
-    (a) top-k neighbor count    : k in {3, 5, 10, 20}   at K=20
-    (b) number of arms K        : K in {10, 15, 20}     at k=5
-    (c) similarity metric       : 'adjusted_cosine' (default) and 'pearson'
-
-Each (config, algorithm) cell runs ``--seeds`` independent seeds.  Only
-TS-Explore and Basic TS are run by default to keep the wall-clock
-budget under control; pass ``--include-grub`` / ``--include-kllucb`` to
-add those.
-
-Saves all raw results to
-``experiments/outputs/movielens_ablations_results.npz``.  Plotting:
-``movielens_ablations_plot.py`` (renders a small grouped-bar figure or
-table).
-"""
 from __future__ import annotations
 
 import argparse
@@ -80,7 +59,6 @@ def main():
                              "the regime where movielens_1 found the "
                              "biggest gap to Basic TS")
     parser.add_argument('--seeds', type=int, default=10)
-    parser.add_argument('--n-jobs', type=int, default=1)
     parser.add_argument('--q', type=float, default=0.1)
     parser.add_argument('--max-steps', type=int, default=10_000_000)
     parser.add_argument('--reward-model', type=str, default='empirical',
@@ -175,9 +153,7 @@ def main():
         except Exception as e:
             print(f"[resume] failed to load {out_npz}: {e}", flush=True)
 
-    # ----------------------------------------------------------------
     # Main loop: each config builds its own instance + reward sampler.
-    # ----------------------------------------------------------------
     for ci, (label, build_kwargs) in enumerate(configs):
         print(f"\n=== config[{ci}] {label}  "
               f"({build_kwargs}) ===", flush=True)
@@ -212,7 +188,7 @@ def main():
             fac = build_factory(name, D, A, mu, delta, args.q,
                                 rho=args.rho, reward_fn=reward_fn)
             t0 = time.time()
-            runs = runners.run_many(fac, seeds, n_jobs=args.n_jobs,
+            runs = runners.run_many(fac, seeds,
                                     max_steps=args.max_steps,
                                     record_elimination=False, progress=False)
             ts = np.array([r['stopping_time'] for r in runs], dtype=float)

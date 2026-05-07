@@ -1,10 +1,3 @@
-"""main_2_plot -- single-panel render of the clustered_chain K-sweep.
-
-Reads ``experiments/outputs/main_2_results.npz`` and writes
-``experiments/outputs/main_2.png``. The combined paper Figure 1 is
-produced by ``fig1_plot.py``; this script is kept for standalone /
-appendix use and follows the same paper style guide.
-"""
 from __future__ import annotations
 
 import argparse

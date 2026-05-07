@@ -1,128 +1,79 @@
-<!-- ABOUT THE PROJECT -->
-## Setup
+# Thompson Sampling for Pure Exploration in Graph-Structured Bandits
 
-```
-conda create -n thompson python=3.9
+This repository is the official implementation accompanying the paper *"Thompson Sampling for Pure Exploration in Graph-Structured Bandits"* (NeurIPS 2026 anonymous submission). It contains the source for the proposed algorithms, the runners that reproduce every experiment in the paper, and the saved raw stopping-time data.
+
+## Overview
+
+We study the best-arm identification (BAI) problem in stochastic bandits where similarities between arms are described by a graph. The graph enters either through a *smoothness regularizer* on the reward vector (the graph-smooth setting) or through *side observations* (the graph-feedback setting). For each setting we develop a Thompson-sampling–based algorithm with a fixed-confidence sample-complexity bound that improves on the classical hardness $\sum_i \Delta_i^{-2}$ by replacing it with a graph-aware quantity.
+
+## Requirements
+
+The experiments run on CPU only and have no external data dependency at install time (the MovieLens-100K dataset is downloaded automatically on first use of the corresponding runner).
+
+To install dependencies:
+
+```setup
+conda create -n thompson python=3.11
 conda activate thompson
 pip install -r requirements.txt
 ```
 
-It's important to use an older version of python, since some code is depracated. 
+The pinned versions reflect the environment used to produce the figures in the paper; later versions of the listed packages should also work.
 
-## TODO: 
-- Nothing!
+## Running the experiments
 
-## About The Project
+The paper-experiment pipeline lives under `experiments/`. Each experiment has a *runner* that executes the sweep and writes a `.npz` result file to `experiments/outputs/`, and a *plot* script that reads the `.npz` and renders the figure. Runners are checkpointed: rerunning a runner resumes from its last completed cell, and `--fresh` ignores the checkpoint and starts over. Every runner accepts `--quick` for a smoke-test sweep (much smaller seed/sweep counts) to verify the end-to-end pipeline before launching the full multi-hour sweep.
 
-We consider the problem of Best-Arm Identification (BAI) in the presence of imperfect side information in the form of a graph.
+| Experiment                                              | Runner(s)                                                         | Plot / table script                |
+|---------------------------------------------------------|-------------------------------------------------------------------|------------------------------------|
+| Synthetic chain $K$-sweep (graph-smooth, two-cluster)   | `experiments/main_2.py`                                           | `experiments/fig1_plot.py`         |
+| MovieLens-100K $\rho$-sweep (graph-smooth, real)        | `experiments/movielens_1.py`                                      | `experiments/fig1_plot.py`         |
+| Erdős–Rényi density sweep (graph feedback, headline)    | `experiments/fb_1.py`                                             | `experiments/fb_1_plot.py`         |
+| 2×2 stop-rule × pull-rule ablation (graph feedback)     | `experiments/fb_ablation.py`                                      | `experiments/fb_1_plot.py`         |
+| Barabási–Albert kernel comparison ($L_G$ vs. $K_G$)     | `experiments/kernel_1.py`                                         | `experiments/kernel_1_plot.py`     |
+| Connected-SBM smoothness asymptotics                    | `experiments/mis_2.py`                                            | (numbers used directly in the LaTeX source) |
 
-From a practical stand-point, here's why this is interesting:
-* This approach helps bandit applications suffering from having too many sub-optimal choices. 
-* No strict modelling assumption (like linear bandits, etc.) is needed.
-* Superior experimental evidence backed by provably better sample complexity bounds.
+To reproduce all paper figures from scratch, run every runner once and then every plot script:
 
-This is the code base used for showing the superior experimental evidence.
+```reproduce
+# Runners (long-running; checkpointed; resume on rerun).
+python experiments/main_2.py
+python experiments/movielens_1.py
+python experiments/fb_1.py
+python experiments/fb_ablation.py
+python experiments/kernel_1.py
+python experiments/mis_2.py
 
-## Core Problem
-
-This repository addresses the challenge of finding the best "arm" (option) in a multi-armed bandit setting where:
-- Multiple choices (arms) exist with unknown reward distributions
-- Arms are connected through a graph structure representing similarities between them
-- The objective is to identify the arm with the highest mean reward using minimal samples
-- Graph structure provides side information that accelerates learning
-
-## How It Works
-
-1. **Graph Generation**: Create a graph where similar nodes (arms) are connected based on their properties
-2. **Reward Modeling**: Each node has an unknown mean reward drawn from a Gaussian distribution
-3. **Strategic Sampling**: Algorithms sample arms strategically using graph structure information
-4. **Confidence Bounds**: As more samples are collected, confidence bounds shrink around mean estimates
-5. **Elimination**: Arms are progressively eliminated when proven to be suboptimal
-6. **Best Arm Identification**: Process continues until the best arm is identified with high confidence
-
-The key insight is that connected nodes in the graph tend to have similar rewards. Therefore, sampling one node provides information about its neighbors, significantly reducing the overall sample complexity compared to standard bandit algorithms that ignore this structure.
-
-## Repository Structure
-
-### Key Components
-
-#### 1. Graph-based Bandit Algorithms (`graph_algo.py`, `algobase.py`)
-- **MaxVarianceArmAlgo**: Selects arms based on maximum variance/uncertainty
-- **CyclicAlgo**: Cycles through arms following graph structure  
-- **MaxDiffVarAlgo (JVM-O)**: Optimizes selection to reduce ensemble confidence width
-- **OneStepMinSumAlgo (JVM-N)**: Minimizes sum of confidence widths across remaining arms
-- **OneStepMinDetAlgo**: Minimizes determinant for optimal experimental design
-- **NoGraphAlgo**: Baseline UCB algorithm without using graph information
-
-#### 2. Algorithm Framework (`algobase.py`)
-- Implements Laplacian-based mean estimation leveraging graph structure
-- Uses UCB-style confidence bounds for arm elimination
-- Sherman-Morrison formula for efficient matrix inverse updates
-- Handles imperfect graph information with epsilon error bounds
-- Tracks confidence widths and progressively eliminates suboptimal arms
-
-#### 3. Graph Generation (`graph_generator.py`)
-- Creates various test graph structures:
-  - Stochastic Block Models (SBM)
-  - Clustered graphs with configurable intra-cluster structures
-- Generates node reward means based on cluster membership
-- Supports graph subsampling for smaller-scale experiments
-- Includes utilities for adding isolated nodes
-
-#### 4. Support Functions (`support_func.py`)
-- Gaussian reward generation with configurable variance
-- Matrix operations including Sherman-Morrison inverse updates
-- Cluster detection and jumping list generation for cyclic algorithms
-- Mean vector optimization with Laplacian constraints
-- Round function definitions for sampling schedules
-
-## Getting Started
-
-### System Requirements
-The following packages in Python 3.6+ are required to run the simulations:
-* numpy 1.19+
-* scipy 1.5+
-* matplotlib
-* networkx 2.5+
-* toml
-
-Install dependencies:
-```sh
-pip install -r requirements.txt
+# Plot scripts (fast; read .npz files and write PDFs/PNGs).
+python experiments/fig1_plot.py
+python experiments/fb_1_plot.py
+python experiments/kernel_1_plot.py
 ```
 
-## Reproducing the paper experiments
+Each plot script writes both a `.pdf` (vector, included by the LaTeX source) and a `.png` (raster preview) under `experiments/outputs/`. The shared paper-figure style is defined in `experiments/utils/plotting.py`. The `.npz` files are precomputed and shipped in `experiments/outputs/`, so plot regeneration is seconds.
 
-The paper-experiment pipeline lives under `experiments/`. Each experiment has two scripts: a **runner** that executes the sweep and writes a `.npz` result file to `experiments/outputs/`, and a **plot** script that reads the `.npz` and renders the figure.
+## Results
 
-**Runners** (long-running; resume from a checkpoint if rerun):
-- `experiments/main_2.py` — clustered-chain K-sweep (graph-smooth, synthetic; Thm. 3.4)
-- `experiments/movielens_1.py` — MovieLens-100K rho-sweep (graph-smooth, real)
-- `experiments/fb_1.py` — Erdos-Renyi density sweep (graph feedback; Thm. 3.10)
-- `experiments/mis_1.py` — SBM smoothness asymptotics (Cor. 3.7)
-- `experiments/kernel_1.py` — Barabasi-Albert kernel comparison (Thm. 3.11)
-- `experiments/movielens_ablations.py` — graph-construction robustness
-- `experiments/main_1.py` — agreement-vs-elimination tightness (appendix)
+The headline empirical findings of the paper, which the runners + plot scripts above reproduce verbatim from the saved `.npz` files:
 
-Each runner takes `--quick` for a smoke-test sweep and `--fresh` to ignore an existing checkpoint.
+| Setting                                                | Result                                                                                                                                                                            |
+|--------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Synthetic chain, $K\in\{10,20,50,100,200\}$, $\rho=100$ | TS-Explore stopping time *decreases* with $K$ (cluster pooling); Basic TS, KL-LUCB, GRUB grow linearly. TS-Explore is $>10\times$ faster than Basic TS at $K=100$.                |
+| MovieLens-100K, $K=20$, $\rho \in [1,10^3]$            | TS-Explore at $\rho=10^3$ is more than an order of magnitude faster than Basic TS and below the strongest non-graph baseline KL-LUCB.                                              |
+| Erdős–Rényi $G(20,p)$, graph feedback                  | TS-Explore-GF and UCB+cover both shrink by $\sim 10\times$ as $p$ increases; the cover-pair pull rule is the dominant empirical effect, isolated by the $2{\times}2$ ablation.    |
+| Barabási–Albert $n=50$, hub-optimal                    | Normalized Laplacian $K_G$ degrades far more gracefully than combinatorial $L_G$ at large $\rho$ and improves over $L_G$ by a factor of $1.12$ ($95\%$ bootstrap CI $[1.05, 1.19]$). |
+| Connected SBM smoothness asymptotics                   | TS-Explore at $\rho \ge \rho_{\mathrm{var}}(\varepsilon)$ drops $11.4\times$ below the un-tuned baselines at $\varepsilon = 10^{-2.5}$.                                            |
 
-**Plot scripts** (fast; read `.npz` and write figures to `experiments/outputs/`):
-- `experiments/fig1_plot.py` — combined paper Figure 1 (synthetic + MovieLens)
-- `experiments/fb_1_plot.py` — paper Figure 2 (graph feedback)
-- `experiments/mis_1_plot.py`, `kernel_1_plot.py`, `movielens_ablations_plot.py`, `main_1_plot.py` — appendix figures
-- `experiments/main_2_plot.py`, `movielens_1_plot.py` — single-panel variants of the Fig. 1 components
+All entries are medians over the seeds reported in the paper (20 seeds for main-body cells, 5–10 seeds for appendix cells), with $25$–$75$ interquartile ranges shaded in the figures.
 
-Every plot script writes the figure as both a `.pdf` (vector, used by the LaTeX paper) and a `.png` (raster preview) under the same base name; the shared paper style lives in `experiments/utils/plotting.py`.
+## Note on `misc/`
 
-### Compiling the paper
+The `misc/` directory holds runners and plots for sanity checks and superseded experiments that are not referenced by the paper itself but are kept so that reviewers can spot-check additional regimes. These include a connectivity-disconnected variant of the SBM smoothness sweep (`mis_1.py`, superseded by `mis_2.py`), a $q$-sensitivity sweep (`q_sweep.py`), a graph-feedback evaluation on canonical graph families (`fb_structured.py`), a robustness check across MovieLens top-$k$ neighbour counts (`movielens_robustness.py`), and a $\rho$-sweep for GRUB on the synthetic chain (`grub_rho_sweep.py`). All are runnable in the same environment.
 
-With all `.pdf` figures present in `experiments/outputs/`:
-```sh
-pdflatex main.tex && bibtex main && pdflatex main.tex && pdflatex main.tex
-```
+## Pre-trained models
 
-<!-- LICENSE -->
+This work studies non-parametric BAI algorithms (no learned model parameters). The saved `.npz` files in `experiments/outputs/` play the role typically served by pre-trained checkpoints: they are the raw stopping-time arrays from which every figure and table in the paper is regenerated. They are version-controlled with the rest of the repository.
+
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
- 
+The code in this repository is released for review purposes only as part of the NeurIPS 2026 submission and is intended to be released under an open-source license (e.g. MIT) upon publication. Author and license details are withheld for double-blind review.

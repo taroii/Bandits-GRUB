@@ -1,10 +1,3 @@
-"""movielens_1_plot -- single-panel render of the MovieLens rho-sweep.
-
-Reads ``experiments/outputs/movielens_1_results.npz`` and writes
-``experiments/outputs/movielens_1.png``. The combined paper Figure 1 is
-produced by ``fig1_plot.py``; this script is kept for standalone /
-appendix use and follows the same paper style guide.
-"""
 from __future__ import annotations
 
 import argparse
