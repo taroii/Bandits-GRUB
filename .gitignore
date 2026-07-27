@@ -124,3 +124,12 @@ experiments/outputs/*.tmp
 /data/ml-100k/
 /data/ml-100k.zip
 data/
+
+paper/
+
+# Rebuttal-round experiments
+# Per-run traces are large (~60 MB for a handful of cells) and are fully
+# regenerable with experiments/trace_runs.py.
+experiments/outputs/traces/
+# Runner logs.
+experiments/outputs/logs/

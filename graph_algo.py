@@ -122,6 +122,9 @@ class BasicThompsonSampling:
         self.reward_fn = reward_fn
         self.converged = False
         self.t = 0
+        # Task 1 instrumentation hooks (see experiments/utils/tracing.py).
+        self.last_pair = (-1, -1)
+        self.last_pull = -1
 
         self.counts = np.zeros(self.K)
         self.total_reward = np.zeros(self.K)
@@ -163,12 +166,15 @@ class BasicThompsonSampling:
         if np.all(i_tilde_m == i_hat):
             self.converged = True
             self.remaining_nodes = [i_hat]
+            self.last_pair = (i_hat, i_hat)
             return i_hat
 
         delta_hat_m = thetas - mu_hat
         m_star = int(np.argmax(np.max(delta_hat_m, axis=1)))
         i_tilde = int(i_tilde_m[m_star])
         arm = i_tilde if self.counts[i_tilde] < self.counts[i_hat] else i_hat
+        self.last_pair = (int(i_hat), int(i_tilde))
+        self.last_pull = int(arm)
 
         reward = self._draw_reward(arm)
         self.counts[arm] += 1
@@ -208,6 +214,9 @@ class KL_LUCB:
         self.reward_fn = reward_fn
         self.converged = False
         self.t = 0
+        # Task 1 instrumentation hooks (see experiments/utils/tracing.py).
+        self.last_pair = (-1, -1)
+        self.last_pull = -1
 
         self.counts = np.zeros(self.K)
         self.total_reward = np.zeros(self.K)
@@ -258,6 +267,8 @@ class KL_LUCB:
 
         # LUCB sampling rule: pull whichever of h* and l* has been pulled less.
         arm = h_star if self.counts[h_star] <= self.counts[l_star] else l_star
+        self.last_pair = (int(h_star), int(l_star))
+        self.last_pull = int(arm)
         reward = self._draw_reward(arm)
         self.counts[arm] += 1
         self.total_reward[arm] += reward
@@ -292,6 +303,9 @@ class ThompsonSampling(algobase.AlgoBase):
         self.K = self.dim
         self.converged = False
         self.t = 0
+        # Task 1 instrumentation hooks (see experiments/utils/tracing.py).
+        self.last_pair = (-1, -1)
+        self.last_pull = -1
 
         for arm in range(self.K):
             self.play_arm(arm)
@@ -332,15 +346,19 @@ class ThompsonSampling(algobase.AlgoBase):
         if np.all(i_tilde_t_m == i_hat_t):
             self.converged = True
             self.remaining_nodes = [i_hat_t]
+            self.last_pair = (i_hat_t, i_hat_t)
             return i_hat_t
 
         delta_hat_t_m = thetas - mu_hat_t
         m_star = int(np.argmax(np.max(delta_hat_t_m, axis=1)))
         i_tilde_t = int(i_tilde_t_m[m_star])
+        self.last_pair = (int(i_hat_t), int(i_tilde_t))
 
         if self.counter[i_tilde_t, i_tilde_t] < self.counter[i_hat_t, i_hat_t]:
+            self.last_pull = int(i_tilde_t)
             self.play_arm(i_tilde_t)
         else:
+            self.last_pull = int(i_hat_t)
             self.play_arm(i_hat_t)
         self.t += 1
         return None
@@ -372,17 +390,33 @@ class GraphFeedbackTS:
     Each pull of arm ``a`` reveals an i.i.d. reward for every arm in
     ``N+(a) = {a} ∪ {j : A[a, j] > 0}``.  The estimator is the empirical
     mean of the feedback observations.
+
+    ``pull_scope`` resolves a known algorithm/analysis mismatch (flagged,
+    not silently decided):
+
+      'all'  -- the implemented behaviour described in Appendix H.1:
+                argmax over ALL arms a of |N+(a) ∩ {i_hat, i_tilde}|, so the
+                pulled arm may be a common neighbour outside the
+                disagreement pair.  DEFAULT (reproduces committed numbers).
+      'pair' -- what Lemma 11 actually assumes: the pull is restricted to
+                the disagreement pair {i_hat, i_tilde} itself.
     """
 
-    def __init__(self, D, A, mu, delta, q, sigma=1.0):
+    def __init__(self, D, A, mu, delta, q, sigma=1.0, pull_scope='all'):
         self.means = np.asarray(mu, dtype=float).flatten()
         self.Adj = np.asarray(A, dtype=float)
         self.K = len(self.means)
         self.delta = delta
         self.q = q
         self.sigma = sigma
+        if pull_scope not in ('all', 'pair'):
+            raise ValueError(f"pull_scope={pull_scope!r} not in ('all','pair')")
+        self.pull_scope = pull_scope
         self.converged = False
         self.t = 0
+        # Task 1 instrumentation hooks (see experiments/utils/tracing.py).
+        self.last_pair = (-1, -1)
+        self.last_pull = -1
 
         self.closed = (self.Adj + np.eye(self.K)) > 0
         self.N_fb = np.zeros(self.K)
@@ -436,15 +470,21 @@ class GraphFeedbackTS:
         m_star = int(np.argmax(np.max(delta_hat_m, axis=1)))
         i_tilde = int(i_tilde_m[m_star])
         candidates = {i_hat, i_tilde}
+        self.last_pair = (int(i_hat), int(i_tilde))
 
         # Pick action a that covers the most candidates, ties broken by smaller N_fb.
+        # pull_scope='all' searches every arm (Appendix H.1); pull_scope='pair'
+        # restricts to the disagreement pair itself (what Lemma 11 assumes).
+        scope = (range(self.K) if self.pull_scope == 'all'
+                 else sorted(candidates))
         best_a, best_key = -1, None
-        for a in range(self.K):
+        for a in scope:
             cover = int(self.closed[a, list(candidates)].sum())
             key = (-cover, self.N_fb[a])
             if best_key is None or key < best_key:
                 best_key = key
                 best_a = a
+        self.last_pull = int(best_a)
         self._pull(best_a)
         return None
 
@@ -482,6 +522,9 @@ class UCB_N:
         self.sigma = sigma
         self.converged = False
         self.t = 0
+        # Task 1 instrumentation hooks (see experiments/utils/tracing.py).
+        self.last_pair = (-1, -1)
+        self.last_pull = -1
 
         self.closed = (self.Adj + np.eye(self.K)) > 0
         self.N_fb = np.zeros(self.K)
@@ -531,6 +574,8 @@ class UCB_N:
         # Pure-exploration pull rule: argmax confidence width over remaining.
         rem = np.array(self.remaining_nodes, dtype=int)
         a_star = int(rem[int(np.argmax(beta[rem]))])
+        self.last_pair = (int(rem[int(np.argmax(mu_hat[rem]))]), int(a_star))
+        self.last_pull = int(a_star)
         self._pull(a_star)
         return None
 
@@ -545,6 +590,9 @@ class GraphFeedbackTSWidth:
         self.sigma = sigma
         self.converged = False
         self.t = 0
+        # Task 1 instrumentation hooks (see experiments/utils/tracing.py).
+        self.last_pair = (-1, -1)
+        self.last_pull = -1
 
         self.closed = (self.Adj + np.eye(self.K)) > 0
         self.N_fb = np.zeros(self.K)
@@ -604,9 +652,13 @@ class GraphFeedbackTSWidth:
         # Pull rule: argmax confidence width over all arms, ties broken by
         # smaller N_fb (to avoid sticky cycles when widths are exactly equal
         # at startup).
+        delta_hat_m = thetas - mu_hat
+        m_star = int(np.argmax(np.max(delta_hat_m, axis=1)))
+        self.last_pair = (int(i_hat), int(i_tilde_m[m_star]))
         beta = self._conf_radius()
         order = np.lexsort((self.N_fb, -beta))
         a_star = int(order[0])
+        self.last_pull = int(a_star)
         self._pull(a_star)
         return None
 
@@ -622,6 +674,9 @@ class UCBNCover:
         self.sigma = sigma
         self.converged = False
         self.t = 0
+        # Task 1 instrumentation hooks (see experiments/utils/tracing.py).
+        self.last_pair = (-1, -1)
+        self.last_pull = -1
 
         self.closed = (self.Adj + np.eye(self.K)) > 0
         self.N_fb = np.zeros(self.K)
@@ -679,6 +734,7 @@ class UCBNCover:
         ucb_rem[h_star] = -np.inf
         l_star = int(np.argmax(ucb_rem))
         candidates = {h_star, l_star}
+        self.last_pair = (int(h_star), int(l_star))
 
         # Pull action a covering the most candidates, ties by smaller N_fb.
         best_a, best_key = -1, None
@@ -689,5 +745,6 @@ class UCBNCover:
             if best_key is None or key < best_key:
                 best_key = key
                 best_a = a
+        self.last_pull = int(best_a)
         self._pull(best_a)
         return None

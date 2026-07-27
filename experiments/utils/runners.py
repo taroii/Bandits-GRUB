@@ -78,11 +78,29 @@ def _elimination_sample_rate(algo) -> bool:
 def run_algorithm(algo_factory: Callable,
                   seed: int,
                   max_steps: int = 1_000_000,
-                  record_elimination: bool = True) -> Dict:
+                  record_elimination: bool = True,
+                  trace_spec: Optional[Dict] = None) -> Dict:
+    """Run one seed.
+
+    ``trace_spec``, if given, turns on Task 1 instrumentation.  It is a dict
+    of keyword arguments for :class:`experiments.utils.tracing.Tracer`
+    (``means``, ``Adj``, ``Degree``, ``rho``, ``eps``, ``delta``, ``q`` and
+    optionally ``every`` / ``max_snaps`` / ``log_pairs``).  The resulting
+    trace dict is returned under the ``'trace'`` key.
+
+    Tracing consumes no randomness, so a traced run follows the identical
+    RNG stream to an untraced one at the same seed.
+    """
     np.random.seed(int(seed))
     algo = algo_factory()
     K = len(_true_means(algo))
     a_star_true = int(np.argmax(_true_means(algo)))
+
+    tracer = None
+    if trace_spec is not None:
+        from experiments.utils.tracing import Tracer
+        tracer = Tracer(algo, **trace_spec)
+        tracer.snapshot(force=True)
 
     curve: List[tuple] = []
     remaining_prev = len(getattr(algo, 'remaining_nodes', range(K)))
@@ -93,6 +111,9 @@ def run_algorithm(algo_factory: Callable,
     while not _is_converged(algo) and steps < max_steps:
         _run_round(algo)
         steps += 1
+        if tracer is not None:
+            tracer.snapshot()
+            tracer.record_pair()
         if record_elimination:
             remaining_now = len(algo.remaining_nodes)
             if remaining_now != remaining_prev:
@@ -104,7 +125,7 @@ def run_algorithm(algo_factory: Callable,
         curve.append((_current_t(algo), remaining_now))
 
     selected = int(algo.remaining_nodes[0]) if algo.remaining_nodes else -1
-    return {
+    out = {
         'stopping_time': _current_t(algo),
         'selected_arm': selected,
         'correct': selected == a_star_true,
@@ -112,6 +133,15 @@ def run_algorithm(algo_factory: Callable,
         'pull_counts': _current_pulls(algo),
         'converged_flag': converged,
     }
+    if tracer is not None:
+        tracer.snapshot(force=True)
+        out['trace'] = tracer.result(
+            stopping_time=out['stopping_time'],
+            selected_arm=selected,
+            correct=out['correct'],
+            capped=not converged,
+        )
+    return out
 
 
 def run_many(algo_factory: Callable,
@@ -119,6 +149,7 @@ def run_many(algo_factory: Callable,
              max_steps: int = 1_000_000,
              record_elimination: bool = True,
              progress: bool = False,
+             trace_spec: Optional[Dict] = None,
              **_legacy_kwargs) -> List[Dict]:
     """Sequentially run ``algo_factory`` for each seed.
 
@@ -132,7 +163,8 @@ def run_many(algo_factory: Callable,
     for i, s in enumerate(seeds):
         out.append(run_algorithm(algo_factory, s,
                                  max_steps=max_steps,
-                                 record_elimination=record_elimination))
+                                 record_elimination=record_elimination,
+                                 trace_spec=trace_spec))
         if progress:
             print(f"  seed {s} done ({i+1}/{len(seeds)})", flush=True)
     return out

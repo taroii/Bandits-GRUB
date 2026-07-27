@@ -178,10 +178,41 @@ def graph_feedback_hardness(means, Adj):
 # ---------------------------------------------------------------------------
 
 def rho_star(epsilon, K, T_estimate, delta, sigma=1.0):
-    """Optimal Laplacian weight for nominal smoothness ``epsilon``."""
+    """sigma_0 * sqrt(L1(T)) / epsilon.
+
+    NOTE: this equals ``sqrt(rho_var(epsilon))``.  The paper's Eq. (5) states,
+    in three places in the text (main-body Eq. (5), again at "as eps -> 0 at
+    any rho >= rho_var(eps)", and in the Appendix D non-competitive-arm step):
+
+        rho_var(epsilon) := sigma_0^2 * L1(T) / epsilon^2
+
+    (which is the value solving sigma_0*sqrt(L1)/sqrt(rho) = epsilon).  This
+    function returns the square root of that expression.  It is kept because
+    ``experiments/mis_2.py`` and the dotted reference line in ``fig1_plot.py``
+    / ``movielens_1_plot.py`` were computed with it, so removing it would
+    change published numbers.  :func:`rho_var` returns the Eq. (5) expression.
+    """
     sigma0 = _sigma0(sigma)
     L1 = _L1(K, T_estimate, delta)
     return sigma0 * np.sqrt(L1) / max(epsilon, 1e-300)
+
+
+def rho_var(epsilon, K, T_estimate, delta, sigma=1.0):
+    """rho_var(eps) = sigma_0^2 L1(T) / eps^2, the Eq. (5) prescription.
+
+    This is the regularization scale above which the bias floor dominates
+    the variance contribution in the elimination threshold (Eq. (4)).
+
+    Measured note for use at small ``epsilon``: under the
+    ``rho_diag = max(1e-4, 1e-6 rho)`` policy of Appendix H.1, the pre-pull
+    effective sample size ``t_eff,i(0) = 1/[V_0^-1]_ii`` equals
+    ``K * rho_diag`` exactly (verified at four rho values).  At eps = 1e-3 on
+    the K=31 SBM that is 5.8e4 effective samples before any pull.  With
+    rho_diag held at 1e-4 it is 3.1e-3 at every rho.
+    """
+    sigma0 = _sigma0(sigma)
+    L1 = _L1(K, T_estimate, delta)
+    return (sigma0 ** 2) * L1 / max(epsilon ** 2, 1e-300)
 
 
 def epsilon_hardness(means, Adj, Degree, epsilon, T_estimate, delta,

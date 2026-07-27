@@ -2,3 +2,8 @@ numpy>=1.19
 scipy>=1.5
 matplotlib>=3.3
 networkx>=2.5
+# Added for the rebuttal-round experiments:
+#   graph_params.py (Russo et al. characteristic time) and
+#   utils/tas_fg.py (TaS-FG omega* program).
+cvxpy>=1.4
+clarabel>=0.6

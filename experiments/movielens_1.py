@@ -63,6 +63,13 @@ def main():
                         help="subset of algorithms to run")
     parser.add_argument('--fresh', action='store_true',
                         help="ignore any existing checkpoint and start over")
+    parser.add_argument('--out-tag', type=str, default=None,
+                        help="suffix for the output .npz, e.g. --out-tag K50 "
+                             "writes movielens_1_K50_results.npz. Defaults to "
+                             "the committed movielens_1_results.npz for K=20 "
+                             "and to an auto K-tagged name otherwise, so a "
+                             "scale-extension run can never clobber the "
+                             "submitted figure data.")
     parser.add_argument('--reward-model', type=str, default='empirical',
                         choices=['empirical', 'gaussian'],
                         help="'empirical': sample rewards uniformly with "
@@ -81,8 +88,17 @@ def main():
         seeds = list(range(args.seeds))
 
     delta = 1e-3
-    out_npz = os.path.join(OUT, 'movielens_1_results.npz')
     K = args.K
+    if args.out_tag:
+        _tag = f'_{args.out_tag}'
+    elif K != 20:
+        _tag = f'_K{K}'
+    else:
+        _tag = ''
+    out_npz = os.path.join(OUT, f'movielens_1{_tag}_results.npz')
+    if _tag:
+        print(f"[movielens_1] writing {os.path.basename(out_npz)} "
+              f"(committed movielens_1_results.npz left untouched)", flush=True)
 
     # Build instance once (deterministic) and report.
     print(f"[movielens_1] loading K={K} top-rated movies...", flush=True)
